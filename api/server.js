@@ -2,10 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2');
 const oracledb = require('oracledb');
+const sql = require('mssql');
 const app = express();
 
 oracledb.initOracleClient({
-  libDir: "/home/bamul-bk/project/Bamul_Final/Bamul_Oracle/instantclient"
+  libDir: process.env.ORACLE_LIB_DIR || "/opt/oracle/instantclient_23_4"
 });
 
 app.use(cors({
@@ -14,6 +15,10 @@ app.use(cors({
     credentials: true
 }));
 app.use(express.json());
+
+// Serve static HTML files
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'public')));
 
 // MySQL connection for UNION_054
 const dbUnion = mysql.createPool({
@@ -84,12 +89,12 @@ app.get('/api/dcs', (req, res) => {
         query = `
             SELECT 
                 DATE_FORMAT(collection_date, '%Y-%m-%d') AS date,
-                SUM(quantity) AS total_milk,
+                SUM(milk) AS total_milk,
                 SUM(amount) AS total_amount,
                 ROUND(AVG(fat), 2) AS avg_fat,
                 ROUND(AVG(snf), 2) AS avg_snf,
                 COUNT(member_code) AS total_entries
-            FROM tbl_milk_collection
+            FROM dcs_milk_collection
             WHERE collection_date >= CURDATE() AND collection_date < CURDATE() + INTERVAL 1 DAY
             GROUP BY DATE(collection_date)
         `;
@@ -98,12 +103,12 @@ app.get('/api/dcs', (req, res) => {
         query = `
             SELECT 
                 DATE_FORMAT(collection_date, '%Y-%m-%d') AS date,
-                SUM(quantity) AS total_milk,
+                SUM(milk) AS total_milk,
                 SUM(amount) AS total_amount,
                 ROUND(AVG(fat), 2) AS avg_fat,
                 ROUND(AVG(snf), 2) AS avg_snf,
                 COUNT(member_code) AS total_entries
-            FROM tbl_milk_collection
+            FROM dcs_milk_collection
             WHERE collection_date >= CURDATE() - INTERVAL 1 DAY AND collection_date < CURDATE()
             GROUP BY DATE(collection_date)
         `;
@@ -113,12 +118,12 @@ app.get('/api/dcs', (req, res) => {
             SELECT 
                 DATE_FORMAT(MIN(collection_date), '%Y-%m-%d') AS date,
                 DATE_FORMAT(MAX(collection_date), '%Y-%m-%d') AS date_end,
-                SUM(quantity) AS total_milk,
+                SUM(milk) AS total_milk,
                 SUM(amount) AS total_amount,
                 ROUND(AVG(fat), 2) AS avg_fat,
                 ROUND(AVG(snf), 2) AS avg_snf,
                 COUNT(member_code) AS total_entries
-            FROM tbl_milk_collection
+            FROM dcs_milk_collection
             WHERE collection_date >= ? AND collection_date < DATE_ADD(?, INTERVAL 1 DAY)
         `;
         params = [start, end];
@@ -127,12 +132,12 @@ app.get('/api/dcs', (req, res) => {
             SELECT 
                 DATE_FORMAT(MIN(collection_date), '%Y-%m-%d') AS date,
                 DATE_FORMAT(MAX(collection_date), '%Y-%m-%d') AS date_end,
-                SUM(quantity) AS total_milk,
+                SUM(milk) AS total_milk,
                 SUM(amount) AS total_amount,
                 ROUND(AVG(fat), 2) AS avg_fat,
                 ROUND(AVG(snf), 2) AS avg_snf,
                 COUNT(member_code) AS total_entries
-            FROM tbl_milk_collection
+            FROM dcs_milk_collection
             WHERE collection_date >= DATE_SUB(CURDATE(), INTERVAL DAYOFWEEK(CURDATE()) - 1 DAY)
                 AND collection_date < CURDATE() + INTERVAL 1 DAY
         `;
@@ -142,12 +147,12 @@ app.get('/api/dcs', (req, res) => {
             SELECT 
                 DATE_FORMAT(MIN(collection_date), '%Y-%m-%d') AS date,
                 DATE_FORMAT(MAX(collection_date), '%Y-%m-%d') AS date_end,
-                SUM(quantity) AS total_milk,
+                SUM(milk) AS total_milk,
                 SUM(amount) AS total_amount,
                 ROUND(AVG(fat), 2) AS avg_fat,
                 ROUND(AVG(snf), 2) AS avg_snf,
                 COUNT(member_code) AS total_entries
-            FROM tbl_milk_collection
+            FROM dcs_milk_collection
             WHERE collection_date >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
                 AND collection_date < CURDATE() + INTERVAL 1 DAY
         `;
@@ -156,12 +161,12 @@ app.get('/api/dcs', (req, res) => {
         query = `
             SELECT 
                 DATE_FORMAT(collection_date, '%Y-%m-%d') AS date,
-                SUM(quantity) AS total_milk,
+                SUM(milk) AS total_milk,
                 SUM(amount) AS total_amount,
                 ROUND(AVG(fat), 2) AS avg_fat,
                 ROUND(AVG(snf), 2) AS avg_snf,
                 COUNT(member_code) AS total_entries
-            FROM tbl_milk_collection
+            FROM dcs_milk_collection
             WHERE collection_date >= CURDATE() - INTERVAL 10 DAY
             GROUP BY DATE(collection_date)
             ORDER BY date DESC
@@ -535,7 +540,330 @@ app.get('/api/sales', (req, res) => {
     });
 });
 
-const PORT = 3001;
-app.listen(PORT, () => {
+// SQL Server connection for Bangalore Dairy ERP
+const sqlConfig = {
+    user: 'sa',
+    password: 'Bamul@123',
+    server: 'localhost',
+    database: 'BAMUL',
+    options: {
+        encrypt: false,
+        trustServerCertificate: true,
+        connectTimeout: 30000,
+        requestTimeout: 30000
+    }
+};
+
+let sqlPool = null;
+sql.connect(sqlConfig).then(pool => {
+    sqlPool = pool;
+    console.log('Connected to Bangalore Dairy SQL Server');
+}).catch(err => {
+    console.error('SQL Server connection failed:', err.message);
+});
+
+// Helper: build date condition for SQL Server
+function mssqlDateCondition(field, filter, start, end) {
+    if (filter === 'today')     return `CAST(${field} AS DATE) = CAST(GETDATE() AS DATE)`;
+    if (filter === 'yesterday') return `CAST(${field} AS DATE) = CAST(DATEADD(DAY,-1,GETDATE()) AS DATE)`;
+    if (filter === 'week')      return `${field} >= DATEADD(DAY, 1-DATEPART(WEEKDAY,GETDATE()), CAST(GETDATE() AS DATE)) AND ${field} < DATEADD(DAY,1,CAST(GETDATE() AS DATE))`;
+    if (filter === 'month')     return `${field} >= DATEFROMPARTS(YEAR(GETDATE()),MONTH(GETDATE()),1) AND ${field} < DATEADD(DAY,1,CAST(GETDATE() AS DATE))`;
+    if (filter === 'custom' && start && end) return `CAST(${field} AS DATE) >= '${start}' AND CAST(${field} AS DATE) <= '${end}'`;
+    return `CAST(${field} AS DATE) = CAST(GETDATE() AS DATE)`;
+}
+
+// GET /api/bangalore/tables - list all tables (debug/explore)
+app.get('/api/bangalore/tables', async (req, res) => {
+    try {
+        if (!sqlPool) return res.status(503).json({ success: false, error: 'SQL Server not connected' });
+        const result = await sqlPool.request().query(
+            `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE' ORDER BY TABLE_NAME`
+        );
+        res.json({ success: true, data: result.recordset });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/bangalore/columns?table=TABLE_NAME - list columns of a table
+app.get('/api/bangalore/columns', async (req, res) => {
+    try {
+        if (!sqlPool) return res.status(503).json({ success: false, error: 'SQL Server not connected' });
+        const table = req.query.table;
+        if (!table) return res.status(400).json({ success: false, error: 'table param required' });
+        const result = await sqlPool.request().query(
+            `SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='${table}' ORDER BY ORDINAL_POSITION`
+        );
+        res.json({ success: true, data: result.recordset });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/bangalore/preview?table=TABLE_NAME - preview top 10 rows
+app.get('/api/bangalore/preview', async (req, res) => {
+    try {
+        if (!sqlPool) return res.status(503).json({ success: false, error: 'SQL Server not connected' });
+        const table = req.query.table;
+        if (!table) return res.status(400).json({ success: false, error: 'table param required' });
+        const result = await sqlPool.request().query(`SELECT TOP 10 * FROM [${table}]`);
+        res.json({ success: true, data: result.recordset });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/bangalore/truck-entry - Milk inward truck entry from MilkRecipt (SQL Server)
+app.get('/api/bangalore/truck-entry', async (req, res) => {
+    try {
+        if (!sqlPool) return res.status(503).json({ success: false, error: 'SQL Server not connected' });
+        const { filter, start, end } = req.query;
+        const dateCond = mssqlDateCondition('[Date]', filter, start, end);
+        const result = await sqlPool.request().query(`
+            SELECT
+                CAST([Date] AS DATE) AS Date,
+                TruckNumber,
+                DCNumber_Sender,
+                GrossWeight,
+                TareWeight,
+                NetWeight,
+                Fat_First,
+                SNF_First,
+                Temp_First,
+                Acidity_First,
+                IsCompleted
+            FROM dbo.MilkRecipt
+            WHERE ${dateCond} AND ISNULL(IsDel, 0) = 0
+            ORDER BY [Date] DESC, ArrivalTime DESC
+        `);
+        res.json({ success: true, data: result.recordset });
+    } catch (err) {
+        console.error('Bangalore truck-entry error:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/bangalore/scada-input - Date-wise total qty from MilkRecipt for SCADA INPUT
+app.get('/api/bangalore/scada-input', async (req, res) => {
+    try {
+        if (!sqlPool) return res.status(503).json({ success: false, error: 'SQL Server not connected' });
+        const { filter, start, end } = req.query;
+        const dateCond = mssqlDateCondition('[Date]', filter, start, end);
+        const result = await sqlPool.request().query(`
+            SELECT
+                CAST([Date] AS DATE) AS Date,
+                SUM(ISNULL(NetWeight, 0)) AS TotalQty
+            FROM dbo.MilkRecipt
+            WHERE ${dateCond} AND ISNULL(IsDel, 0) = 0
+            GROUP BY CAST([Date] AS DATE)
+            ORDER BY Date DESC
+        `);
+        res.json({ success: true, data: result.recordset });
+    } catch (err) {
+        console.error('scada-input error:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/bangalore/milk-dispatch-truck - Milk Dispatch (Truck-wise)
+app.get('/api/bangalore/milk-dispatch-truck', async (req, res) => {
+    try {
+        if (!sqlPool) return res.status(503).json({ success: false, error: 'SQL Server not connected' });
+        const { filter, start, end } = req.query;
+        const dateCond = mssqlDateCondition('[Date]', filter, start, end);
+        const result = await sqlPool.request().query(`
+            SELECT CAST([Date] AS DATE) AS Date,
+                TruckNumber, DairyCode, ProductCode,
+                GrossWeight, TareWeight, NetWeight,
+                Fat_First, SNF_First, Temp_First, Acidity_First,
+                IsCompleted
+            FROM dbo.MilkDispatch
+            WHERE ${dateCond} AND ISNULL(IsDel, 0) = 0
+            ORDER BY [Date] DESC
+        `);
+        res.json({ success: true, data: result.recordset });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/bangalore/lab-test - Lab Test Results
+app.get('/api/bangalore/lab-test', async (req, res) => {
+    try {
+        if (!sqlPool) return res.status(503).json({ success: false, error: 'SQL Server not connected' });
+        const { filter, start, end } = req.query;
+        const dateCond = mssqlDateCondition('TestDate', filter, start, end);
+        const result = await sqlPool.request().query(`
+            SELECT TOP 100 TransactionCode, TestDate,
+                Fat_First, SNF_First, Acidity_First, Temp_First,
+                Average_Fat, Average_SNF, IsAccepted
+            FROM LabTest
+            WHERE ${dateCond}
+            ORDER BY LabTestId DESC
+        `);
+        res.json({ success: true, data: result.recordset });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/bangalore/non-milk-receipt - Non-Milk Receipt
+app.get('/api/bangalore/non-milk-receipt', async (req, res) => {
+    try {
+        if (!sqlPool) return res.status(503).json({ success: false, error: 'SQL Server not connected' });
+        const { filter, start, end } = req.query;
+        const dateCond = mssqlDateCondition('[Date]', filter, start, end);
+        const result = await sqlPool.request().query(`
+            SELECT CAST([Date] AS DATE) AS Date,
+                TruckNumber, ProductCode, GrossWeight, TareWeight, NetWeight,
+                IsCompleted
+            FROM NonMilkReceipt
+            WHERE ${dateCond} AND ISNULL(IsDel, 0) = 0
+            ORDER BY [Date] DESC
+        `);
+        res.json({ success: true, data: result.recordset });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/bangalore/reception-bay - Milk Reception Bay (all bays combined)
+app.get('/api/bangalore/reception-bay', async (req, res) => {
+    try {
+        if (!sqlPool) return res.status(503).json({ success: false, error: 'SQL Server not connected' });
+        const { filter, start, end } = req.query;
+        const dateCond = mssqlDateCondition('StartTime', filter, start, end);
+        const result = await sqlPool.request().query(`
+            SELECT CAST(StartTime AS DATE) AS Date, BayID,
+                COUNT(*) AS Entries,
+                SUM(EndQnty - StartQnty) AS TotalQty,
+                ROUND(AVG(FAT),2) AS AvgFat,
+                ROUND(AVG(SNF),2) AS AvgSNF
+            FROM DataLogger_RawMilkReception
+            WHERE ${dateCond}
+            GROUP BY CAST(StartTime AS DATE), BayID
+            ORDER BY Date DESC, BayID
+        `);
+        res.json({ success: true, data: result.recordset });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/bangalore/rmst - RMST (all silos combined)
+app.get('/api/bangalore/rmst', async (req, res) => {
+    try {
+        if (!sqlPool) return res.status(503).json({ success: false, error: 'SQL Server not connected' });
+        const { filter, start, end } = req.query;
+        const dateCond = mssqlDateCondition('StartTime', filter, start, end);
+        const result = await sqlPool.request().query(`
+            SELECT CAST(StartTime AS DATE) AS Date, RMSID,
+                COUNT(*) AS Entries,
+                SUM(EndQnty - StartQnty) AS TotalQty,
+                ROUND(AVG(FAT),2) AS AvgFat,
+                ROUND(AVG(SNF),2) AS AvgSNF
+            FROM DataLogger_RawMilkReception
+            WHERE ${dateCond}
+            GROUP BY CAST(StartTime AS DATE), RMSID
+            ORDER BY Date DESC, RMSID
+        `);
+        res.json({ success: true, data: result.recordset });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/bangalore/pmst - Pasteurization (Milk Processing)
+app.get('/api/bangalore/pmst', async (req, res) => {
+    try {
+        if (!sqlPool) return res.status(503).json({ success: false, error: 'SQL Server not connected' });
+        const { filter, start, end } = req.query;
+        const dateCond = mssqlDateCondition('StartTime', filter, start, end);
+        const result = await sqlPool.request().query(`
+            SELECT CAST(StartTime AS DATE) AS Date, PMSID,
+                COUNT(*) AS Entries,
+                SUM(EndQnty_PMS - StartQnty_PMS) AS TotalProcessed,
+                ROUND(AVG(FAT_PMS),2) AS AvgFat,
+                ROUND(AVG(SNF_PMS),2) AS AvgSNF
+            FROM DataLogger__MilkProcessing
+            WHERE ${dateCond}
+            GROUP BY CAST(StartTime AS DATE), PMSID
+            ORDER BY Date DESC, PMSID
+        `);
+        res.json({ success: true, data: result.recordset });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/bangalore/hmst - HMST (Pasteurized Milk to HMST)
+app.get('/api/bangalore/hmst', async (req, res) => {
+    try {
+        if (!sqlPool) return res.status(503).json({ success: false, error: 'SQL Server not connected' });
+        const { filter, start, end } = req.query;
+        const dateCond = mssqlDateCondition('StartTime', filter, start, end);
+        const result = await sqlPool.request().query(`
+            SELECT CAST(StartTime AS DATE) AS Date, HMSTID,
+                COUNT(*) AS Entries,
+                SUM(EndQnty - StartQnty) AS TotalQty,
+                ROUND(AVG(FAT),2) AS AvgFat,
+                ROUND(AVG(SNF),2) AS AvgSNF
+            FROM DataLoggerPMilktransferHMST
+            WHERE ${dateCond}
+            GROUP BY CAST(StartTime AS DATE), HMSTID
+            ORDER BY Date DESC, HMSTID
+        `);
+        res.json({ success: true, data: result.recordset });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/bangalore/cream - Cream Dispatch
+app.get('/api/bangalore/cream', async (req, res) => {
+    try {
+        if (!sqlPool) return res.status(503).json({ success: false, error: 'SQL Server not connected' });
+        const { filter, start, end } = req.query;
+        const dateCond = mssqlDateCondition('StartTime', filter, start, end);
+        const result = await sqlPool.request().query(`
+            SELECT CAST(StartTime AS DATE) AS Date,
+                COUNT(*) AS Entries,
+                SUM(EndQnty - StartQnty) AS TotalQty,
+                ROUND(AVG(FAT),2) AS AvgFat,
+                ROUND(AVG(SNF),2) AS AvgSNF
+            FROM DataLoggerCreamDisptoOldDairy
+            WHERE ${dateCond}
+            GROUP BY CAST(StartTime AS DATE)
+            ORDER BY Date DESC
+        `);
+        res.json({ success: true, data: result.recordset });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/bangalore/curd - Curd Preparation
+app.get('/api/bangalore/curd', async (req, res) => {
+    try {
+        if (!sqlPool) return res.status(503).json({ success: false, error: 'SQL Server not connected' });
+        const { filter, start, end } = req.query;
+        const dateCond = mssqlDateCondition('StartTime', filter, start, end);
+        const result = await sqlPool.request().query(`
+            SELECT CAST(StartTime AS DATE) AS Date, CTID AS TankID,
+                COUNT(*) AS Entries,
+                SUM(EndQnty - StartQnty) AS TotalQty
+            FROM DataLoggerCurdPreparation
+            WHERE ${dateCond}
+            GROUP BY CAST(StartTime AS DATE), CTID
+            ORDER BY Date DESC, CTID
+        `);
+        res.json({ success: true, data: result.recordset });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
 });

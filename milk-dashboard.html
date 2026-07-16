@@ -13,14 +13,15 @@
         }
 
         body {
-            background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+            background: #f0f4f8;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             min-height: 100vh;
             padding: 0;
+            font-weight: 600;
         }
 
         .navbar {
-            background: #2d3748;
+            background: #1b2a4a;
             color: white;
             padding: 70px 50px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
@@ -43,7 +44,7 @@
 
         .navbar-subtitle {
             font-size: 22px;
-            color: #a0aec0;
+            color: #94a3c4;
             font-weight: 400;
         }
 
@@ -53,7 +54,7 @@
             top: 50%;
             transform: translateY(-50%);
             background: white;
-            color: #7c3aed;
+            color: #1b2a4a;
             border: 2px solid white;
             padding: 16px 36px;
             border-radius: 10px;
@@ -65,7 +66,7 @@
         }
 
         .logout-btn:hover {
-            background: #f3f4f6;
+            background: #e8edf5;
             box-shadow: 0 6px 16px rgba(0,0,0,0.2);
         }
 
@@ -79,8 +80,10 @@
             position: relative;
             padding: 48px;
             min-height: calc(100vh - 72px);
-            max-width: 95%;
+            max-width: 1600px;
+            width: 100%;
             margin: 0 auto;
+            background: #f0f4f8;
         }
 
         .level {
@@ -96,7 +99,7 @@
         }
 
         .level-2, .level-3, .level-4, .level-5 {
-            justify-content: space-between;
+            justify-content: center;
             max-width: 100%;
             margin-left: auto;
             margin-right: auto;
@@ -115,13 +118,13 @@
         }
 
         .table-box {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            border: none;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
             border-radius: 20px;
             padding: 44px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 16px rgba(27,42,74,0.06), 0 1px 4px rgba(0,0,0,0.04);
             flex: 1;
-            min-width: 580px;
+            min-width: 0;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
@@ -134,11 +137,12 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, #8b5cf6, #a78bfa, #c4b5fd);
+            background: linear-gradient(90deg, #1b2a4a, #2d4a7a, #4a6fa5);
         }
 
         .table-box:hover {
-            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.25), 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 12px 32px rgba(27,42,74,0.12), 0 4px 12px rgba(0,0,0,0.06);
+            border-color: #c7d2e0;
         }
 
         .table-box h3 {
@@ -173,7 +177,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 18px;
-            table-layout: auto;
+            table-layout: fixed;
         }
 
         #cc {
@@ -211,10 +215,10 @@
 
         .data-table th {
             background: #f3f4f6;
-            padding: 16px 20px;
+            padding: 16px 12px;
             text-align: center;
             font-weight: 600;
-            font-size: 18px;
+            font-size: 16px;
             color: #374151;
             border-bottom: 2px solid #e5e7eb;
             white-space: nowrap;
@@ -223,11 +227,11 @@
         }
 
         .data-table td {
-            padding: 16px 20px;
+            padding: 16px 12px;
             border-bottom: 1px solid #e5e7eb;
             color: #6b7280;
             text-align: center;
-            font-size: 17px;
+            font-size: 15px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -244,10 +248,10 @@
         .section-label {
             font-weight: 600;
             font-size: 17px;
-            color: #8b5cf6;
+            color: #1b2a4a;
             padding: 14px 22px;
-            background: #f3f4f6;
-            border-bottom: 2px solid #e5e7eb;
+            background: #f0f4f8;
+            border-bottom: 2px solid #e2e8f0;
             cursor: pointer;
             user-select: none;
             position: relative;
@@ -292,7 +296,7 @@
             width: 64px;
             height: 64px;
             margin: 0 auto 20px;
-            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+            background: linear-gradient(135deg, #1b2a4a, #2d4a7a);
             border-radius: 14px;
             display: flex;
             align-items: center;
@@ -305,7 +309,7 @@
             width: 110px;
             height: 110px;
             margin: 0 auto 20px;
-            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+            background: linear-gradient(135deg, #1b2a4a, #2d4a7a);
             border-radius: 18px;
             display: flex;
             align-items: center;
@@ -425,16 +429,16 @@
         }
 
         line {
-            stroke: #ffffff;
-            stroke-width: 4;
-            opacity: 0.9;
-            filter: drop-shadow(0 2px 6px rgba(255, 255, 255, 0.4));
+            stroke: #2d4a7a;
+            stroke-width: 3;
+            opacity: 0.5;
+            filter: drop-shadow(0 1px 3px rgba(27,42,74,0.2));
             transition: all 0.3s ease;
         }
 
         .flow-arrow {
-            fill: #ffffff;
-            opacity: 0.9;
+            fill: #2d4a7a;
+            opacity: 0.7;
         }
 
         .filter-bar {
@@ -445,6 +449,7 @@
             align-items: flex-start;
             flex-wrap: wrap;
             position: relative;
+            background: #f0f4f8;
         }
 
         .custom-range-wrapper {
@@ -470,26 +475,27 @@
 
         .filter-btn {
             background: white;
-            color: #7c3aed;
-            border: 2px solid white;
+            color: #1b2a4a;
+            border: 2px solid #e2e8f0;
             padding: 16px 32px;
             border-radius: 10px;
             cursor: pointer;
             font-size: 18px;
             font-weight: 600;
             transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
 
         .filter-btn:hover {
-            background: #f3f4f6;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+            background: #f0f4f8;
+            border-color: #2d4a7a;
+            box-shadow: 0 4px 12px rgba(27,42,74,0.1);
         }
 
         .filter-btn.active {
-            background: #2d3748;
+            background: #1b2a4a;
             color: white;
-            border-color: #2d3748;
+            border-color: #1b2a4a;
         }
 
         .date-input {
@@ -523,8 +529,8 @@
         .loading-spinner {
             width: 80px;
             height: 80px;
-            border: 7px solid #f3f3f3;
-            border-top: 7px solid #8b5cf6;
+            border: 7px solid #e2e8f0;
+            border-top: 7px solid #1b2a4a;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -532,6 +538,58 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 1400px) {
+            .table-box { padding: 30px; }
+            .level-2, .level-3, .level-4, .level-5 { gap: 24px; }
+            .dashboard { padding: 24px; }
+        }
+
+        @media (max-width: 1024px) {
+            .navbar { padding: 40px 20px; }
+            .navbar h1 { font-size: 32px; }
+            .navbar-subtitle { font-size: 16px; }
+            .logout-btn { position: static; transform: none; margin-top: 15px; padding: 12px 24px; font-size: 14px; }
+            .dashboard { padding: 16px; }
+            .level { flex-direction: column; margin: 40px 0; gap: 24px; }
+            .level-2, .level-3, .level-4, .level-5 { flex-direction: column; gap: 24px; }
+            .table-box { min-width: unset; width: 100%; padding: 24px; overflow-x: auto; }
+            .table-box h3 { font-size: 20px; }
+            .data-table { font-size: 14px; }
+            .data-table th, .data-table td { padding: 10px 8px; font-size: 13px; }
+            .filter-bar { padding: 16px; gap: 10px; }
+            .filter-btn { padding: 10px 16px; font-size: 14px; }
+            .anim-icon { width: 70px; height: 70px; font-size: 36px; }
+        }
+
+        @media (max-width: 768px) {
+            .navbar { padding: 24px 16px; }
+            .navbar h1 { font-size: 22px; }
+            .navbar-subtitle { font-size: 13px; }
+            .logout-btn { padding: 10px 20px; font-size: 13px; }
+            .dashboard { padding: 10px; }
+            .level { margin: 24px 0; }
+            .table-box { padding: 16px; border-radius: 12px; }
+            .table-box h3 { font-size: 16px; margin-bottom: 12px; }
+            .data-table th, .data-table td { padding: 8px 6px; font-size: 12px; }
+            .filter-bar { padding: 12px; gap: 8px; flex-wrap: wrap; }
+            .filter-btn { padding: 8px 12px; font-size: 12px; }
+            .date-input { padding: 10px 12px; font-size: 14px; }
+            .anim-icon { width: 56px; height: 56px; font-size: 28px; border-radius: 12px; }
+            .icon { width: 44px; height: 44px; font-size: 22px; }
+            .data-table { display: block; overflow-x: auto; white-space: nowrap; }
+        }
+
+        @media (max-width: 480px) {
+            .navbar h1 { font-size: 18px; }
+            .navbar-subtitle { font-size: 11px; }
+            .filter-btn { padding: 6px 10px; font-size: 11px; border-radius: 6px; }
+            .table-box { padding: 12px; }
+            .table-box h3 { font-size: 14px; }
+            .data-table th, .data-table td { padding: 6px 4px; font-size: 11px; }
+            .anim-icon { width: 44px; height: 44px; font-size: 22px; }
         }
     </style>
 </head>
@@ -542,9 +600,23 @@
         <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
 
+    <div id="totalOverview" style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:20px;text-align:center;padding:28px 48px;background:#ffffff;box-shadow:0 2px 12px rgba(27,42,74,0.08);border-bottom:2px solid #e2e8f0;">
+        <div style="flex:1;min-width:180px;padding:18px;background:#f0f7ff;border-radius:12px;border:2px solid #1b2a4a;">
+            <div style="font-size:14px;color:#6b7280;margin-bottom:6px;">🥛 Milk Procured (In)</div>
+            <div id="overviewIn" style="font-size:26px;font-weight:700;color:#1b2a4a;">--</div>
+        </div>
+        <div style="flex:1;min-width:180px;padding:18px;background:#f0f7ff;border-radius:12px;border:2px solid #1b2a4a;">
+            <div style="font-size:14px;color:#6b7280;margin-bottom:6px;">🚚 Milk Dispatched (Out)</div>
+            <div id="overviewOut" style="font-size:26px;font-weight:700;color:#1b2a4a;">--</div>
+        </div>
+        <div style="flex:1;min-width:180px;padding:18px;background:#f0f7ff;border-radius:12px;border:2px solid #1b2a4a;">
+            <div style="font-size:14px;color:#6b7280;margin-bottom:6px;">🏭 Milk Produced</div>
+            <div id="overviewProduced" style="font-size:26px;font-weight:700;color:#1b2a4a;">--</div>
+        </div>
+    </div>
+
     <div class="filter-bar">
-        <button class="filter-btn active" onclick="filterData('today')">Today</button>
-        <button class="filter-btn" onclick="filterData('yesterday')">Yesterday</button>
+        <button class="filter-btn active" onclick="filterData('yesterday')">Yesterday</button>
         <button class="filter-btn" onclick="filterData('week')">This Week</button>
         <button class="filter-btn" onclick="filterData('month')">This Month</button>
         <div class="custom-range-wrapper">
@@ -571,23 +643,24 @@
         <div class="level level-1">
             <div class="table-box" id="dcs">
                 <div class="anim-icon"><span class="milk-anim">🥛</span></div>
-                <h3 onclick="toggleDCS()" style="cursor: pointer; position: relative;">AMCS_DCS - DAIRY CO-OPERATIVE SOCIETY <span id="dcsArrow" style="font-size: 16px; position: absolute; right: 0; display: none;">▼</span></h3>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Total Milk (L)</th>
-                            <th>Total Amount (₹)</th>
-                            <th>Avg Fat (%)</th>
-                            <th>Avg SNF (%)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dcsTableBody" class="collapsible-section collapsed">
-                        <tr>
-                            <td colspan="10" style="text-align: center;">Loading...</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <h3 onclick="toggleDCS()" style="cursor: pointer; position: relative;">AMCS_DCS - DAIRY CO-OPERATIVE SOCIETY <span id="dcsArrow" style="font-size: 16px; position: absolute; right: 0;">▶</span></h3>
+                <div id="dcsSummary" style="margin-bottom:16px;padding:16px;background:#edf2f7;border-radius:10px;text-align:center;">Loading...</div>
+                <div id="dcsDetails" style="display:none;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Total Milk (L)</th>
+                                <th>Total Amount (₹)</th>
+                                <th>Avg Fat (%)</th>
+                                <th>Avg SNF (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dcsTableBody">
+                            <tr><td colspan="5" style="text-align: center;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -595,45 +668,44 @@
         <div class="level level-2">
             <div class="table-box" id="bmc">
                 <div class="anim-icon"><span class="ice-anim">❄️</span></div>
-                <h3>BMC - BULK MILK COOLERS</h3>
-                <table class="data-table">
-                    <thead>
-                        <tr onclick="toggleSection('bmc-input')">
-                            <th colspan="9" class="section-label collapsed">INPUT</th>
-                        </tr>
-                        <tr>
-                            <th colspan="3">Date</th>
-                            <th colspan="3">Total Qty (L)</th>
-                            <th colspan="3">Avg Fat % / SNF %</th>
-                        </tr>
-                    </thead>
-                    <tbody id="bmc-input" class="collapsible-section collapsed">
-                        <tr>
-                            <td colspan="9" style="text-align: center;">Loading...</td>
-                        </tr>
-                    </tbody>
-                    <thead>
-                        <tr onclick="toggleSection('bmc-output')">
-                            <th colspan="9" class="section-label collapsed">OUTPUT</th>
-                        </tr>
-                        <tr>
-                            <th>Date</th>
-                            <th>MPCS Code</th>
-                            <th>MPCS Name</th>
-                            <th>Route</th>
-                            <th>Qty (Shipped)</th>
-                            <th>Fat %</th>
-                            <th>SNF %</th>
-                            <th>Temp °C</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="bmc-output" class="collapsible-section collapsed">
-                        <tr>
-                            <td colspan="10" style="text-align: center;">Loading...</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <h3>BMC - BULK MILK COOLERS <span id="bmcArrow" style="font-size:16px;position:absolute;right:20px;cursor:pointer;" onclick="togglePanel('bmcDetails','bmcArrow')">▶</span></h3>
+                <div id="bmcSummary" style="margin-bottom:16px;padding:16px;background:#edf2f7;border-radius:10px;text-align:center;">Loading...</div>
+                <div id="bmcDetails" style="display:none;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th colspan="9" class="section-label hide-arrow">INPUT</th>
+                            </tr>
+                            <tr>
+                                <th colspan="3">Date</th>
+                                <th colspan="3">Total Qty (L)</th>
+                                <th colspan="3">Avg Fat % / SNF %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bmc-input">
+                            <tr><td colspan="9" style="text-align: center;">Loading...</td></tr>
+                        </tbody>
+                        <thead>
+                            <tr>
+                                <th colspan="9" class="section-label hide-arrow">OUTPUT</th>
+                            </tr>
+                            <tr>
+                                <th>Date</th>
+                                <th>MPCS Code</th>
+                                <th>MPCS Name</th>
+                                <th>Route</th>
+                                <th>Qty (Shipped)</th>
+                                <th>Fat %</th>
+                                <th>SNF %</th>
+                                <th>Temp °C</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bmc-output">
+                            <tr><td colspan="9" style="text-align:center;">Coming Soon</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div class="table-box" id="cc">
                 <div class="anim-icon" style="overflow:visible;">
@@ -647,180 +719,80 @@
                         <span class="ice-spark">❅</span>
                     </div>
                 </div>
-                <h3>CC - CHILLING CENTERS</h3>
-                <table class="data-table">
-                    <thead>
-                        <tr onclick="toggleSection('cc-input')">
-                            <th colspan="9" class="section-label collapsed">INPUT</th>
-                        </tr>
-                        <tr>
-                            <th colspan="5">Chilling Centres</th>
-                            <th colspan="2">Total Qty (L)</th>
-                            <th colspan="2">Total Records</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cc-input" class="collapsible-section collapsed">
-                        <tr>
-                            <td colspan="9" style="text-align: center;">Loading...</td>
-                        </tr>
-                    </tbody>
-                    <thead>
-                        <tr onclick="toggleSection('cc-output')">
-                            <th colspan="9" class="section-label collapsed">OUTPUT</th>
-                        </tr>
-                        <tr>
-                            <th colspan="5">Chilling Centres</th>
-                            <th colspan="2">Total Qty (L)</th>
-                            <th colspan="2">Total Records</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cc-output" class="collapsible-section collapsed">
-                        <tr>
-                            <td colspan="9" style="text-align: center;">Loading...</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <h3>CC - CHILLING CENTERS <span id="ccArrow" style="font-size:16px;position:absolute;right:20px;cursor:pointer;" onclick="togglePanel('ccDetails','ccArrow')">▶</span></h3>
+                <div id="ccSummary" style="margin-bottom:16px;padding:16px;background:#edf2f7;border-radius:10px;text-align:center;">Loading...</div>
+                <div id="ccDetails" style="display:none;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th colspan="9" class="section-label hide-arrow">INPUT</th>
+                            </tr>
+                            <tr>
+                                <th colspan="5">Chilling Centres</th>
+                                <th colspan="2">Total Qty (L)</th>
+                                <th colspan="2">Total Records</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cc-input">
+                            <tr><td colspan="9" style="text-align: center;">Loading...</td></tr>
+                        </tbody>
+                        <thead>
+                            <tr>
+                                <th colspan="9" class="section-label hide-arrow">OUTPUT</th>
+                            </tr>
+                            <tr>
+                                <th colspan="5">Chilling Centres</th>
+                                <th colspan="2">Total Qty (L)</th>
+                                <th colspan="2">Total Records</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cc-output">
+                            <tr><td colspan="9" style="text-align:center;">Coming Soon</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <!-- Level 3: Dairies -->
-        <div class="level level-3">
-            <div class="table-box" id="dairy-bengaluru">
-                <div class="anim-icon"><span class="building-anim">🏢</span></div>
-                <h3 style="cursor:pointer;" onclick="openDairy('bengaluru', event)">BANGALORE MAIN DAIRY <span style="font-size:16px;">↗</span><span class="expand-arrow" id="dairy-bengaluru-arrow">▼</span></h3>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Total Qty (L)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dairy-bengaluru-body" class="collapsible-tbody">
-                        <tr><td colspan="2" style="text-align: center;">Loading...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="table-box" id="dairy-hoskote">
-                <div class="anim-icon"><span class="building-anim">🏢</span></div>
-                <h3 style="cursor:pointer;" onclick="openDairy('hoskote', event)">HOSAKOTE DAIRY <span style="font-size:16px;">↗</span><span class="expand-arrow" id="dairy-hoskote-arrow">▼</span></h3>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Total Qty (L)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dairy-hoskote-body" class="collapsible-tbody">
-                        <tr><td colspan="2" style="text-align: center;">Loading...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="table-box" id="dairy-kanakapura">
-                <div class="anim-icon"><span class="building-anim">🏢</span></div>
-                <h3 style="cursor:pointer;" onclick="openDairy('kanakapura', event)">KANAKAPURA DAIRY <span style="font-size:16px;">↗</span><span class="expand-arrow" id="dairy-kanakapura-arrow">▼</span></h3>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Total Qty (L)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dairy-kanakapura-body" class="collapsible-tbody">
-                        <tr><td colspan="2" style="text-align: center;">Loading...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
 
         <!-- Level 4: SCADA -->
         <div class="level level-4">
             <div class="table-box" id="scada-bengaluru">
                 <div class="anim-icon"><span class="scada-g1">⚙️</span><span class="scada-g2">⚙️</span></div>
-                <h3>SCADA - Bengaluru</h3>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>System</th>
-                            <th>Uptime</th>
-                            
-                        </tr>
-                    </thead>
-                    <tbody id="scada-bengaluru-body">
-                        <tr>
-                            <td>Monitor-1</td>
-                            <td>99.8%</td>
-                            <td>Running</td>
-                        </tr>
-                        <tr>
-                            <td>Control-1</td>
-                            <td>99.5%</td>
-                            <td>Running</td>
-                        </tr>
-                        <tr>
-                            <td>Backup</td>
-                            <td>100%</td>
-                            <td>Standby</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <h3 style="cursor:pointer;" onclick="openDairy('bengaluru')">SCADA - Bengaluru <span style="font-size:16px;">↗</span></h3>
+                <div id="scadaSummary" style="margin-bottom:16px;padding:16px;background:#edf2f7;border-radius:10px;text-align:center;">Loading...</div>
+                <div id="scadaDetails" style="display:none;">
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>Date</th><th>Total Qty (Kg)</th></tr>
+                        </thead>
+                        <tbody id="scada-bengaluru-input">
+                            <tr><td colspan="2" style="text-align:center;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div class="table-box" id="scada-hoskote">
                 <div class="anim-icon"><span class="scada-g1">⚙️</span><span class="scada-g2">⚙️</span></div>
-                <h3>SCADA - Hoskote</h3>
+                <h3 style="cursor:pointer;" onclick="openDairy('hoskote')">SCADA - Hoskote <span style="font-size:16px;">↗</span></h3>
                 <table class="data-table">
                     <thead>
-                        <tr>
-                            <th>System</th>
-                            <th>Uptime</th>
-                            
-                        </tr>
+                        <tr><th>Date</th><th>Total Qty (Kg)</th></tr>
                     </thead>
-                    <tbody id="scada-hoskote-body">
-                        <tr>
-                            <td>Monitor-1</td>
-                            <td>99.7%</td>
-                            <td>Running</td>
-                        </tr>
-                        <tr>
-                            <td>Control-1</td>
-                            <td>99.6%</td>
-                            <td>Running</td>
-                        </tr>
-                        <tr>
-                            <td>Backup</td>
-                            <td>100%</td>
-                            <td>Standby</td>
-                        </tr>
+                    <tbody>
+                        <tr><td colspan="2" style="text-align:center;">Coming Soon</td></tr>
                     </tbody>
                 </table>
             </div>
             <div class="table-box" id="scada-kanakapura">
                 <div class="anim-icon"><span class="scada-g1">⚙️</span><span class="scada-g2">⚙️</span></div>
-                <h3>SCADA - Kanakapura</h3>
+                <h3 style="cursor:pointer;" onclick="openDairy('kanakapura')">SCADA - Kanakapura <span style="font-size:16px;">↗</span></h3>
                 <table class="data-table">
                     <thead>
-                        <tr>
-                            <th>System</th>
-                            <th>Uptime</th>
-                            
-                        </tr>
+                        <tr><th>Date</th><th>Total Qty (Kg)</th></tr>
                     </thead>
-                    <tbody id="scada-kanakapura-body">
-                        <tr>
-                            <td>Monitor-1</td>
-                            <td>99.9%</td>
-                            <td>Running</td>
-                        </tr>
-                        <tr>
-                            <td>Control-1</td>
-                            <td>99.4%</td>
-                            <td>Running</td>
-                        </tr>
-                        <tr>
-                            <td>Backup</td>
-                            <td>100%</td>
-                            <td>Standby</td>
-                        </tr>
+                    <tbody>
+                        <tr><td colspan="2" style="text-align:center;">Coming Soon</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -835,35 +807,44 @@
                     <span class="data-dot"></span>
                     <span class="data-dot"></span>
                 </div>
-                <h3>AI Sales</h3>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Variants</th>
-                            <th style="white-space: nowrap;">Total Produced (L)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="aiSalesBody">
-                        <tr>
-                            <td colspan="2" style="text-align: center;">Loading...</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <h3>AI Sales <span id="aiArrow" style="font-size:16px;position:absolute;right:20px;cursor:pointer;" onclick="togglePanel('aiDetails','aiArrow')">▶</span></h3>
+                <div id="aiSummary" style="margin-bottom:16px;padding:16px;background:#edf2f7;border-radius:10px;text-align:center;">Loading...</div>
+                <div id="aiDetails" style="display:none;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Variants</th>
+                                <th style="white-space: nowrap;">Total Produced (L)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="aiSalesBody">
+                            <tr><td colspan="2" style="text-align: center;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Update total overview
+        let overviewData = { procured: 0, dispatched: 0, produced: 0 };
+        function updateOverview() {
+            document.getElementById('overviewIn').textContent = formatIndianNumber(overviewData.procured) + ' L';
+            document.getElementById('overviewOut').textContent = formatIndianNumber(overviewData.dispatched) + ' Kg';
+            document.getElementById('overviewProduced').textContent = formatIndianNumber(overviewData.produced) + ' L';
+        }
+
         // Check if user is logged in
 //         if (!sessionStorage.getItem('loggedIn')) {
-//             window.location.href = 'login.html';
+//             window.location.href = 'login';
 //         }
 
         // Logout function
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
                 sessionStorage.removeItem('loggedIn');
-                window.location.href = 'login.html';
+                window.location.href = 'login';
             }
         }
 
@@ -891,7 +872,7 @@
             return `${day}/${month}/${year}`;
         }
 
-        let currentFilter = 'today';
+        let currentFilter = 'yesterday';
         let loadingCount = 0;
 
         function showLoading() {
@@ -916,15 +897,13 @@
             event.target.classList.add('active');
             document.getElementById('customRangeInputs').style.display = 'none';
             
+            showLoading(); showLoading(); showLoading();
             showLoading();
-            showLoading();
-            showLoading();
-            
             fetchDCSData();
             fetchBMCData();
             fetchCCData();
-            fetchDairyData();
             fetchAISalesData();
+            fetchSCADAData();
         }
 
         function showCustomRange() {
@@ -945,14 +924,13 @@
                 document.getElementById('customRangeInputs').style.display = 'none';
                 currentFilter = `custom&start=${startDate}&end=${endDate}`;
                 
-                showLoading();
-                showLoading();
+                showLoading(); showLoading(); showLoading();
                 showLoading();
                 
                 fetchDCSData();
                 fetchBMCData();
                 fetchCCData();
-                fetchDairyData();
+                fetchSCADAData();
                 fetchAISalesData();
             }
         }
@@ -960,76 +938,75 @@
         // Fetch DCS data from API
         async function fetchDCSData() {
             try {
-                let url = 'http://localhost:3001/api/dcs?filter=' + currentFilter;
-                
+                let url = '/papi/dcs?filter=' + currentFilter;
                 const response = await fetch(url);
                 const result = await response.json();
+                const summary = document.getElementById('dcsSummary');
                 const tbody = document.getElementById('dcsTableBody');
-                const arrow = document.getElementById('dcsArrow');
                 
                 if (result.success && result.data.length > 0) {
-                    const isSummary = currentFilter !== 'today' && currentFilter !== 'yesterday';
+                    const data = result.data;
+                    const totalMilk = data.reduce((s, r) => s + parseFloat(r.total_milk || 0), 0);
+                    const totalAmount = data.reduce((s, r) => s + parseFloat(r.total_amount || 0), 0);
+                    const avgFat = data.reduce((s, r) => s + parseFloat(r.avg_fat || 0), 0) / data.length;
+                    const avgSnf = data.reduce((s, r) => s + parseFloat(r.avg_snf || 0), 0) / data.length;
 
-                    if (isSummary) {
-                        const row = result.data[0];
-                        const rangeLabel = row.date_end && row.date_end !== row.date
-                            ? `${formatDate(row.date)} – ${formatDate(row.date_end)}`
-                            : formatDate(row.date);
-                        const totalMilk = parseFloat(row.total_milk || 0);
-                        const totalAmount = parseFloat(row.total_amount || 0);
-                        const avgFat = parseFloat(row.avg_fat || 0);
-                        const avgSnf = parseFloat(row.avg_snf || 0);
-                        tbody.innerHTML = `<tr>
-                            <td>${rangeLabel}</td>
-                            <td>${formatIndianNumber(totalMilk)}</td>
-                            <td>${formatIndianNumber(totalAmount)}</td>
-                            <td>${avgFat.toFixed(2)}</td>
-                            <td>${avgSnf.toFixed(2)}</td>
-                        </tr>`;
-                        tbody.classList.remove('collapsed');
-                        arrow.style.display = 'none';
-                    } else {
-                        tbody.innerHTML = result.data.map(record => `
-                            <tr>
-                                <td>${formatDate(record.date)}</td>
-                                <td>${formatIndianNumber(record.total_milk)}</td>
-                                <td>${formatIndianNumber(record.total_amount)}</td>
-                                <td>${parseFloat(record.avg_fat).toFixed(2)}</td>
-                                <td>${parseFloat(record.avg_snf).toFixed(2)}</td>
-                            </tr>
-                        `).join('');
-                        tbody.classList.remove('collapsed');
-                        arrow.style.display = 'none';
-                    }
+                    overviewData.procured = totalMilk;
+                    updateOverview();
+
+                    summary.innerHTML = `
+                        <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:12px;">
+                            <div><div style="font-size:12px;color:#6b7280;">Total Milk</div><div style="font-size:20px;font-weight:700;color:#1b2a4a;">${formatIndianNumber(totalMilk)} L</div></div>
+                            <div><div style="font-size:12px;color:#6b7280;">Total Amount</div><div style="font-size:20px;font-weight:700;color:#1b2a4a;">₹${formatIndianNumber(totalAmount)}</div></div>
+                            <div><div style="font-size:12px;color:#6b7280;">Avg Fat</div><div style="font-size:20px;font-weight:700;color:#1b2a4a;">${avgFat.toFixed(2)}%</div></div>
+                            <div><div style="font-size:12px;color:#6b7280;">Avg SNF</div><div style="font-size:20px;font-weight:700;color:#1b2a4a;">${avgSnf.toFixed(2)}%</div></div>
+                        </div>`;
+
+                    tbody.innerHTML = data.map(record => `
+                        <tr>
+                            <td>${formatDate(record.date || record.date_end)}</td>
+                            <td>${formatIndianNumber(record.total_milk)}</td>
+                            <td>${formatIndianNumber(record.total_amount)}</td>
+                            <td>${parseFloat(record.avg_fat).toFixed(2)}</td>
+                            <td>${parseFloat(record.avg_snf).toFixed(2)}</td>
+                        </tr>
+                    `).join('');
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">No data available</td></tr>';
-                    arrow.style.display = 'none';
+                    summary.innerHTML = '<span style="color:#6b7280;">No data available</span>';
+                    tbody.innerHTML = '';
                 }
                 setTimeout(() => drawConnections(), 100);
             } catch (error) {
-                document.getElementById('dcsTableBody').innerHTML = '<tr><td colspan="10" style="text-align: center;">Error loading data</td></tr>';
+                document.getElementById('dcsSummary').innerHTML = '<span style="color:red;">Error loading data</span>';
             } finally {
                 hideLoading();
             }
         }
 
+        showLoading(); showLoading(); showLoading();
+        showLoading();
         fetchDCSData();
         fetchBMCData();
         fetchCCData();
-        fetchDairyData();
         fetchSCADAData();
-        fetchAnalyticsData();
         fetchAISalesData();
 
         // Fetch BMC data
         async function fetchBMCData() {
             try {
-                let url = 'http://localhost:3001/api/bmc/input?filter=' + currentFilter;
+                let url = '/papi/bmc/input?filter=' + currentFilter;
                 const response = await fetch(url);
                 const result = await response.json();
+                const summary = document.getElementById('bmcSummary');
                 const tbody = document.getElementById('bmc-input');
                 if (result.success && result.data.length > 0) {
                     const r = result.data[0];
+                    summary.innerHTML = `
+                        <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:12px;">
+                            <div><div style="font-size:12px;color:#6b7280;">Total Qty</div><div style="font-size:20px;font-weight:700;color:#1b2a4a;">${formatIndianNumber(r.TOTAL_QUANTITY || 0)} L</div></div>
+                            <div><div style="font-size:12px;color:#6b7280;">Avg Fat / SNF</div><div style="font-size:20px;font-weight:700;color:#1b2a4a;">${r.AVG_FAT || 'N/A'} / ${r.AVG_SNF || 'N/A'}</div></div>
+                            <div><div style="font-size:12px;color:#6b7280;">Total BMCs</div><div style="font-size:20px;font-weight:700;color:#1b2a4a;">${r.TOTAL_BMCS || 'N/A'}</div></div>
+                        </div>`;
                     const dateLabel = r.DATE_END && formatDate(r.DATE_END) !== formatDate(r.DATE_START)
                         ? `${formatDate(r.DATE_START)} – ${formatDate(r.DATE_END)}`
                         : formatDate(r.DATE_START);
@@ -1039,33 +1016,11 @@
                         <td colspan="3">${r.AVG_FAT || 'N/A'} / ${r.AVG_SNF || 'N/A'}</td>
                     </tr>`;
                 } else {
+                    summary.innerHTML = '<span style="color:#6b7280;">No data available</span>';
                     tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">No data available</td></tr>';
                 }
-
-                const outputResponse = await fetch(`http://localhost:3001/api/bmc/output?filter=${currentFilter}`);
-                const outputResult = await outputResponse.json();
-                const outputTbody = document.getElementById('bmc-output');
-                if (outputResult.success && outputResult.data.length > 0) {
-                    outputTbody.innerHTML = outputResult.data.map((record, index) => `
-                        <tr${index >= 3 ? ' class="expandable-row"' : ''}>
-                            <td>${formatDate(record.SHIPPED_DATE)}</td>
-                            <td>${record.RECEIPT_SOURCE_CODE || 'N/A'}</td>
-                            <td>${record.VENDOR_NAME || 'N/A'}</td>
-                            <td>${record.ROUTE_NO || 'N/A'}</td>
-                            <td>${record.QUANTITY_RECEIVED || 0}</td>
-                            <td>${record.AVG_FAT || 'N/A'}</td>
-                            <td>${record.AVG_SNF || 'N/A'}</td>
-                            <td>${record.TEMPERATURE || 'N/A'}</td>
-                            <td>${record.RECEIPT_STATUS || 'N/A'}</td>
-                        </tr>
-                    `).join('');
-                    checkArrowVisibility('bmc-output');
-                } else {
-                    outputTbody.innerHTML = '<tr><td colspan="10" style="text-align: center;">No data available</td></tr>';
-                }
             } catch (error) {
-                console.error('Error fetching BMC data:', error);
-                document.getElementById('bmc-input').innerHTML = '<tr><td colspan="9" style="text-align: center;">Error loading data</td></tr>';
+                document.getElementById('bmcSummary').innerHTML = '<span style="color:red;">Error loading data</span>';
             } finally {
                 hideLoading();
             }
@@ -1074,56 +1029,31 @@
         // Fetch CC data
         async function fetchCCData() {
             try {
-                let url = 'http://localhost:3001/api/cc?filter=' + currentFilter;
+                let url = '/papi/cc?filter=' + currentFilter;
                 const response = await fetch(url);
                 const result = await response.json();
+                const summary = document.getElementById('ccSummary');
                 const tbody = document.getElementById('cc-input');
-
-                let ccLocationNames = 'N/A';
 
                 if (result.success && result.data.length > 0) {
                     const record = result.data[0];
-                    ccLocationNames = (record.LOCATION_NAMES || 'N/A').split(', ').map(n => n.replace(/CHILLING CENT(RE|ER)/gi, '').trim()).join(', ');
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="5" style="vertical-align: middle; white-space: normal; word-break: break-word;">${ccLocationNames}</td>
-                            <td colspan="2" style="vertical-align: middle;">${formatIndianNumber(record.TOTAL_QUANTITY || 0)}</td>
-                            <td colspan="2" style="vertical-align: middle;">${formatIndianNumber(record.TOTAL_RECORDS || 0)}</td>
-                        </tr>
-                    `;
-                    checkArrowVisibility('cc-input');
+                    const ccLocationNames = (record.LOCATION_NAMES || 'N/A').split(', ').map(n => n.replace(/CHILLING CENT(RE|ER)/gi, '').trim()).join(', ');
+                    summary.innerHTML = `
+                        <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:12px;">
+                            <div><div style="font-size:12px;color:#6b7280;">Total Qty</div><div style="font-size:20px;font-weight:700;color:#1b2a4a;">${formatIndianNumber(record.TOTAL_QUANTITY || 0)} L</div></div>
+                            <div><div style="font-size:12px;color:#6b7280;">Total Records</div><div style="font-size:20px;font-weight:700;color:#1b2a4a;">${formatIndianNumber(record.TOTAL_RECORDS || 0)}</div></div>
+                        </div>`;
+                    tbody.innerHTML = `<tr>
+                        <td colspan="5" style="white-space:normal;word-break:break-word;">${ccLocationNames}</td>
+                        <td colspan="2">${formatIndianNumber(record.TOTAL_QUANTITY || 0)}</td>
+                        <td colspan="2">${formatIndianNumber(record.TOTAL_RECORDS || 0)}</td>
+                    </tr>`;
                 } else {
+                    summary.innerHTML = '<span style="color:#6b7280;">No data available</span>';
                     tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">No data available</td></tr>';
                 }
-
-                // CC Output: sum of all 3 dairies, same location names as input
-                const outputTbody = document.getElementById('cc-output');
-                try {
-                    const dairyResponse = await fetch(`http://localhost:3001/api/dairy?filter=${currentFilter}`);
-                    const dairyResult = await dairyResponse.json();
-                    if (dairyResult.success) {
-                        const allRows = [
-                            ...(dairyResult.data.bengaluru || []),
-                            ...(dairyResult.data.hoskote || []),
-                            ...(dairyResult.data.kanakapura || [])
-                        ];
-                        const totalQty = allRows.reduce((s, r) => s + parseFloat(r.TOTAL_QUANTITY || 0), 0);
-                        outputTbody.innerHTML = `
-                            <tr>
-                                <td colspan="5" style="vertical-align: middle; white-space: normal; word-break: break-word;">${ccLocationNames}</td>
-                                <td colspan="2" style="vertical-align: middle;">${formatIndianNumber(totalQty)}</td>
-                                <td colspan="2" style="vertical-align: middle;">-</td>
-                            </tr>
-                        `;
-                    } else {
-                        outputTbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">No data available</td></tr>';
-                    }
-                } catch (e) {
-                    outputTbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">Error loading data</td></tr>';
-                }
             } catch (error) {
-                console.error('Error fetching CC data:', error);
-                document.getElementById('cc-input').innerHTML = '<tr><td colspan="9" style="text-align: center;">Error loading data</td></tr>';
+                document.getElementById('ccSummary').innerHTML = '<span style="color:red;">Error loading data</span>';
             } finally {
                 hideLoading();
             }
@@ -1132,7 +1062,7 @@
         // Fetch Dairy data
         async function fetchDairyData() {
             try {
-                const response = await fetch(`http://localhost:3001/api/dairy?filter=${currentFilter}`);
+                const response = await fetch(`/papi/dairy?filter=${currentFilter}`);
                 const result = await response.json();
                 if (result.success) {
                     const isSummary = currentFilter !== 'today' && currentFilter !== 'yesterday';
@@ -1152,37 +1082,34 @@
                 }
             } catch (error) {
                 console.error('Error fetching Dairy data:', error);
+            } finally {
+                hideLoading();
             }
         }
 
-        // Render dairy table with collapsible rows
+        // Render dairy table with summary + details
         function renderDairyTable(tbodyId, arrowId, data, isSummary) {
             const tbody = document.getElementById(tbodyId);
             const arrow = document.getElementById(arrowId);
 
             if (data.length > 0) {
-                if (isSummary) {
-                    const row = data[0];
-                    const rangeLabel = row.dateEnd && row.dateEnd !== row.date
-                        ? `${row.date} – ${row.dateEnd}`
-                        : row.date;
-                    tbody.innerHTML = `<tr><td>${rangeLabel}</td><td>${row.formatted}</td></tr>`;
-                    tbody.classList.remove('collapsed');
-                    arrow.classList.remove('visible', 'collapsed');
-                } else {
-                    tbody.innerHTML = data.map((record, index) => `
-                        <tr${index >= 3 ? ' class="expandable-row"' : ''}>
-                            <td>${record.date}</td>
-                            <td>${record.formatted}</td>
-                        </tr>
-                    `).join('');
-                    if (data.length > 3) {
-                        tbody.classList.add('collapsed');
-                        arrow.classList.add('visible', 'collapsed');
-                    } else {
-                        tbody.classList.remove('collapsed');
-                        arrow.classList.remove('visible', 'collapsed');
-                    }
+                const totalQty = data.reduce((s, r) => s + parseFloat(r.formatted.replace(/,/g, '') || 0), 0);
+                let html = `<tr style="background:#edf2f7;font-weight:600;">
+                    <td><strong>Total</strong></td>
+                    <td><strong>${formatIndianNumber(totalQty)}</strong></td>
+                </tr>`;
+                html += data.map(record => `
+                    <tr class="expandable-row" style="display:none;">
+                        <td>${record.dateEnd && record.dateEnd !== record.date ? record.date + ' – ' + record.dateEnd : record.date}</td>
+                        <td>${record.formatted}</td>
+                    </tr>
+                `).join('');
+                tbody.innerHTML = html;
+                tbody.classList.remove('collapsed');
+                if (data.length > 0) {
+                    arrow.classList.add('visible');
+                    arrow.classList.add('collapsed');
+                    arrow.textContent = '▶';
                 }
             } else {
                 tbody.innerHTML = '<tr><td colspan="2" style="text-align: center;">No data available</td></tr>';
@@ -1190,9 +1117,20 @@
             }
         }
 
-        function openDairy(dairy, e) {
-            e.stopPropagation();
-            window.open('dairy-detail.html?dairy=' + dairy + '&filter=' + currentFilter, '_blank');
+        function openDairy(dairy) {
+            window.location.href = 'dairy-detail?dairy=' + dairy + '&filter=' + currentFilter;
+        }
+
+        // Toggle expandable rows in any table
+        function toggleExpandRows(tbodyId, arrowId) {
+            const tbody = document.getElementById(tbodyId);
+            const arrow = document.getElementById(arrowId);
+            const rows = tbody.querySelectorAll('.expandable-row');
+            if (!rows.length) return;
+            const expanded = rows[0].style.display !== 'none';
+            rows.forEach(r => r.style.display = expanded ? 'none' : '');
+            if (arrow) arrow.textContent = expanded ? '▶' : '▼';
+            requestAnimationFrame(() => requestAnimationFrame(drawConnections));
         }
 
         // Toggle dairy section
@@ -1218,28 +1156,40 @@
 
         // Fetch SCADA data
         async function fetchSCADAData() {
+            const tbody = document.getElementById('scada-bengaluru-input');
+            const summary = document.getElementById('scadaSummary');
             try {
-                const response = await fetch('http://localhost:3001/api/scada');
-                const result = await response.json();
-                const tbody = document.querySelector('#scada tbody');
-                if (result.success) {
-                    tbody.innerHTML = result.data.map(record => `
-                        <tr>
-                            <td>${record.system}</td>
-                            <td>${record.uptime}</td>
-                            <td>${record.status}</td>
-                        </tr>
-                    `).join('');
+                const filter = currentFilter || 'yesterday';
+                const res = await fetch(`/papi/bangalore/scada-input?filter=${filter}`);
+                const result = await res.json();
+                if (result.success && result.data.length) {
+                    const totalQty = result.data.reduce((s, r) => s + parseFloat(r.TotalQty || 0), 0);
+                    overviewData.dispatched = totalQty;
+                    updateOverview();
+
+                    summary.innerHTML = `
+                        <div><div style="font-size:12px;color:#6b7280;">Total Input</div><div style="font-size:20px;font-weight:700;color:#1b2a4a;">${parseFloat(totalQty).toLocaleString('en-IN')} Kg</div></div>`;
+                    tbody.innerHTML = result.data.map(r => {
+                        const d = new Date(r.Date);
+                        const dateStr = String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+                        const qty = parseFloat(r.TotalQty).toLocaleString('en-IN');
+                        return `<tr><td>${dateStr}</td><td>${qty}</td></tr>`;
+                    }).join('');
+                } else {
+                    summary.innerHTML = '<span style="color:#6b7280;">No data</span>';
+                    tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;">No data</td></tr>';
                 }
-            } catch (error) {
-                console.error('Error fetching SCADA data:', error);
+            } catch (e) {
+                summary.innerHTML = '<span style="color:red;">Error loading</span>';
+            } finally {
+                hideLoading();
             }
         }
 
         // Fetch Analytics data
         async function fetchAnalyticsData() {
             try {
-                const response = await fetch('http://localhost:3001/api/analytics');
+                const response = await fetch('/papi/analytics');
                 const result = await response.json();
                 const tbody = document.querySelector('#analytics tbody');
                 if (result.success) {
@@ -1260,53 +1210,61 @@
         async function fetchAISalesData() {
             try {
                 const filter = currentFilter;
-                let url = `http://localhost:3001/api/sales?filter=${filter}`;
-                
-                if (filter === 'custom' && customDateRange.start && customDateRange.end) {
-                    url += `&start=${customDateRange.start}&end=${customDateRange.end}`;
-                }
-                
+                let url = `/papi/sales?filter=${filter}`;
                 const response = await fetch(url);
                 const result = await response.json();
+                const summary = document.getElementById('aiSummary');
                 const tbody = document.getElementById('aiSalesBody');
                 
                 if (result.success && result.data.length > 0) {
-                    // Group variants by type prefix
+                    const totalProduced = result.data.reduce((s, r) => s + parseFloat(r.total_produced || 0), 0);
+                    overviewData.produced = totalProduced;
+                    updateOverview();
+
+                    summary.innerHTML = `
+                        <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:12px;">
+                            <div><div style="font-size:12px;color:#6b7280;">Total Produced</div><div style="font-size:20px;font-weight:700;color:#1b2a4a;">${formatIndianNumber(totalProduced)} L</div></div>
+                            <div><div style="font-size:12px;color:#6b7280;">Variants</div><div style="font-size:20px;font-weight:700;color:#1b2a4a;">${result.data.length}</div></div>
+                        </div>`;
+
                     const groups = {};
                     result.data.forEach(r => {
                         const prefix = r.variant_name.match(/^[A-Z]+/)?.[0] || r.variant_name;
                         if (!groups[prefix]) groups[prefix] = [];
                         groups[prefix].push(r);
                     });
-
                     tbody.innerHTML = Object.entries(groups).map(([prefix, records]) => {
                         const names = records.map(r => r.variant_name).join(', ');
                         const total = records.reduce((s, r) => s + parseFloat(r.total_produced || 0), 0);
                         return `<tr>
-                            <td style="white-space: normal; word-break: break-word;">${names}</td>
-                            <td style="white-space: nowrap;">${formatIndianNumber(total)}</td>
+                            <td style="white-space:normal;word-break:break-word;">${names}</td>
+                            <td style="white-space:nowrap;">${formatIndianNumber(total)}</td>
                         </tr>`;
                     }).join('');
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="2" style="text-align: center;">No sales data available</td></tr>';
+                    summary.innerHTML = '<span style="color:#6b7280;">No sales data available</span>';
+                    tbody.innerHTML = '';
                 }
             } catch (error) {
-                console.error('Error fetching AI Sales data:', error);
-                document.getElementById('aiSalesBody').innerHTML = '<tr><td colspan="5" style="text-align: center;">Error loading data</td></tr>';
+                document.getElementById('aiSummary').innerHTML = '<span style="color:red;">Error loading data</span>';
+            } finally {
+                hideLoading();
             }
+        }
+
+        // Toggle panel visibility
+        function togglePanel(panelId, arrowId) {
+            const panel = document.getElementById(panelId);
+            const arrow = document.getElementById(arrowId);
+            const visible = panel.style.display !== 'none';
+            panel.style.display = visible ? 'none' : 'block';
+            arrow.textContent = visible ? '▶' : '▼';
+            requestAnimationFrame(() => requestAnimationFrame(drawConnections));
         }
 
         // Toggle DCS section
         function toggleDCS() {
-            const tbody = document.getElementById('dcsTableBody');
-            const arrow = document.getElementById('dcsArrow');
-            tbody.classList.toggle('collapsed');
-            arrow.textContent = tbody.classList.contains('collapsed') ? '▶' : '▼';
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    drawConnections();
-                });
-            });
+            togglePanel('dcsDetails', 'dcsArrow');
         }
 
         // Check if arrow should be visible
@@ -1349,9 +1307,6 @@
             const dcs = document.getElementById('dcs').getBoundingClientRect();
             const bmc = document.getElementById('bmc').getBoundingClientRect();
             const cc = document.getElementById('cc').getBoundingClientRect();
-            const bengaluru = document.getElementById('dairy-bengaluru').getBoundingClientRect();
-            const hoskote = document.getElementById('dairy-hoskote').getBoundingClientRect();
-            const kanakapura = document.getElementById('dairy-kanakapura').getBoundingClientRect();
             const scadaBengaluru = document.getElementById('scada-bengaluru').getBoundingClientRect();
             const scadaHoskote = document.getElementById('scada-hoskote').getBoundingClientRect();
             const scadaKanakapura = document.getElementById('scada-kanakapura').getBoundingClientRect();
@@ -1381,59 +1336,40 @@
             createLine(bmcCenterX, midY1, bmcCenterX, bmcTopY);
             createLine(ccCenterX, midY1, ccCenterX, ccTopY);
 
-            // BMC and CC to Dairies
+            // BMC and CC to SCADA boxes
             const bmcBottomY = bmc.bottom;
             const ccBottomY = cc.bottom;
-            const bengaluruCenterX = bengaluru.left + bengaluru.width / 2;
-            const bengaluruTopY = bengaluru.top;
-            const hoskoteCenterX = hoskote.left + hoskote.width / 2;
-            const hoskoteTopY = hoskote.top;
-            const kanakapuraCenterX = kanakapura.left + kanakapura.width / 2;
-            const kanakapuraTopY = kanakapura.top;
-            const midY2 = (bmcBottomY + bengaluruTopY) / 2;
+            const scadaBCX = scadaBengaluru.left + scadaBengaluru.width / 2;
+            const scadaHCX = scadaHoskote.left + scadaHoskote.width / 2;
+            const scadaKCX = scadaKanakapura.left + scadaKanakapura.width / 2;
+            const scadaTopY = Math.min(scadaBengaluru.top, scadaHoskote.top, scadaKanakapura.top);
+            const bottomY2 = Math.max(bmcBottomY, ccBottomY);
+            const midY2 = (bottomY2 + scadaTopY) / 2;
 
+            // BMC and CC drop to midY2 horizontal line
+            const midX = (bmcCenterX + ccCenterX) / 2;
             createLine(bmcCenterX, bmcBottomY, bmcCenterX, midY2);
             createLine(ccCenterX, ccBottomY, ccCenterX, midY2);
-            createLine(bmcCenterX, midY2, bengaluruCenterX, midY2);
-            createLine(bmcCenterX, midY2, hoskoteCenterX, midY2);
-            createLine(bmcCenterX, midY2, kanakapuraCenterX, midY2);
-            createLine(ccCenterX, midY2, bengaluruCenterX, midY2);
-            createLine(ccCenterX, midY2, hoskoteCenterX, midY2);
-            createLine(ccCenterX, midY2, kanakapuraCenterX, midY2);
-            createLine(bengaluruCenterX, midY2, bengaluruCenterX, bengaluruTopY);
-            createLine(hoskoteCenterX, midY2, hoskoteCenterX, hoskoteTopY);
-            createLine(kanakapuraCenterX, midY2, kanakapuraCenterX, kanakapuraTopY);
-
-            // Dairies to SCADA
-            const bengaluruBottomY = bengaluru.bottom;
-            const hoskoteBottomY = hoskote.bottom;
-            const kanakapuraBottomY = kanakapura.bottom;
-            const scadaBengaluruCenterX = scadaBengaluru.left + scadaBengaluru.width / 2;
-            const scadaBengaluruTopY = scadaBengaluru.top;
-            const scadaHoskoteCenterX = scadaHoskote.left + scadaHoskote.width / 2;
-            const scadaHoskoteTopY = scadaHoskote.top;
-            const scadaKanakapuraCenterX = scadaKanakapura.left + scadaKanakapura.width / 2;
-            const scadaKanakapuraTopY = scadaKanakapura.top;
-
-            createLine(bengaluruCenterX, bengaluruBottomY, scadaBengaluruCenterX, scadaBengaluruTopY);
-            createLine(hoskoteCenterX, hoskoteBottomY, scadaHoskoteCenterX, scadaHoskoteTopY);
-            createLine(kanakapuraCenterX, kanakapuraBottomY, scadaKanakapuraCenterX, scadaKanakapuraTopY);
+            // Horizontal line spanning all 3 SCADA boxes
+            createLine(scadaBCX, midY2, scadaKCX, midY2);
+            // Vertical drops to each SCADA
+            createLine(scadaBCX, midY2, scadaBCX, scadaTopY);
+            createLine(scadaHCX, midY2, scadaHCX, scadaTopY);
+            createLine(scadaKCX, midY2, scadaKCX, scadaTopY);
 
             // SCADA to AI Sales
-            const scadaBengaluruBottomY = scadaBengaluru.bottom;
-            const scadaHoskoteBottomY = scadaHoskote.bottom;
-            const scadaKanakapuraBottomY = scadaKanakapura.bottom;
+            const scadaBottomY = Math.max(scadaBengaluru.bottom, scadaHoskote.bottom, scadaKanakapura.bottom);
             const aiCenterX = ai.left + ai.width / 2;
             const aiTopY = ai.top;
-            const midY4 = (scadaBengaluruBottomY + aiTopY) / 2;
+            const midY3 = (scadaBottomY + aiTopY) / 2;
 
-            createLine(scadaBengaluruCenterX, scadaBengaluruBottomY, scadaBengaluruCenterX, midY4);
-            createLine(scadaHoskoteCenterX, scadaHoskoteBottomY, scadaHoskoteCenterX, midY4);
-            createLine(scadaKanakapuraCenterX, scadaKanakapuraBottomY, scadaKanakapuraCenterX, midY4);
-            createLine(scadaBengaluruCenterX, midY4, aiCenterX, midY4);
-            createLine(scadaHoskoteCenterX, midY4, aiCenterX, midY4);
-            createLine(scadaKanakapuraCenterX, midY4, aiCenterX, midY4);
-            createLine(aiCenterX, midY4, aiCenterX, aiTopY);
+            createLine(scadaBCX, scadaBengaluru.bottom, scadaBCX, midY3);
+            createLine(scadaHCX, scadaHoskote.bottom, scadaHCX, midY3);
+            createLine(scadaKCX, scadaKanakapura.bottom, scadaKCX, midY3);
+            createLine(scadaBCX, midY3, aiCenterX, midY3);
+            createLine(scadaHCX, midY3, aiCenterX, midY3);
+            createLine(scadaKCX, midY3, aiCenterX, midY3);
+            createLine(aiCenterX, midY3, aiCenterX, aiTopY);
         }
 
         window.addEventListener('load', () => {
