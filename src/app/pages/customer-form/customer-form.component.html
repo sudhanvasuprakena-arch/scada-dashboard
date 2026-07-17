@@ -1,0 +1,808 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h4><i class="fa fa-user-plus"></i> Customer Master - {{ isEditMode ? 'Update' : 'Create' }}</h4>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="customerForm" (ngSubmit)="onSubmit()">
+
+            <!-- B2B / B2C SELECTION -->
+            <div class="panel panel-default">
+              <div class="panel-heading"><strong>Customer Classification <span class="text-danger">*</span></strong></div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <label class="radio-inline" style="font-size: 15px; margin-right: 30px;">
+                      <input type="radio" formControlName="customerClassification" value="B2B"> <strong>B2B</strong> (Business to Business)
+                    </label>
+                    <label class="radio-inline" style="font-size: 15px;">
+                      <input type="radio" formControlName="customerClassification" value="B2C"> <strong>B2C</strong> (Business to Consumer)
+                    </label>
+                    <div *ngIf="customerForm.get('customerClassification').touched && customerForm.get('customerClassification').hasError('required')" class="text-danger" style="font-size:11px; margin-top:5px;">Please select B2B or B2C</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- BASIC INFO -->
+            <div class="panel panel-default">
+              <div class="panel-heading"><strong>Basic Information</strong></div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-4 form-group">
+                    <label>Price List <span class="text-danger">*</span></label>
+                    <select class="form-control" formControlName="priceList" required>
+                      <option value="">-- Select Price List --</option>
+                      <option value="BAMUL EMPLOYEE SALES PRICE LIST">BAMUL EMPLOYEE SALES PRICE LIST</option>
+                      <option value="BAMUL SERVICES PRICE LIST">BAMUL SERVICES PRICE LIST</option>
+                      <option value="BULK SALES PRICE LIST">BULK SALES PRICE LIST</option>
+                      <option value="BULK SALES PRICE LIST 3.50 FAT 8.23 SNF">BULK SALES PRICE LIST 3.50 FAT 8.23 SNF</option>
+                      <option value="CI_2423 PRICE LIST">CI_2423 PRICE LIST</option>
+                      <option value="DEFENCE">DEFENCE</option>
+                      <option value="DEPO SALES PRICE LIST">DEPO SALES PRICE LIST</option>
+                      <option value="HOSUR SALES PRICE LIST">HOSUR SALES PRICE LIST</option>
+                      <option value="INTER UNION SALES PRICE LIST">INTER UNION SALES PRICE LIST</option>
+                      <option value="KBS-KMF CDPO PRICE LIST">KBS-KMF CDPO PRICE LIST</option>
+                      <option value="KBS-KMF INTER UNION SALES">KBS-KMF INTER UNION SALES</option>
+                      <option value="KBS-KMF ZP PRICE LIST">KBS-KMF ZP PRICE LIST</option>
+                      <option value="KBS-NGO ADUGEKENDRA PRICE LIST">KBS-NGO ADUGEKENDRA PRICE LIST</option>
+                      <option value="MILK AND CURD PRICE LIST">MILK AND CURD PRICE LIST</option>
+                      <option value="MOTHER DAIRY PRICE LIST">MOTHER DAIRY PRICE LIST</option>
+                      <option value="MRP PRICE LIST">MRP PRICE LIST</option>
+                      <option value="P&I CATTLE FEED & FODDER PRICE LIST">P&I CATTLE FEED & FODDER PRICE LIST</option>
+                      <option value="P&I DCS MATERIALS PRICE LIST">P&I DCS MATERIALS PRICE LIST</option>
+                      <option value="P&I PRODUCERS MATERIALS PRICE LIST">P&I PRODUCERS MATERIALS PRICE LIST</option>
+                      <option value="P&I SEMEN PRICE LIST">P&I SEMEN PRICE LIST</option>
+                      <option value="PRO SALES PRICE LIST">PRO SALES PRICE LIST</option>
+                      <option value="RELIANCE">RELIANCE</option>
+                      <option value="RETAILER SALES PRICE LIST">RETAILER SALES PRICE LIST</option>
+                      <option value="SCRAP SALES PRICE LIST">SCRAP SALES PRICE LIST</option>
+                      <option value="SPECIAL SALES PRICE LIST">SPECIAL SALES PRICE LIST</option>
+                      <option value="TAMILNADU PRICE LIST">TAMILNADU PRICE LIST</option>
+                      <option value="UDAAN PRICE LIST">UDAAN PRICE LIST</option>
+                      <option value="UTP PRICE LIST">UTP PRICE LIST</option>
+                      <option value="VIP SALES PRICE LIST">VIP SALES PRICE LIST</option>
+                      <option value="WSD PRICE LIST">WSD PRICE LIST</option>
+                      <option value="OTHERS">OTHERS</option>
+                    </select>
+                    <div *ngIf="customerForm.get('priceList').touched && customerForm.get('priceList').hasError('required')" class="text-danger" style="font-size:11px; margin-top:3px;">Price List is required</div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4 form-group">
+                    <label>Customer Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" formControlName="customerName" placeholder="Enter customer name">
+                    <div *ngIf="customerForm.get('customerName').touched && customerForm.get('customerName').hasError('required')" class="text-danger" style="font-size:11px; margin-top:3px;">Customer Name is required</div>
+                    <div *ngIf="customerForm.get('customerName').touched && customerForm.get('customerName').hasError('invalidName')" class="text-danger" style="font-size:11px; margin-top:3px;">Only English letters, numbers, spaces and dots allowed. No hyphens or special characters.</div>
+                  </div>
+                  <div class="col-md-4 form-group">
+                    <label>Customer Type <span class="text-danger">*</span></label>
+                    <select class="form-control" formControlName="customerType">
+                      <option value="">-- Select --</option>
+                      <option value="PERSON">PERSON</option>
+                      <option value="ORGANIZATION">ORGANIZATION</option>
+                    </select>
+                    <div *ngIf="customerForm.get('customerType').touched && customerForm.get('customerType').hasError('required')" class="text-danger" style="font-size:11px; margin-top:3px;">Customer Type is required</div>
+                  </div>
+                  <div class="col-md-4 form-group">
+                    <label>Customer Account Number <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" formControlName="accountNumber" placeholder="Manually enter account number" required>
+                    <div class="text-info" style="font-size:11px; margin-top:3px;">Please enter the account number manually. Auto-generation is disabled.</div>
+                    <div *ngIf="customerForm.get('accountNumber').touched && customerForm.get('accountNumber').hasError('required')" class="text-danger" style="font-size:11px; margin-top:3px;">Account Number is required</div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4 form-group">
+                    <label>Customer Class <span class="text-danger">*</span></label>
+                    <select class="form-control" formControlName="customerClass">
+                      <option value="">-- Select --</option>
+                      <option value="BAMUL EMPLOYEE CUSTOMER">BAMUL EMPLOYEE CUSTOMER</option>
+                      <option value="BMS">BMS</option>
+                      <option value="CANTEEN-CUSTOMER">CANTEEN-CUSTOMER</option>
+                      <option value="CASH CUSTOMER">CASH CUSTOMER</option>
+                      <option value="CI">CI</option>
+                      <option value="DAY COUNTER">DAY COUNTER</option>
+                      <option value="FEDERAL">FEDERAL</option>
+                      <option value="GOVT">GOVT</option>
+                      <option value="IU">IU</option>
+                      <option value="KMF">KMF</option>
+                      <option value="KMF UNITS">KMF UNITS</option>
+                      <option value="KSHEERA BHAGYA">KSHEERA BHAGYA</option>
+                      <option value="LEASE">LEASE</option>
+                      <option value="MPCS CUSTOMER">MPCS CUSTOMER</option>
+                      <option value="PARLOUR">PARLOUR</option>
+                      <option value="PRO">PRO</option>
+                      <option value="RETAILER">RETAILER</option>
+                      <option value="SCRAP">SCRAP</option>
+                      <option value="TCD">TCD</option>
+                      <option value="TRANSPORTER">TRANSPORTER</option>
+                      <option value="WSD">WSD</option>
+                      <option value="SECURITY DEPOSIT">SECURITY DEPOSIT</option>
+                      <option value="OTHERS">OTHERS</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4 form-group" *ngIf="customerForm.get('customerType').value !== 'ORGANIZATION'">
+                    <label>Customer Aadhar Number <span class="text-danger" *ngIf="customerForm.get('customerType').value === 'PERSON'">*</span></label>
+                    <input type="text" class="form-control" formControlName="aadharNo" placeholder="12-digit Aadhar" maxlength="12">
+                    <div *ngIf="customerForm.get('aadharNo').touched && customerForm.get('aadharNo').invalid" class="text-danger" style="font-size:11px; margin-top:3px;">Valid 12-digit Aadhaar required (starts with 2-9)</div>
+                    <div style="margin-top: 8px;">
+                      <label class="btn btn-sm btn-default" style="cursor: pointer;">
+                        <i class="fa fa-upload"></i> Upload Aadhaar (PDF)
+                        <input type="file" accept=".pdf" (change)="onAadharUpload($event)" (click)="$event.target.value = null" style="display: none;">
+                      </label>
+                      <span *ngIf="aadharFileName" class="text-success" style="margin-left: 10px; font-size: 12px;">
+                        <i class="fa fa-check-circle"></i> {{ aadharFileName }}
+                        <button type="button" class="btn btn-xs btn-danger" (click)="removeAadhar()" style="margin-left: 5px;"><i class="fa fa-times"></i></button>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="col-md-4 form-group" *ngIf="customerForm.get('customerType').value === 'ORGANIZATION'">
+                    <label>CAN Certificate</label>
+                    <div style="margin-top: 8px;">
+                      <label class="btn btn-sm btn-default" style="cursor: pointer;">
+                        <i class="fa fa-upload"></i> Upload CAN Certificate (PDF)
+                        <input type="file" accept=".pdf" (change)="onCanCertUpload($event)" (click)="$event.target.value = null" style="display: none;">
+                      </label>
+                      <span *ngIf="canCertFileName" class="text-success" style="margin-left: 10px; font-size: 12px;">
+                        <i class="fa fa-check-circle"></i> {{ canCertFileName }}
+                        <button type="button" class="btn btn-xs btn-danger" (click)="removeCanCert()" style="margin-left: 5px;"><i class="fa fa-times"></i></button>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4 form-group">
+                    <label>Customer Email <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" formControlName="customerEmail" placeholder="Enter email" onpaste="return false" oncopy="return false" oncut="return false">
+                    <div *ngIf="customerForm.get('customerEmail').touched && customerForm.get('customerEmail').invalid" class="text-danger" style="font-size:11px; margin-top:3px;">Valid email required</div>
+                  </div>
+                  <div class="col-md-4 form-group">
+                    <label>Confirm Customer Email <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" formControlName="confirmCustomerEmail" placeholder="Re-enter email" onpaste="return false" oncopy="return false" oncut="return false">
+                    <div *ngIf="customerForm.get('confirmCustomerEmail').value && customerForm.get('customerEmail').value !== customerForm.get('confirmCustomerEmail').value" class="text-danger" style="font-size:11px; margin-top:3px;">Emails do not match</div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4 form-group">
+                    <label>Customer PAN Number <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" formControlName="panNo" placeholder="ABCDE1234F" maxlength="10" style="text-transform: uppercase;" (input)="customerForm.get('panNo').setValue($event.target.value.toUpperCase(), {emitEvent: false})">
+                    <div *ngIf="customerForm.get('panNo').touched && customerForm.get('panNo').invalid" class="text-danger" style="font-size:11px; margin-top:3px;">Format: ABCDE1234F (5 letters + 4 digits + 1 letter)</div>
+                    <div style="margin-top: 8px;">
+                      <label class="btn btn-sm btn-default" style="cursor: pointer;">
+                        <i class="fa fa-upload"></i> Upload PAN Card (PDF)
+                        <input type="file" accept=".pdf" (change)="onPanCardUpload($event)" (click)="$event.target.value = null" style="display: none;">
+                      </label>
+                      <span *ngIf="panCardFileName" class="text-success" style="margin-left: 10px; font-size: 12px;">
+                        <i class="fa fa-check-circle"></i> {{ panCardFileName }}
+                      </span>
+                    </div>
+                    <div *ngIf="panCardFileName" style="margin-top: 10px;">
+                      <div style="display: inline-block; border: 1px solid #ddd; border-radius: 4px; padding: 8px 12px; background: #f9f9f9;">
+                        <i class="fa fa-file-pdf-o text-danger" style="font-size: 24px; vertical-align: middle;"></i>
+                        <span style="margin-left: 8px; font-size: 13px; vertical-align: middle;">{{ panCardFileName }}</span>
+                        <button type="button" class="btn btn-xs btn-danger" (click)="removePanCard()" style="margin-left: 10px; vertical-align: middle;">
+                          <i class="fa fa-times"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-4 form-group" *ngIf="customerForm.get('customerClassification').value === 'B2B'">
+                    <label>Customer GSTIN Number <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" formControlName="gstinNumber" placeholder="22AAAAA0000A1Z5" maxlength="15" style="text-transform: uppercase;" (input)="customerForm.get('gstinNumber').setValue($event.target.value.toUpperCase(), {emitEvent: false})">
+                    <div *ngIf="customerForm.get('gstinNumber').touched && customerForm.get('gstinNumber').invalid" class="text-danger" style="font-size:11px; margin-top:3px;">Format: 22AAAAA0000A1Z5</div>
+                    <div style="margin-top: 8px;">
+                      <label class="btn btn-sm btn-default" style="cursor: pointer;">
+                        <i class="fa fa-upload"></i> Upload GST Certificate (PDF) <span class="text-danger">*</span>
+                        <input type="file" accept=".pdf" (change)="onGstUpload($event)" (click)="$event.target.value = null" style="display: none;">
+                      </label>
+                      <span *ngIf="gstFileName" class="text-success" style="margin-left: 10px; font-size: 12px;">
+                        <i class="fa fa-check-circle"></i> {{ gstFileName }}
+                        <button type="button" class="btn btn-xs btn-danger" (click)="removeGst()" style="margin-left: 5px;"><i class="fa fa-times"></i></button>
+                      </span>
+                      <div *ngIf="!gstFile" class="text-danger" style="font-size:11px; margin-top:3px;">GST Certificate upload is mandatory for B2B customers</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- BILL TO ADDRESSES -->
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <strong>Bill To Address Details</strong>
+              </div>
+              <div class="panel-body">
+                <div *ngFor="let addr of billAddresses; let i = index" style="border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px;">
+                  <div class="row" *ngIf="false">
+                    <div class="col-md-12 text-right">
+                      <button type="button" class="btn btn-xs btn-danger" (click)="removeBillAddress(i)"><i class="fa fa-trash"></i> Remove</button>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-5 form-group">
+                      <label>Address Line 1 <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" [(ngModel)]="addr.address1" [ngModelOptions]="{standalone: true}" placeholder="Street / Building">
+                    </div>
+                    <div class="col-md-1 form-group" style="padding-top: 25px;">
+                      <button type="button" class="btn btn-xs btn-info" (click)="addr.address2 = addr.address1" title="Copy to Address Line 2" [disabled]="!addr.address1">
+                        <i class="fa fa-arrow-right"></i> Copy
+                      </button>
+                    </div>
+                    <div class="col-md-6 form-group">
+                      <label>Address Line 2 <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" [(ngModel)]="addr.address2" [ngModelOptions]="{standalone: true}" placeholder="Area / Locality">
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-3 form-group">
+                      <label>State <span class="text-danger">*</span></label>
+                      <select class="form-control" [(ngModel)]="addr.state" [ngModelOptions]="{standalone: true}" (change)="onAddrStateChange(addr, 'bill')">
+                        <option value="">-- Select State --</option>
+                        <option *ngFor="let s of stateList" [value]="s">{{ s }}</option>
+                      </select>
+                    </div>
+                    <div class="col-md-3 form-group">
+                      <label>City <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" [(ngModel)]="addr.city" [ngModelOptions]="{standalone: true}" placeholder="Enter city">
+                    </div>
+                    <div class="col-md-3 form-group">
+                      <label>Postal Code <span class="text-danger">*</span></label>
+                      <div class="input-group">
+                        <input type="text" class="form-control" [(ngModel)]="addr.postalCode" [ngModelOptions]="{standalone: true}" placeholder="560001" maxlength="6">
+                        <span class="input-group-btn">
+                          <button type="button" class="btn btn-info btn-sm" (click)="fetchByPincode(addr)" [disabled]="!addr.postalCode || addr.postalCode.length !== 6">
+                            <i class="fa fa-search"></i>
+                          </button>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="col-md-3 form-group">
+                      <label>Country</label>
+                      <input type="text" class="form-control" value="India" readonly style="background-color: #eee; cursor: not-allowed;">
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-2 form-group">
+                      <label>&nbsp;</label>
+                      <button type="button" class="btn btn-sm btn-info" (click)="detectLocation(addr)">
+                        <i class="fa fa-map-marker"></i> Detect
+                      </button>
+                    </div>
+                    <div class="col-md-3 form-group">
+                      <label>Latitude</label>
+                      <input type="text" class="form-control" [(ngModel)]="addr.latitude" [ngModelOptions]="{standalone: true}" placeholder="12.97" maxlength="10" readonly style="background-color: #eee;">
+                    </div>
+                    <div class="col-md-3 form-group">
+                      <label>Longitude</label>
+                      <input type="text" class="form-control" [(ngModel)]="addr.longitude" [ngModelOptions]="{standalone: true}" placeholder="77.59" maxlength="10" readonly style="background-color: #eee;">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CORRESPONDENCE ADDRESS -->
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <strong>Correspondence Address</strong>
+              </div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-12">
+                    <label style="cursor: pointer;">
+                      <input type="checkbox" [(ngModel)]="corrAddrSameAsBill" [ngModelOptions]="{standalone: true}" [disabled]="!billAddresses[0].address1" (change)="onCorrAddrChange()"> Same as Bill To Address
+                    </label>
+                  </div>
+                </div>
+                <div style="margin-top: 15px;">
+                  <div class="row">
+                    <div class="col-md-6 form-group">
+                      <label>Address Line 1 <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" [(ngModel)]="corrAddress.address1" [ngModelOptions]="{standalone: true}" placeholder="Street / Building" [readonly]="corrAddrSameAsBill" [style.background-color]="corrAddrSameAsBill ? '#eee' : ''">
+                    </div>
+                    <div class="col-md-6 form-group">
+                      <label>Address Line 2</label>
+                      <input type="text" class="form-control" [(ngModel)]="corrAddress.address2" [ngModelOptions]="{standalone: true}" placeholder="Area / Locality" [readonly]="corrAddrSameAsBill" [style.background-color]="corrAddrSameAsBill ? '#eee' : ''">
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-3 form-group">
+                      <label>State <span class="text-danger">*</span></label>
+                      <input *ngIf="corrAddrSameAsBill" type="text" class="form-control" [value]="corrAddress.state" readonly style="background-color: #eee;">
+                      <select *ngIf="!corrAddrSameAsBill" class="form-control" [(ngModel)]="corrAddress.state" [ngModelOptions]="{standalone: true}" (change)="onCorrStateChange()">
+                        <option value="">-- Select --</option>
+                        <option *ngFor="let s of stateList" [value]="s">{{ s }}</option>
+                      </select>
+                    </div>
+                    <div class="col-md-3 form-group">
+                      <label>City <span class="text-danger">*</span></label>
+                      <input *ngIf="corrAddrSameAsBill" type="text" class="form-control" [value]="corrAddress.city" readonly style="background-color: #eee;">
+                      <input *ngIf="!corrAddrSameAsBill" type="text" class="form-control" [(ngModel)]="corrAddress.city" [ngModelOptions]="{standalone: true}" placeholder="Enter city">
+                    </div>
+                    <div class="col-md-3 form-group">
+                      <label>Postal Code <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" [(ngModel)]="corrAddress.postalCode" [ngModelOptions]="{standalone: true}" placeholder="560001" maxlength="6" [readonly]="corrAddrSameAsBill" [style.background-color]="corrAddrSameAsBill ? '#eee' : ''">
+                    </div>
+                    <div class="col-md-3 form-group">
+                      <label>Country</label>
+                      <input type="text" class="form-control" value="India" readonly style="background-color: #eee;">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SHIP TO ADDRESSES -->
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <strong>Ship To Address Details</strong>
+                <button type="button" class="btn btn-sm btn-primary pull-right" (click)="addShipAddress()" style="margin-top: -3px;">
+                  <i class="fa fa-plus"></i> Add Ship To Address
+                </button>
+              </div>
+              <div class="panel-body">
+                <div *ngFor="let addr of shipAddresses; let i = index" style="border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px;">
+                  <div class="row" *ngIf="i > 0">
+                    <div class="col-md-12 text-right">
+                      <button type="button" class="btn btn-xs btn-danger" (click)="removeShipAddress(i)"><i class="fa fa-trash"></i> Remove</button>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-5 form-group">
+                      <label>Address Line 1 <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" [(ngModel)]="addr.address1" [ngModelOptions]="{standalone: true}" placeholder="Street / Building">
+                    </div>
+                    <div class="col-md-1 form-group" style="padding-top: 25px;">
+                      <button type="button" class="btn btn-xs btn-info" (click)="addr.address2 = addr.address1" title="Copy to Address Line 2" [disabled]="!addr.address1">
+                        <i class="fa fa-arrow-right"></i> Copy
+                      </button>
+                    </div>
+                    <div class="col-md-6 form-group">
+                      <label>Address Line 2 <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" [(ngModel)]="addr.address2" [ngModelOptions]="{standalone: true}" placeholder="Area / Locality">
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-3 form-group">
+                      <label>State <span class="text-danger">*</span></label>
+                      <select class="form-control" [(ngModel)]="addr.state" [ngModelOptions]="{standalone: true}" (change)="onAddrStateChange(addr, 'ship')">
+                        <option value="">-- Select State --</option>
+                        <option *ngFor="let s of stateList" [value]="s">{{ s }}</option>
+                      </select>
+                    </div>
+                    <div class="col-md-3 form-group">
+                      <label>City <span class="text-danger">*</span></label>
+                      <select class="form-control" [(ngModel)]="addr.city" [ngModelOptions]="{standalone: true}">
+                        <option value="">-- Select City --</option>
+                        <option *ngFor="let c of addr.cities" [value]="c">{{ c }}</option>
+                      </select>
+                    </div>
+                    <div class="col-md-3 form-group">
+                      <label>Postal Code <span class="text-danger">*</span></label>
+                      <div class="input-group">
+                        <input type="text" class="form-control" [(ngModel)]="addr.postalCode" [ngModelOptions]="{standalone: true}" placeholder="560001" maxlength="6">
+                        <span class="input-group-btn">
+                          <button type="button" class="btn btn-info btn-sm" (click)="fetchByPincode(addr)" [disabled]="!addr.postalCode || addr.postalCode.length !== 6">
+                            <i class="fa fa-search"></i>
+                          </button>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="col-md-3 form-group">
+                      <label>Country</label>
+                      <input type="text" class="form-control" value="India" readonly style="background-color: #eee; cursor: not-allowed;">
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-2 form-group">
+                      <label>&nbsp;</label>
+                      <button type="button" class="btn btn-sm btn-info" (click)="detectLocation(addr)">
+                        <i class="fa fa-map-marker"></i> Detect
+                      </button>
+                    </div>
+                    <div class="col-md-3 form-group">
+                      <label>Latitude</label>
+                      <input type="text" class="form-control" [(ngModel)]="addr.latitude" [ngModelOptions]="{standalone: true}" placeholder="12.97" maxlength="10" readonly style="background-color: #eee;">
+                    </div>
+                    <div class="col-md-3 form-group">
+                      <label>Longitude</label>
+                      <input type="text" class="form-control" [(ngModel)]="addr.longitude" [ngModelOptions]="{standalone: true}" placeholder="77.59" maxlength="10" readonly style="background-color: #eee;">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CONTACT DETAILS -->
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <strong>Contact Details</strong>
+                <button type="button" class="btn btn-sm btn-primary pull-right" (click)="addContact()" style="margin-top: -3px;">
+                  <i class="fa fa-plus"></i> Add Contact
+                </button>
+              </div>
+              <div class="panel-body">
+                <div *ngFor="let contact of contacts; let i = index" style="border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px;">
+                  <div class="row">
+                    <div class="col-md-3 form-group">
+                      <label>Contact Person Name <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" [(ngModel)]="contact.contactPerson" [ngModelOptions]="{standalone: true}">
+                    </div>
+                    <div class="col-md-2 form-group">
+                      <label>Contact Person Designation</label>
+                      <input type="text" class="form-control" [(ngModel)]="contact.designation" [ngModelOptions]="{standalone: true}" placeholder="e.g. Manager">
+                    </div>
+                    <div class="col-md-3 form-group">
+                      <label>Contact Person Mobile <span class="text-danger">*</span></label>
+                      <div class="input-group">
+                        <span class="input-group-addon">+91</span>
+                        <input type="text" class="form-control" [(ngModel)]="contact.mobileNumber" [ngModelOptions]="{standalone: true}" placeholder="9876543210" maxlength="10">
+                      </div>
+                    </div>
+                    <div class="col-md-1 form-group" *ngIf="i > 0">
+                      <label>&nbsp;</label>
+                      <button type="button" class="btn btn-danger btn-block" (click)="removeContact(i)">
+                        <i class="fa fa-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-4 form-group">
+                      <label>Contact Person Email <span class="text-danger">*</span></label>
+                      <input type="email" class="form-control" [(ngModel)]="contact.emailId" [ngModelOptions]="{standalone: true}" placeholder="Enter email" onpaste="return false" oncopy="return false" oncut="return false">
+                    </div>
+                    <div class="col-md-4 form-group">
+                      <label>Confirm Contact Person Email <span class="text-danger">*</span></label>
+                      <input type="email" class="form-control" [(ngModel)]="contact.confirmEmailId" [ngModelOptions]="{standalone: true}" placeholder="Re-enter email" onpaste="return false" oncopy="return false" oncut="return false">
+                      <div *ngIf="contact.confirmEmailId && contact.emailId !== contact.confirmEmailId" class="text-danger" style="font-size:11px; margin-top:3px;">Emails do not match</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- BANK DETAILS -->
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <strong>Bank Details</strong>
+                <button type="button" class="btn btn-sm btn-primary pull-right" (click)="addBank()" style="margin-top: -3px;">
+                  <i class="fa fa-plus"></i> Add Bank
+                </button>
+              </div>
+              <div class="panel-body">
+                <div *ngFor="let bank of bankAccounts; let i = index" style="border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px;">
+                  <div class="row" *ngIf="i > 0">
+                    <div class="col-md-12 text-right">
+                      <button type="button" class="btn btn-xs btn-danger" (click)="removeBank(i)"><i class="fa fa-trash"></i> Remove</button>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-3 form-group">
+                      <label>Bank Name <span class="text-danger" *ngIf="i === 0">*</span></label>
+                      <input type="text" class="form-control" [(ngModel)]="bank.bankName" [ngModelOptions]="{standalone: true}" placeholder="Enter bank name or use IFSC Fetch" list="bankList">
+                      <datalist id="bankList">
+                        <option *ngFor="let b of bankNamesList" [value]="b"></option>
+                      </datalist>
+                    </div>
+                    <div class="col-md-3 form-group">
+                      <label>Branch Name <span class="text-danger" *ngIf="i === 0">*</span></label>
+                      <input type="text" class="form-control" [(ngModel)]="bank.branchName" [ngModelOptions]="{standalone: true}" placeholder="Enter branch name" style="text-transform: uppercase;" (input)="bank.branchName = $event.target.value.toUpperCase()">
+                    </div>
+                    <div class="col-md-3 form-group">
+                      <label>Account Number <span class="text-danger" *ngIf="i === 0">*</span></label>
+                      <input type="text" class="form-control" [(ngModel)]="bank.accountNumber" [ngModelOptions]="{standalone: true}" placeholder="Account number">
+                    </div>
+                    <div class="col-md-3 form-group">
+                      <label>IFSC Code <span class="text-danger" *ngIf="i === 0">*</span></label>
+                      <div class="input-group">
+                        <input type="text" class="form-control" [(ngModel)]="bank.ifscCode" [ngModelOptions]="{standalone: true}" placeholder="SBIN0001234" maxlength="11" style="text-transform: uppercase;" (input)="bank.ifscCode = $event.target.value.toUpperCase()">
+                        <span class="input-group-btn">
+                          <button type="button" class="btn btn-info btn-sm" (click)="fetchByIfsc(bank)" [disabled]="!bank.ifscCode || bank.ifscCode.length !== 11">
+                            <i class="fa fa-search"></i> Fetch
+                          </button>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-4 form-group">
+                      <label>Cancelled Cheque / Passbook (PDF)</label>
+                      <div>
+                        <label class="btn btn-sm btn-default" style="cursor: pointer;">
+                          <i class="fa fa-upload"></i> Upload Cancelled Cheque
+                          <input type="file" accept=".pdf" (change)="onBankChequeUpload($event, bank)" (click)="$event.target.value = null" style="display: none;">
+                        </label>
+                        <span *ngIf="bank.chequeFileName" class="text-success" style="margin-left: 10px; font-size: 12px;">
+                          <i class="fa fa-check-circle"></i> {{ bank.chequeFileName }}
+                          <button type="button" class="btn btn-xs btn-danger" (click)="bank.chequeFile = null; bank.chequeFileName = ''" style="margin-left: 5px;"><i class="fa fa-times"></i></button>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SALES DETAILS -->
+            <div class="panel panel-default">
+              <div class="panel-heading"><strong>Sales Details</strong></div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-4 form-group">
+                    <label>Salesperson / FSR Name</label>
+                    <input type="text" class="form-control" formControlName="salesperson">
+                  </div>
+                  <div class="col-md-4 form-group">
+                    <label>Salesperson / FSR Number</label>
+                    <input type="text" class="form-control" formControlName="salesrepEmpNumber">
+                  </div>
+                  <div class="col-md-4 form-group">
+                    <label>Primary Order Type</label>
+                    <select class="form-control" formControlName="primaryOrderType">
+                      <option value="">-- Select --</option>
+                      <option *ngFor="let ot of orderTypesList" [value]="ot">{{ ot }}</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- PAYMENT DETAILS -->
+            <div class="panel panel-default">
+              <div class="panel-heading"><strong>Payment Details</strong></div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-4 form-group">
+                    <label>Payment Details <span class="text-danger">*</span></label>
+                    <select class="form-control" formControlName="paymentTerms" required>
+                      <option value="">-- Select --</option>
+                      <option value="IMMEDIATE">IMMEDIATE</option>
+                      <option value="1 NET">1 NET</option>
+                      <option value="30 NET">30 NET</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4 form-group">
+                    <label>Credit Limit (₹)</label>
+                    <input type="number" class="form-control" formControlName="creditLimit" placeholder="50000">
+                  </div>
+                  <div class="col-md-4 form-group">
+                    <label>Deposit (₹)</label>
+                    <input type="number" class="form-control" formControlName="deposit">
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3 form-group">
+                    <label>Off Ord No</label>
+                    <input type="text" class="form-control" formControlName="offOrdNo">
+                  </div>
+                  <div class="col-md-3 form-group">
+                    <label>Off Ord Date</label>
+                    <input type="date" class="form-control" formControlName="offOrdDate">
+                  </div>
+                  <div class="col-md-4 form-group">
+                    <label>Order Document (PDF)</label>
+                    <div>
+                      <label class="btn btn-sm btn-default" style="cursor: pointer;">
+                        <i class="fa fa-upload"></i> Upload Order Document
+                        <input type="file" accept=".pdf" (change)="onOrderDocUpload($event)" (click)="$event.target.value = null" style="display: none;">
+                      </label>
+                      <span *ngIf="orderDocFileName" class="text-success" style="margin-left: 10px; font-size: 12px;">
+                        <i class="fa fa-check-circle"></i> {{ orderDocFileName }}
+                        <button type="button" class="btn btn-xs btn-danger" (click)="removeOrderDoc()" style="margin-left: 5px;"><i class="fa fa-times"></i></button>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="row" style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 15px;">
+                  <div class="col-md-4 form-group">
+                    <label>FDR Amount (₹)</label>
+                    <input type="number" class="form-control" formControlName="fdrNumber" placeholder="FDR Amount">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ZONE / AREA -->
+            <div class="panel panel-default">
+              <div class="panel-heading"><strong>Zone / Area Details</strong></div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-3 form-group">
+                    <label>Zone Code</label>
+                    <select class="form-control" formControlName="zoneCode" (change)="onZoneChange($event.target.value)">
+                      <option value="">-- Select --</option>
+                      <option value="1">Zone 1</option>
+                      <option value="2">Zone 2</option>
+                      <option value="3">Zone 3</option>
+                      <option value="4">Zone 4</option>
+                      <option value="5">Zone 5</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3 form-group">
+                    <label>Area</label>
+                    <input type="text" class="form-control" formControlName="area">
+                  </div>
+                  <div class="col-md-3 form-group">
+                    <label>Sub Area</label>
+                    <input type="text" class="form-control" formControlName="subArea">
+                  </div>
+                  <div class="col-md-3 form-group">
+                    <label>Ward</label>
+                    <input type="text" class="form-control" formControlName="ward">
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-6 form-group">
+                    <label>Zonal Manager</label>
+                    <input type="text" class="form-control" formControlName="zonalManager" readonly style="background-color: #eee;">
+                  </div>
+                  <div class="col-md-6 form-group">
+                    <label>Zonal Manager Emp No</label>
+                    <input type="text" class="form-control" formControlName="zonalManagerEmp" readonly style="background-color: #eee;">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- NOMINEE DETAILS - only for PERSON type -->
+            <div class="panel panel-default" *ngIf="customerForm.get('customerType').value === 'PERSON'">
+              <div class="panel-heading"><strong>Nominee Details</strong></div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-4 form-group">
+                    <label>Nominee Name</label>
+                    <input type="text" class="form-control" formControlName="nomineeName">
+                  </div>
+                  <div class="col-md-4 form-group">
+                    <label>Nominee Contact</label>
+                    <div class="input-group">
+                      <span class="input-group-addon">+91</span>
+                      <input type="text" class="form-control" formControlName="nomineeContact" maxlength="10">
+                    </div>
+                    <div *ngIf="customerForm.get('nomineeContact').touched && customerForm.get('nomineeContact').invalid" class="text-danger" style="font-size:11px; margin-top:3px;">Valid 10-digit number starting with 6-9</div>
+                  </div>
+                  <div class="col-md-4 form-group">
+                    <label>Nominee Relationship</label>
+                    <select class="form-control" formControlName="nomineeRelationship">
+                      <option value="">-- Select --</option>
+                      <option value="FATHER">Father</option>
+                      <option value="MOTHER">Mother</option>
+                      <option value="SPOUSE">Spouse</option>
+                      <option value="SON">Son</option>
+                      <option value="DAUGHTER">Daughter</option>
+                      <option value="BROTHER">Brother</option>
+                      <option value="SISTER">Sister</option>
+                      <option value="OTHERS">Others</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-8 form-group">
+                    <label>Nominee Supporting Documents (PDF)</label>
+                    <div>
+                      <label class="btn btn-sm btn-default" style="cursor: pointer;">
+                        <i class="fa fa-upload"></i> Upload Documents (Multiple PDFs)
+                        <input type="file" accept=".pdf" multiple (change)="onNomineeDocUpload($event)" (click)="$event.target.value = null" style="display: none;">
+                      </label>
+                      <div class="text-muted" style="font-size: 11px; margin-top: 3px;">You can select multiple PDF files at once</div>
+                    </div>
+                    <!-- Already uploaded nominee docs (edit mode) -->
+                    <div *ngIf="existingNomineeDocNames && existingNomineeDocNames.length > 0" style="margin-top: 10px;">
+                      <p style="font-size: 12px; color: #666; margin-bottom: 5px;"><strong>Already uploaded:</strong></p>
+                      <div *ngFor="let name of existingNomineeDocNames; let i = index" style="display: flex; align-items: center; margin-bottom: 5px; padding: 5px; border: 1px solid #c3e6cb; border-radius: 3px; background: #d4edda;">
+                        <i class="fa fa-file-pdf-o text-danger" style="font-size: 16px; margin-right: 8px;"></i>
+                        <span style="flex: 1; font-size: 12px;">{{ name }}</span>
+                        <span class="text-success" style="font-size: 11px;"><i class="fa fa-check-circle"></i> Saved</span>
+                        <button type="button" class="btn btn-xs btn-danger" (click)="removeExistingNomineeDoc(i)" style="margin-left: 5px;">
+                          <i class="fa fa-times"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <!-- New nominee docs to upload -->
+                    <div *ngIf="nomineeDocFiles && nomineeDocFiles.length > 0" style="margin-top: 10px;">
+                      <div *ngFor="let doc of nomineeDocFiles; let i = index" style="display: flex; align-items: center; margin-bottom: 5px; padding: 5px; border: 1px solid #ddd; border-radius: 3px; background: #f9f9f9;">
+                        <i class="fa fa-file-pdf-o text-danger" style="font-size: 16px; margin-right: 8px;"></i>
+                        <span style="flex: 1; font-size: 12px;">{{ doc.name }}</span>
+                        <button type="button" class="btn btn-xs btn-danger" (click)="removeNomineeDoc(i)" style="margin-left: 5px;">
+                          <i class="fa fa-times"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- DISTRIBUTOR INFO -->
+            <div class="panel panel-default">
+              <div class="panel-heading"><strong>Distributor Information</strong></div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-3 form-group">
+                    <label>Products Distributor</label>
+                    <input type="text" class="form-control" formControlName="productsDistributor">
+                  </div>
+                  <div class="col-md-3 form-group">
+                    <label>Distributor Number</label>
+                    <input type="text" class="form-control" formControlName="distributorNumber">
+                  </div>
+                  <div class="col-md-3 form-group">
+                    <label>Icecream Distributor</label>
+                    <input type="text" class="form-control" formControlName="icecreamDistributor">
+                  </div>
+                  <div class="col-md-3 form-group">
+                    <label>Icecream Dist Num</label>
+                    <input type="text" class="form-control" formControlName="icecreamDistNum">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SUBMIT -->
+            <!-- ADDITIONAL INFORMATION -->
+            <div class="panel panel-default">
+              <div class="panel-heading"><strong>Additional Information</strong></div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-12 form-group">
+                    <label>Remarks / Additional Details</label>
+                    <textarea class="form-control" formControlName="additionalInfo" rows="6" placeholder="Enter any additional information here..." style="resize: vertical; min-height: 120px;"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-center" style="margin-top: 20px;">
+              <button type="submit" class="btn btn-success btn-lg">
+                <i class="fa fa-paper-plane"></i> Submit for Approval
+              </button>
+              <div *ngIf="customerForm.invalid || !contacts[0].contactPerson || !contacts[0].mobileNumber || !contacts[0].emailId || contacts[0].emailId !== contacts[0].confirmEmailId || customerForm.get('customerEmail').value !== customerForm.get('confirmCustomerEmail').value || (customerForm.get('customerClassification').value === 'B2B' && !gstFile)" class="text-danger" style="margin-top: 10px; font-size: 13px;">
+                <i class="fa fa-exclamation-triangle"></i>
+                <span *ngIf="customerForm.invalid"> Please fill all mandatory fields correctly.</span>
+                <span *ngIf="customerForm.get('accountNumber').touched && customerForm.get('accountNumber').hasError('required')"> Account Number is required.</span>
+                <span *ngIf="!contacts[0].contactPerson || !contacts[0].mobileNumber || !contacts[0].emailId"> Contact details are incomplete.</span>
+                <span *ngIf="contacts[0].emailId && contacts[0].emailId !== contacts[0].confirmEmailId"> Contact emails do not match.</span>
+                <span *ngIf="customerForm.get('customerEmail').value !== customerForm.get('confirmCustomerEmail').value"> Customer emails do not match.</span>
+                <span *ngIf="customerForm.get('customerClassification').value === 'B2B' && !gstFile"> GST Certificate upload is required for B2B.</span>
+              </div>
+              <button type="button" class="btn btn-default btn-lg" (click)="onReset()" style="margin-left: 10px;">
+                <i class="fa fa-refresh"></i> Reset
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- MAP MODAL -->
+<div class="modal-overlay" *ngIf="showMap" (click)="closeMap()">
+  <div class="modal-box" (click)="$event.stopPropagation()" style="width: 700px; height: 600px;">
+    <div class="modal-header-custom" style="background-color: #1a73e8;">
+      <h4><i class="fa fa-map-marker"></i> Select Location on Map</h4>
+      <button class="close-btn" (click)="closeMap()">&times;</button>
+    </div>
+    <div style="padding: 10px;">
+      <div style="margin-bottom: 8px; display: flex;">
+        <input type="text" class="form-control" [(ngModel)]="mapSearchQuery" [ngModelOptions]="{standalone: true}" placeholder="Search location (e.g. Koramangala, Bengaluru)" (keyup.enter)="searchMapLocation()" style="flex: 1;">
+        <button class="btn btn-primary" (click)="searchMapLocation()" style="margin-left: 5px;"><i class="fa fa-search"></i> Search</button>
+      </div>
+      <p style="font-size: 12px; color: #666; margin-bottom: 5px;">Search a place or click on the map to select location</p>
+      <div id="map" style="height: 380px; border-radius: 5px;"></div>
+      <div style="margin-top: 10px; text-align: right;">
+        <span style="font-size: 13px; margin-right: 15px;" *ngIf="selectedLat">
+          <strong>Lat:</strong> {{ selectedLat }} | <strong>Lng:</strong> {{ selectedLng }}
+        </span>
+        <button class="btn btn-success" (click)="confirmLocation()" [disabled]="!selectedLat">
+          <i class="fa fa-check"></i> Confirm Location
+        </button>
+        <button class="btn btn-default" (click)="closeMap()" style="margin-left: 5px;">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>

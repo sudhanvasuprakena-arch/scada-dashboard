@@ -1,0 +1,204 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::               (v2.7.18)
+
+2026-06-10 16:23:39.365  INFO 66600 --- [           main] c.b.c.CustomerMasterApplication          : Starting CustomerMasterApplication v1.0.0 using Java 21.0.10 on shibashish-Latitude-5420 with PID 66600 (/home/shibashish/Downloads/OM_to_AR/customer-portal/backend/target/customer-master-1.0.0.jar started by shibashish in /home/shibashish/Downloads/OM_to_AR/customer-portal/backend)
+2026-06-10 16:23:39.368  INFO 66600 --- [           main] c.b.c.CustomerMasterApplication          : No active profile set, falling back to 1 default profile: "default"
+2026-06-10 16:23:40.051  INFO 66600 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-06-10 16:23:40.124  INFO 66600 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 62 ms. Found 3 JPA repository interfaces.
+2026-06-10 16:23:40.816  INFO 66600 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 9092 (http)
+2026-06-10 16:23:40.827  INFO 66600 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-06-10 16:23:40.827  INFO 66600 --- [           main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.83]
+2026-06-10 16:23:40.919  INFO 66600 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-06-10 16:23:40.919  INFO 66600 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1498 ms
+2026-06-10 16:23:41.316  INFO 66600 --- [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-06-10 16:23:41.372  INFO 66600 --- [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 5.6.15.Final
+2026-06-10 16:23:41.541  INFO 66600 --- [           main] o.hibernate.annotations.common.Version   : HCANN000001: Hibernate Commons Annotations {5.1.2.Final}
+2026-06-10 16:23:41.652  INFO 66600 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-06-10 16:23:42.841 ERROR 66600 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Exception during pool initialization.
+
+java.sql.SQLRecoverableException: IO Error: The Network Adapter could not establish the connection (CONNECTION_ID=SWIYJP2yQ8OMITweWofBoA==)
+	at oracle.jdbc.driver.T4CConnection.handleLogonNetException(T4CConnection.java:892) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.jdbc.driver.T4CConnection.logon(T4CConnection.java:697) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.jdbc.driver.PhysicalConnection.connect(PhysicalConnection.java:1047) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.jdbc.driver.T4CDriverExtension.getConnection(T4CDriverExtension.java:89) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.jdbc.driver.OracleDriver.connect(OracleDriver.java:732) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.jdbc.driver.OracleDriver.connect(OracleDriver.java:648) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:138) ~[HikariCP-4.0.3.jar!/:na]
+	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:364) ~[HikariCP-4.0.3.jar!/:na]
+	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:206) ~[HikariCP-4.0.3.jar!/:na]
+	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:476) ~[HikariCP-4.0.3.jar!/:na]
+	at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:561) ~[HikariCP-4.0.3.jar!/:na]
+	at com.zaxxer.hikari.pool.HikariPool.<init>(HikariPool.java:115) ~[HikariCP-4.0.3.jar!/:na]
+	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:112) ~[HikariCP-4.0.3.jar!/:na]
+	at org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl.getConnection(DatasourceConnectionProviderImpl.java:122) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:181) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.initiateService(JdbcEnvironmentInitiator.java:68) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.initiateService(JdbcEnvironmentInitiator.java:35) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.boot.registry.internal.StandardServiceRegistryImpl.initiateService(StandardServiceRegistryImpl.java:101) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.createService(AbstractServiceRegistryImpl.java:272) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.initializeService(AbstractServiceRegistryImpl.java:246) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.getService(AbstractServiceRegistryImpl.java:223) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.id.factory.internal.DefaultIdentifierGeneratorFactory.injectServices(DefaultIdentifierGeneratorFactory.java:175) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.injectDependencies(AbstractServiceRegistryImpl.java:295) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.initializeService(AbstractServiceRegistryImpl.java:252) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.getService(AbstractServiceRegistryImpl.java:223) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.boot.internal.InFlightMetadataCollectorImpl.<init>(InFlightMetadataCollectorImpl.java:173) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.boot.model.process.spi.MetadataBuildingProcess.complete(MetadataBuildingProcess.java:127) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl.metadata(EntityManagerFactoryBuilderImpl.java:1460) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl.build(EntityManagerFactoryBuilderImpl.java:1494) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.springframework.orm.jpa.vendor.SpringHibernateJpaPersistenceProvider.createContainerEntityManagerFactory(SpringHibernateJpaPersistenceProvider.java:58) ~[spring-orm-5.3.31.jar!/:5.3.31]
+	at org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean.createNativeEntityManagerFactory(LocalContainerEntityManagerFactoryBean.java:365) ~[spring-orm-5.3.31.jar!/:5.3.31]
+	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.buildNativeEntityManagerFactory(AbstractEntityManagerFactoryBean.java:409) ~[spring-orm-5.3.31.jar!/:5.3.31]
+	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.afterPropertiesSet(AbstractEntityManagerFactoryBean.java:396) ~[spring-orm-5.3.31.jar!/:5.3.31]
+	at org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean.afterPropertiesSet(LocalContainerEntityManagerFactoryBean.java:341) ~[spring-orm-5.3.31.jar!/:5.3.31]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1863) ~[spring-beans-5.3.31.jar!/:5.3.31]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1800) ~[spring-beans-5.3.31.jar!/:5.3.31]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:620) ~[spring-beans-5.3.31.jar!/:5.3.31]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542) ~[spring-beans-5.3.31.jar!/:5.3.31]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335) ~[spring-beans-5.3.31.jar!/:5.3.31]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234) ~[spring-beans-5.3.31.jar!/:5.3.31]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333) ~[spring-beans-5.3.31.jar!/:5.3.31]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208) ~[spring-beans-5.3.31.jar!/:5.3.31]
+	at org.springframework.context.support.AbstractApplicationContext.getBean(AbstractApplicationContext.java:1168) ~[spring-context-5.3.31.jar!/:5.3.31]
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:919) ~[spring-context-5.3.31.jar!/:5.3.31]
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:591) ~[spring-context-5.3.31.jar!/:5.3.31]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:147) ~[spring-boot-2.7.18.jar!/:2.7.18]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:732) ~[spring-boot-2.7.18.jar!/:2.7.18]
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:409) ~[spring-boot-2.7.18.jar!/:2.7.18]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:308) ~[spring-boot-2.7.18.jar!/:2.7.18]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1300) ~[spring-boot-2.7.18.jar!/:2.7.18]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1289) ~[spring-boot-2.7.18.jar!/:2.7.18]
+	at com.bamul.customermaster.CustomerMasterApplication.main(CustomerMasterApplication.java:11) ~[classes!/:1.0.0]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.boot.loader.MainMethodRunner.run(MainMethodRunner.java:49) ~[customer-master-1.0.0.jar:1.0.0]
+	at org.springframework.boot.loader.Launcher.launch(Launcher.java:108) ~[customer-master-1.0.0.jar:1.0.0]
+	at org.springframework.boot.loader.Launcher.launch(Launcher.java:58) ~[customer-master-1.0.0.jar:1.0.0]
+	at org.springframework.boot.loader.JarLauncher.main(JarLauncher.java:65) ~[customer-master-1.0.0.jar:1.0.0]
+Caused by: oracle.net.ns.NetException: The Network Adapter could not establish the connection (CONNECTION_ID=SWIYJP2yQ8OMITweWofBoA==)
+	at oracle.net.nt.ConnStrategy.execute(ConnStrategy.java:715) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.resolver.AddrResolution.resolveAndExecute(AddrResolution.java:584) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.ns.NSProtocol.establishConnection(NSProtocol.java:964) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.ns.NSProtocol.connect(NSProtocol.java:350) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.jdbc.driver.T4CConnection.connect(T4CConnection.java:2441) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.jdbc.driver.T4CConnection.logon(T4CConnection.java:656) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	... 56 common frames omitted
+Caused by: java.io.IOException: Connection refused, socket connect lapse 9 ms. localhost 1521  30000 (1/1) true
+	at oracle.net.nt.TcpNTAdapter.establishSocket(TcpNTAdapter.java:425) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.nt.TcpNTAdapter.doLocalDNSLookupConnect(TcpNTAdapter.java:307) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.nt.TcpNTAdapter.connect(TcpNTAdapter.java:269) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.nt.ConnOption.connect(ConnOption.java:230) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.nt.ConnStrategy.executeConnOption(ConnStrategy.java:1014) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.nt.ConnStrategy.execute(ConnStrategy.java:673) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	... 61 common frames omitted
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.connect0(Native Method) ~[na:na]
+	at java.base/sun.nio.ch.Net.connect(Net.java:601) ~[na:na]
+	at java.base/sun.nio.ch.Net.connect(Net.java:608) ~[na:na]
+	at java.base/sun.nio.ch.SocketChannelImpl.connect(SocketChannelImpl.java:880) ~[na:na]
+	at java.base/java.nio.channels.SocketChannel.open(SocketChannel.java:285) ~[na:na]
+	at oracle.net.nt.TimeoutSocketChannel.connect(TimeoutSocketChannel.java:183) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.nt.TimeoutSocketChannel.<init>(TimeoutSocketChannel.java:157) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.nt.TcpNTAdapter.establishSocket(TcpNTAdapter.java:384) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	... 66 common frames omitted
+
+2026-06-10 16:23:42.843  WARN 66600 --- [           main] o.h.e.j.e.i.JdbcEnvironmentInitiator     : HHH000342: Could not obtain connection to query metadata
+
+java.sql.SQLRecoverableException: IO Error: The Network Adapter could not establish the connection (CONNECTION_ID=SWIYJP2yQ8OMITweWofBoA==)
+	at oracle.jdbc.driver.T4CConnection.handleLogonNetException(T4CConnection.java:892) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.jdbc.driver.T4CConnection.logon(T4CConnection.java:697) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.jdbc.driver.PhysicalConnection.connect(PhysicalConnection.java:1047) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.jdbc.driver.T4CDriverExtension.getConnection(T4CDriverExtension.java:89) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.jdbc.driver.OracleDriver.connect(OracleDriver.java:732) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.jdbc.driver.OracleDriver.connect(OracleDriver.java:648) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:138) ~[HikariCP-4.0.3.jar!/:na]
+	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:364) ~[HikariCP-4.0.3.jar!/:na]
+	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:206) ~[HikariCP-4.0.3.jar!/:na]
+	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:476) ~[HikariCP-4.0.3.jar!/:na]
+	at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:561) ~[HikariCP-4.0.3.jar!/:na]
+	at com.zaxxer.hikari.pool.HikariPool.<init>(HikariPool.java:115) ~[HikariCP-4.0.3.jar!/:na]
+	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:112) ~[HikariCP-4.0.3.jar!/:na]
+	at org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl.getConnection(DatasourceConnectionProviderImpl.java:122) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:181) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.initiateService(JdbcEnvironmentInitiator.java:68) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.initiateService(JdbcEnvironmentInitiator.java:35) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.boot.registry.internal.StandardServiceRegistryImpl.initiateService(StandardServiceRegistryImpl.java:101) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.createService(AbstractServiceRegistryImpl.java:272) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.initializeService(AbstractServiceRegistryImpl.java:246) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.getService(AbstractServiceRegistryImpl.java:223) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.id.factory.internal.DefaultIdentifierGeneratorFactory.injectServices(DefaultIdentifierGeneratorFactory.java:175) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.injectDependencies(AbstractServiceRegistryImpl.java:295) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.initializeService(AbstractServiceRegistryImpl.java:252) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.getService(AbstractServiceRegistryImpl.java:223) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.boot.internal.InFlightMetadataCollectorImpl.<init>(InFlightMetadataCollectorImpl.java:173) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.boot.model.process.spi.MetadataBuildingProcess.complete(MetadataBuildingProcess.java:127) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl.metadata(EntityManagerFactoryBuilderImpl.java:1460) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl.build(EntityManagerFactoryBuilderImpl.java:1494) ~[hibernate-core-5.6.15.Final.jar!/:5.6.15.Final]
+	at org.springframework.orm.jpa.vendor.SpringHibernateJpaPersistenceProvider.createContainerEntityManagerFactory(SpringHibernateJpaPersistenceProvider.java:58) ~[spring-orm-5.3.31.jar!/:5.3.31]
+	at org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean.createNativeEntityManagerFactory(LocalContainerEntityManagerFactoryBean.java:365) ~[spring-orm-5.3.31.jar!/:5.3.31]
+	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.buildNativeEntityManagerFactory(AbstractEntityManagerFactoryBean.java:409) ~[spring-orm-5.3.31.jar!/:5.3.31]
+	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.afterPropertiesSet(AbstractEntityManagerFactoryBean.java:396) ~[spring-orm-5.3.31.jar!/:5.3.31]
+	at org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean.afterPropertiesSet(LocalContainerEntityManagerFactoryBean.java:341) ~[spring-orm-5.3.31.jar!/:5.3.31]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1863) ~[spring-beans-5.3.31.jar!/:5.3.31]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1800) ~[spring-beans-5.3.31.jar!/:5.3.31]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:620) ~[spring-beans-5.3.31.jar!/:5.3.31]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542) ~[spring-beans-5.3.31.jar!/:5.3.31]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335) ~[spring-beans-5.3.31.jar!/:5.3.31]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234) ~[spring-beans-5.3.31.jar!/:5.3.31]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333) ~[spring-beans-5.3.31.jar!/:5.3.31]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208) ~[spring-beans-5.3.31.jar!/:5.3.31]
+	at org.springframework.context.support.AbstractApplicationContext.getBean(AbstractApplicationContext.java:1168) ~[spring-context-5.3.31.jar!/:5.3.31]
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:919) ~[spring-context-5.3.31.jar!/:5.3.31]
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:591) ~[spring-context-5.3.31.jar!/:5.3.31]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:147) ~[spring-boot-2.7.18.jar!/:2.7.18]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:732) ~[spring-boot-2.7.18.jar!/:2.7.18]
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:409) ~[spring-boot-2.7.18.jar!/:2.7.18]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:308) ~[spring-boot-2.7.18.jar!/:2.7.18]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1300) ~[spring-boot-2.7.18.jar!/:2.7.18]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1289) ~[spring-boot-2.7.18.jar!/:2.7.18]
+	at com.bamul.customermaster.CustomerMasterApplication.main(CustomerMasterApplication.java:11) ~[classes!/:1.0.0]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.boot.loader.MainMethodRunner.run(MainMethodRunner.java:49) ~[customer-master-1.0.0.jar:1.0.0]
+	at org.springframework.boot.loader.Launcher.launch(Launcher.java:108) ~[customer-master-1.0.0.jar:1.0.0]
+	at org.springframework.boot.loader.Launcher.launch(Launcher.java:58) ~[customer-master-1.0.0.jar:1.0.0]
+	at org.springframework.boot.loader.JarLauncher.main(JarLauncher.java:65) ~[customer-master-1.0.0.jar:1.0.0]
+Caused by: oracle.net.ns.NetException: The Network Adapter could not establish the connection (CONNECTION_ID=SWIYJP2yQ8OMITweWofBoA==)
+	at oracle.net.nt.ConnStrategy.execute(ConnStrategy.java:715) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.resolver.AddrResolution.resolveAndExecute(AddrResolution.java:584) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.ns.NSProtocol.establishConnection(NSProtocol.java:964) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.ns.NSProtocol.connect(NSProtocol.java:350) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.jdbc.driver.T4CConnection.connect(T4CConnection.java:2441) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.jdbc.driver.T4CConnection.logon(T4CConnection.java:656) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	... 56 common frames omitted
+Caused by: java.io.IOException: Connection refused, socket connect lapse 9 ms. localhost 1521  30000 (1/1) true
+	at oracle.net.nt.TcpNTAdapter.establishSocket(TcpNTAdapter.java:425) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.nt.TcpNTAdapter.doLocalDNSLookupConnect(TcpNTAdapter.java:307) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.nt.TcpNTAdapter.connect(TcpNTAdapter.java:269) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.nt.ConnOption.connect(ConnOption.java:230) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.nt.ConnStrategy.executeConnOption(ConnStrategy.java:1014) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.nt.ConnStrategy.execute(ConnStrategy.java:673) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	... 61 common frames omitted
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.connect0(Native Method) ~[na:na]
+	at java.base/sun.nio.ch.Net.connect(Net.java:601) ~[na:na]
+	at java.base/sun.nio.ch.Net.connect(Net.java:608) ~[na:na]
+	at java.base/sun.nio.ch.SocketChannelImpl.connect(SocketChannelImpl.java:880) ~[na:na]
+	at java.base/java.nio.channels.SocketChannel.open(SocketChannel.java:285) ~[na:na]
+	at oracle.net.nt.TimeoutSocketChannel.connect(TimeoutSocketChannel.java:183) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.nt.TimeoutSocketChannel.<init>(TimeoutSocketChannel.java:157) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	at oracle.net.nt.TcpNTAdapter.establishSocket(TcpNTAdapter.java:384) ~[ojdbc8-21.9.0.0.jar!/:21.9.0.0.0]
+	... 66 common frames omitted
+
+2026-06-10 16:23:42.870  INFO 66600 --- [           main] org.hibernate.dialect.Dialect            : HHH000400: Using dialect: org.hibernate.dialect.Oracle10gDialect
+2026-06-10 16:23:43.601  INFO 66600 --- [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
+2026-06-10 16:23:43.612  INFO 66600 --- [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-06-10 16:23:44.703  INFO 66600 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 9092 (http) with context path ''
+2026-06-10 16:23:44.716  INFO 66600 --- [           main] c.b.c.CustomerMasterApplication          : Started CustomerMasterApplication in 5.93 seconds (JVM running for 6.632)
+2026-06-10 20:40:05.135  INFO 66600 --- [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'

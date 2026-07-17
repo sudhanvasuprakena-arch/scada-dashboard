@@ -1,0 +1,314 @@
+<div class="container-fluid" *ngIf="authorized">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header bg-info text-white">
+          <h4><i class="fa fa-money"></i> Finance Head - Customer Approval</h4>
+          <p style="margin: 0; font-size: 13px;">Approve or reject customer creation/update requests</p>
+        </div>
+        <div class="card-body">
+          <div style="margin-bottom: 15px;">
+            <button class="btn btn-sm" [ngClass]="{'btn-primary': statusFilter === 'ALL', 'btn-default': statusFilter !== 'ALL'}" (click)="statusFilter = 'ALL'">All</button>
+            <button class="btn btn-sm" [ngClass]="{'btn-warning': statusFilter === 'PA', 'btn-default': statusFilter !== 'PA'}" (click)="statusFilter = 'PA'" style="margin-left: 5px;">Pending</button>
+            <button class="btn btn-sm" [ngClass]="{'btn-success': statusFilter === 'S', 'btn-default': statusFilter !== 'S'}" (click)="statusFilter = 'S'" style="margin-left: 5px;">Approved</button>
+            <button class="btn btn-sm" [ngClass]="{'btn-danger': statusFilter === 'REJECTED', 'btn-default': statusFilter !== 'REJECTED'}" (click)="statusFilter = 'REJECTED'" style="margin-left: 5px;">Rejected</button>
+          </div>
+          <table class="table table-bordered table-striped">
+            <thead class="thead-dark">
+              <tr>
+                <th>#</th>
+                <th>Customer Name</th>
+                <th>Account No</th>
+                <th>Type</th>
+                <th>City</th>
+                <th>Credit Limit</th>
+                <th>Submitted Date</th>
+                <th>Status</th>
+                <th>Submitted By</th>
+                <th>Actioned By</th>
+                <th>Error/Reason</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let cust of getFilteredCustomers(); let i = index">
+                <td>{{ i + 1 }}</td>
+                <td>{{ cust.customerName }}</td>
+                <td>{{ cust.accountNumber }}</td>
+                <td>{{ cust.customerType }}</td>
+                <td>{{ cust.city }}</td>
+                <td>₹ {{ cust.creditLimit }}</td>
+                <td>{{ cust.creationDate | date:'dd-MMM-yyyy HH:mm' }}</td>
+                <td>
+                  <span class="status-badge"
+                    [ngClass]="{'status-pending': cust.pickedStatus === 'PA', 'status-approved': cust.pickedStatus === 'S', 'status-rejected': cust.pickedStatus === 'REJECTED'}">
+                    {{ cust.pickedStatus === 'PA' ? 'PENDING' : cust.pickedStatus === 'S' ? 'APPROVED' : cust.pickedStatus === 'REJECTED' ? 'REJECTED' : cust.pickedStatus }}
+                  </span>
+                </td>
+                <td>{{ cust.submittedBy || '-' }}</td>
+                <td>{{ cust.approvedBy || '-' }}</td>
+                <td>{{ cust.pickedStatus === 'S' ? 'NA' : (cust.errorMsg || '-') }}</td>
+                <td>
+                  <a href="javascript:void(0)" (click)="viewDetails(cust)" class="view-link">
+                    <i class="fa fa-eye"></i> View Details
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div *ngIf="getFilteredCustomers().length === 0" class="text-center" style="padding: 30px; color: #999;">
+            <i class="fa fa-inbox" style="font-size: 40px;"></i>
+            <p>No customer requests found</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" *ngIf="selectedCustomer" (click)="closeModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header-custom">
+      <h4><i class="fa fa-user"></i> Customer Details</h4>
+      <button class="close-btn" (click)="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body-custom">
+
+      <!-- Basic Info -->
+      <div class="section-title">Basic Information</div>
+      <div class="row">
+        <div class="col-md-4"><div class="detail-row"><label>Customer Name</label><p>{{ selectedCustomer.customerName }}</p></div></div>
+        <div class="col-md-4" *ngIf="selectedCustomer.pickedStatus !== 'REJECTED'"><div class="detail-row"><label>Account Number</label><p>{{ selectedCustomer.accountNumber || 'Not provided' }}</p></div></div>
+        <div class="col-md-4"><div class="detail-row"><label>Customer Type</label><p>{{ selectedCustomer.customerType }}</p></div></div>
+      </div>
+      <div class="row">
+        <div class="col-md-4"><div class="detail-row"><label>B2B / B2C</label><p>{{ selectedCustomer.customerClassification || '-' }}</p></div></div>
+        <div class="col-md-4"><div class="detail-row"><label>Customer Class</label><p>{{ selectedCustomer.customerClass || '-' }}</p></div></div>
+        <div class="col-md-4"><div class="detail-row"><label>Price List</label><p>{{ selectedCustomer.priceList || '-' }}</p></div></div>
+        <div class="col-md-4"><div class="detail-row"><label>Customer Email</label><p>{{ selectedCustomer.emailId || '-' }}</p></div></div>
+      </div>
+      <div class="row">
+        <div class="col-md-4"><div class="detail-row"><label>PAN No</label><p>{{ selectedCustomer.panNo || '-' }}</p></div></div>
+        <div class="col-md-4"><div class="detail-row"><label>GSTIN</label><p>{{ selectedCustomer.gstinNumber || '-' }}</p></div></div>
+        <div class="col-md-4"><div class="detail-row"><label>Aadhaar No</label><p>{{ selectedCustomer.aadharNo || '-' }}</p></div></div>
+      </div>
+
+      <!-- Bill To Address -->
+      <div class="section-title">Bill To Address(es)</div>
+      <div *ngFor="let addr of parseBillAddresses(); let i = index" style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #eee;">
+        <div class="row" *ngIf="parseBillAddresses().length > 1"><div class="col-md-12"><strong style="font-size:12px; color:#666;">Address {{ i + 1 }}</strong></div></div>
+        <div class="row">
+          <div class="col-md-6"><div class="detail-row"><label>Address</label><p>{{ addr.address1 }} {{ addr.address2 }}</p></div></div>
+          <div class="col-md-3"><div class="detail-row"><label>City</label><p>{{ addr.city || '-' }}</p></div></div>
+          <div class="col-md-3"><div class="detail-row"><label>State</label><p>{{ addr.state || '-' }}</p></div></div>
+        </div>
+        <div class="row">
+          <div class="col-md-3"><div class="detail-row"><label>Postal Code</label><p>{{ addr.postalCode || '-' }}</p></div></div>
+          <div class="col-md-3"><div class="detail-row"><label>Country</label><p>India</p></div></div>
+          <div class="col-md-3"><div class="detail-row"><label>Latitude</label><p>{{ addr.latitude || '-' }}</p></div></div>
+          <div class="col-md-3"><div class="detail-row"><label>Longitude</label><p>{{ addr.longitude || '-' }}</p></div></div>
+        </div>
+      </div>
+
+      <!-- Correspondence Address -->
+      <div class="section-title">Correspondence Address</div>
+      <div class="row">
+        <div class="col-md-6"><div class="detail-row"><label>Address</label><p>{{ selectedCustomer.corrAddress1 || '-' }} {{ selectedCustomer.corrAddress2 || '' }}</p></div></div>
+        <div class="col-md-3"><div class="detail-row"><label>City</label><p>{{ selectedCustomer.corrCity || '-' }}</p></div></div>
+        <div class="col-md-3"><div class="detail-row"><label>State</label><p>{{ selectedCustomer.corrState || '-' }}</p></div></div>
+      </div>
+      <div class="row">
+        <div class="col-md-3"><div class="detail-row"><label>Postal Code</label><p>{{ selectedCustomer.corrPostalCode || '-' }}</p></div></div>
+        <div class="col-md-3"><div class="detail-row"><label>Country</label><p>India</p></div></div>
+      </div>
+
+      <!-- Ship To Address -->
+      <div class="section-title">Ship To Address(es)</div>
+      <div *ngFor="let addr of parseShipAddresses(); let i = index" style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #eee;">
+        <div class="row" *ngIf="parseShipAddresses().length > 1"><div class="col-md-12"><strong style="font-size:12px; color:#666;">Address {{ i + 1 }}</strong></div></div>
+        <div class="row">
+          <div class="col-md-6"><div class="detail-row"><label>Address</label><p>{{ addr.address1 }} {{ addr.address2 }}</p></div></div>
+          <div class="col-md-3"><div class="detail-row"><label>City</label><p>{{ addr.city || '-' }}</p></div></div>
+          <div class="col-md-3"><div class="detail-row"><label>State</label><p>{{ addr.state || '-' }}</p></div></div>
+        </div>
+        <div class="row">
+          <div class="col-md-3"><div class="detail-row"><label>Postal Code</label><p>{{ addr.postalCode || '-' }}</p></div></div>
+          <div class="col-md-3"><div class="detail-row"><label>Country</label><p>India</p></div></div>
+          <div class="col-md-3"><div class="detail-row"><label>Latitude</label><p>{{ addr.latitude || '-' }}</p></div></div>
+          <div class="col-md-3"><div class="detail-row"><label>Longitude</label><p>{{ addr.longitude || '-' }}</p></div></div>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div class="section-title">Contact Details</div>
+      <div class="row">
+        <div class="col-md-4"><div class="detail-row"><label>Contact Person</label><p>{{ selectedCustomer.contactPerson || '-' }}</p></div></div>
+        <div class="col-md-4"><div class="detail-row"><label>Mobile</label><p>{{ selectedCustomer.mobileNumber ? '+91 ' + selectedCustomer.mobileNumber : '-' }}</p></div></div>
+        <div class="col-md-4"><div class="detail-row"><label>Email</label><p>{{ selectedCustomer.emailId || '-' }}</p></div></div>
+      </div>
+
+      <!-- Bank Details -->
+      <div class="section-title">Bank Details</div>
+      <div *ngFor="let bank of parseBankAccounts(); let i = index" style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #eee;">
+        <div class="row" *ngIf="parseBankAccounts().length > 1"><div class="col-md-12"><strong style="font-size:12px; color:#666;">Bank {{ i + 1 }}</strong></div></div>
+        <div class="row">
+          <div class="col-md-3"><div class="detail-row"><label>Bank Name</label><p>{{ bank.bankName || '-' }}</p></div></div>
+          <div class="col-md-3"><div class="detail-row"><label>Branch Name</label><p>{{ bank.branchName || '-' }}</p></div></div>
+          <div class="col-md-3"><div class="detail-row"><label>Account Number</label><p>{{ bank.accountNumber || '-' }}</p></div></div>
+          <div class="col-md-3"><div class="detail-row"><label>IFSC Code</label><p>{{ bank.ifscCode || '-' }}</p></div></div>
+        </div>
+      </div>
+
+      <!-- Sales Details -->
+      <div class="section-title">Sales Details</div>
+      <div class="row">
+        <div class="col-md-4"><div class="detail-row"><label>Salesperson</label><p>{{ selectedCustomer.salesperson || '-' }}</p></div></div>
+        <div class="col-md-4"><div class="detail-row"><label>Salesrep Emp No</label><p>{{ selectedCustomer.salesrepEmpNumber || '-' }}</p></div></div>
+        <div class="col-md-4"><div class="detail-row"><label>Primary Order Type</label><p>{{ selectedCustomer.primaryOrderType || '-' }}</p></div></div>
+      </div>
+
+      <!-- Payment Details -->
+      <div class="section-title">Payment Details</div>
+      <div class="row">
+        <div class="col-md-3"><div class="detail-row"><label>Payment Terms</label><p>{{ selectedCustomer.paymentTerms || '-' }}</p></div></div>
+        <div class="col-md-3"><div class="detail-row"><label>Credit Limit</label><p>₹ {{ selectedCustomer.creditLimit || 0 }}</p></div></div>
+        <div class="col-md-3"><div class="detail-row"><label>Deposit</label><p>₹ {{ selectedCustomer.deposit || 0 }}</p></div></div>
+        <div class="col-md-3"><div class="detail-row"><label>FDR Amount</label><p>₹ {{ selectedCustomer.fdrNumber || 0 }}</p></div></div>
+      </div>
+      <div class="row">
+        <div class="col-md-3"><div class="detail-row"><label>Off Ord No</label><p>{{ selectedCustomer.offOrdNo || '-' }}</p></div></div>
+        <div class="col-md-3"><div class="detail-row"><label>Off Ord Date</label><p>{{ selectedCustomer.offOrdDate || '-' }}</p></div></div>
+      </div>
+
+      <!-- Zone / Area -->
+      <div class="section-title">Zone / Area</div>
+      <div class="row">
+        <div class="col-md-3"><div class="detail-row"><label>Zone Code</label><p>{{ selectedCustomer.zoneCode || '-' }}</p></div></div>
+        <div class="col-md-3"><div class="detail-row"><label>Area</label><p>{{ selectedCustomer.area || '-' }}</p></div></div>
+        <div class="col-md-3"><div class="detail-row"><label>Sub Area</label><p>{{ selectedCustomer.subArea || '-' }}</p></div></div>
+        <div class="col-md-3"><div class="detail-row"><label>Ward</label><p>{{ selectedCustomer.ward || '-' }}</p></div></div>
+      </div>
+      <div class="row">
+        <div class="col-md-4"><div class="detail-row"><label>Zonal Manager</label><p>{{ selectedCustomer.zonalManager || '-' }}</p></div></div>
+        <div class="col-md-4"><div class="detail-row"><label>Zonal Manager Emp No</label><p>{{ selectedCustomer.zonalManagerEmp || '-' }}</p></div></div>
+      </div>
+
+      <!-- Nominee Details -->
+      <div class="section-title">Nominee Details</div>
+      <div class="row">
+        <div class="col-md-4"><div class="detail-row"><label>Nominee Name</label><p>{{ selectedCustomer.nomineeName || '-' }}</p></div></div>
+        <div class="col-md-4"><div class="detail-row"><label>Nominee Contact</label><p>{{ selectedCustomer.nomineeContact ? '+91 ' + selectedCustomer.nomineeContact : '-' }}</p></div></div>
+        <div class="col-md-4"><div class="detail-row"><label>Relationship</label><p>{{ selectedCustomer.nomineeRelationship || '-' }}</p></div></div>
+      </div>
+
+      <!-- Distributor -->
+      <div class="section-title">Distributor Information</div>
+      <div class="row">
+        <div class="col-md-3"><div class="detail-row"><label>Products Distributor</label><p>{{ selectedCustomer.productsDistributor || '-' }}</p></div></div>
+        <div class="col-md-3"><div class="detail-row"><label>Distributor Number</label><p>{{ selectedCustomer.distributorNumber || '-' }}</p></div></div>
+        <div class="col-md-3"><div class="detail-row"><label>Icecream Distributor</label><p>{{ selectedCustomer.icecreamDistributor || '-' }}</p></div></div>
+        <div class="col-md-3"><div class="detail-row"><label>Icecream Dist Num</label><p>{{ selectedCustomer.icecreamDistNum || '-' }}</p></div></div>
+      </div>
+
+      <!-- Additional Information -->
+      <div class="section-title">Additional Information</div>
+      <div class="row">
+        <div class="col-md-12"><div class="detail-row"><label>Remarks</label><p style="white-space: pre-wrap;">{{ selectedCustomer.additionalInfo || '-' }}</p></div></div>
+      </div>
+
+      <!-- Documents -->
+      <div class="section-title">Documents</div>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="detail-row">
+            <label>PAN Card</label>
+            <p *ngIf="selectedCustomer.panCardPdfPath"><a [href]="'http://129.159.231.57/api/customer/doc/' + selectedCustomer.panCardPdfPath" target="_blank" style="color: #1a73e8; font-weight: 600;"><i class="fa fa-file-pdf-o text-danger"></i> View PAN Card</a></p>
+            <p *ngIf="!selectedCustomer.panCardPdfPath">Not uploaded</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="detail-row">
+            <label>Aadhaar Card</label>
+            <p *ngIf="selectedCustomer.aadharCardPdfPath"><a [href]="'http://129.159.231.57/api/customer/doc/' + selectedCustomer.aadharCardPdfPath" target="_blank" style="color: #1a73e8; font-weight: 600;"><i class="fa fa-file-pdf-o text-danger"></i> View Aadhaar</a></p>
+            <p *ngIf="!selectedCustomer.aadharCardPdfPath">Not uploaded</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="detail-row">
+            <label>GST Certificate</label>
+            <p *ngIf="selectedCustomer.gstCertPdfPath"><a [href]="'http://129.159.231.57/api/customer/doc/' + selectedCustomer.gstCertPdfPath" target="_blank" style="color: #1a73e8; font-weight: 600;"><i class="fa fa-file-pdf-o text-danger"></i> View GST Certificate</a></p>
+            <p *ngIf="!selectedCustomer.gstCertPdfPath">Not uploaded</p>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="detail-row">
+            <label>Cancelled Cheque</label>
+            <p *ngIf="selectedCustomer.cancelledChequePdfPath"><a [href]="'http://129.159.231.57/api/customer/doc/' + selectedCustomer.cancelledChequePdfPath" target="_blank" style="color: #1a73e8; font-weight: 600;"><i class="fa fa-file-pdf-o text-danger"></i> View Cancelled Cheque</a></p>
+            <p *ngIf="!selectedCustomer.cancelledChequePdfPath">Not uploaded</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="detail-row">
+            <label>CAN Certificate</label>
+            <p *ngIf="selectedCustomer.canCertPdfPath"><a [href]="'http://129.159.231.57/api/customer/doc/' + selectedCustomer.canCertPdfPath" target="_blank" style="color: #1a73e8; font-weight: 600;"><i class="fa fa-file-pdf-o text-danger"></i> View CAN Certificate</a></p>
+            <p *ngIf="!selectedCustomer.canCertPdfPath">Not uploaded</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="detail-row">
+            <label>Nominee Document(s)</label>
+            <ng-container *ngIf="selectedCustomer.nomineeDocPdfPath; else noNomineeDoc">
+              <p *ngFor="let f of selectedCustomer.nomineeDocPdfPath.split(','); let i = index">
+                <a [href]="'http://129.159.231.57/api/customer/doc/' + f.trim()" target="_blank" style="color: #1a73e8; font-weight: 600;">
+                  <i class="fa fa-file-pdf-o text-danger"></i> View Nominee Doc {{ i + 1 }}
+                </a>
+              </p>
+            </ng-container>
+            <ng-template #noNomineeDoc><p>Not uploaded</p></ng-template>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="detail-row">
+            <label>Order Document</label>
+            <p *ngIf="selectedCustomer.orderDocPdfPath"><a [href]="'http://129.159.231.57/api/customer/doc/' + selectedCustomer.orderDocPdfPath" target="_blank" style="color: #1a73e8; font-weight: 600;"><i class="fa fa-file-pdf-o text-danger"></i> View Order Document</a></p>
+            <p *ngIf="!selectedCustomer.orderDocPdfPath">Not uploaded</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reject Reason Input -->
+      <div class="row" *ngIf="showRejectInput">
+        <div class="col-md-12">
+          <div class="form-group">
+            <label class="text-danger" style="font-size: 14px;">Rejection Reason <span>*</span></label>
+            <textarea class="form-control" [(ngModel)]="rejectReason" rows="3" placeholder="Enter reason for rejection..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer-custom" *ngIf="selectedCustomer.pickedStatus === 'PA'">
+      <button class="btn btn-info" (click)="downloadPdf()" style="margin-right: 10px;"><i class="fa fa-file-pdf-o"></i> Download PDF</button>
+      <button class="btn btn-success" (click)="approve()" *ngIf="!showRejectInput">
+        <i class="fa fa-check"></i> Approve
+      </button>
+      <button class="btn btn-danger" (click)="showRejectBox()" *ngIf="!showRejectInput">
+        <i class="fa fa-times"></i> Reject
+      </button>
+      <button class="btn btn-danger" (click)="confirmReject()" *ngIf="showRejectInput" [disabled]="!rejectReason">
+        <i class="fa fa-times"></i> Confirm Reject
+      </button>
+      <button class="btn btn-default" (click)="cancelReject()" *ngIf="showRejectInput">
+        Cancel
+      </button>
+    </div>
+
+    <div class="modal-footer-custom" *ngIf="selectedCustomer.pickedStatus !== 'PA'">
+      <button class="btn btn-info" (click)="downloadPdf()" style="margin-right: 10px;"><i class="fa fa-file-pdf-o"></i> Download PDF</button>
+      <button class="btn btn-default" (click)="closeModal()">Close</button>
+    </div>
+  </div>
+</div>

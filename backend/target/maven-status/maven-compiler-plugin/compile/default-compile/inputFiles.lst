@@ -1,0 +1,16 @@
+/home/shibashish/Downloads/OM_to_AR/customer-portal/backend/src/main/java/com/bamul/customermaster/repository/LoginLogRepository.java
+/home/shibashish/Downloads/OM_to_AR/customer-portal/backend/src/main/java/com/bamul/customermaster/controller/RegistrationController.java
+/home/shibashish/Downloads/OM_to_AR/customer-portal/backend/src/main/java/com/bamul/customermaster/entity/UserRegistration.java
+/home/shibashish/Downloads/OM_to_AR/customer-portal/backend/src/main/java/com/bamul/customermaster/service/CustomerStagingService.java
+/home/shibashish/Downloads/OM_to_AR/customer-portal/backend/src/main/java/com/bamul/customermaster/controller/AuthController.java
+/home/shibashish/Downloads/OM_to_AR/customer-portal/backend/src/main/java/com/bamul/customermaster/controller/CustomerController.java
+/home/shibashish/Downloads/OM_to_AR/customer-portal/backend/src/main/java/com/bamul/customermaster/service/EscalationService.java
+/home/shibashish/Downloads/OM_to_AR/customer-portal/backend/src/main/java/com/bamul/customermaster/service/OtpService.java
+/home/shibashish/Downloads/OM_to_AR/customer-portal/backend/src/main/java/com/bamul/customermaster/entity/CustomerStaging.java
+/home/shibashish/Downloads/OM_to_AR/customer-portal/backend/src/main/java/com/bamul/customermaster/repository/UserRegistrationRepository.java
+/home/shibashish/Downloads/OM_to_AR/customer-portal/backend/src/main/java/com/bamul/customermaster/repository/CustomerStagingRepository.java
+/home/shibashish/Downloads/OM_to_AR/customer-portal/backend/src/main/java/com/bamul/customermaster/controller/OtpController.java
+/home/shibashish/Downloads/OM_to_AR/customer-portal/backend/src/main/java/com/bamul/customermaster/CustomerMasterApplication.java
+/home/shibashish/Downloads/OM_to_AR/customer-portal/backend/src/main/java/com/bamul/customermaster/config/CorsConfig.java
+/home/shibashish/Downloads/OM_to_AR/customer-portal/backend/src/main/java/com/bamul/customermaster/entity/LoginLog.java
+/home/shibashish/Downloads/OM_to_AR/customer-portal/backend/src/main/java/com/bamul/customermaster/service/ActivityLogService.java

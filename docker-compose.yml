@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # Frontend (Nginx serving Angular app)
+  frontend:
+    image: nginx:alpine
+    container_name: bamul-frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./dist/bamul-customer-portal:/usr/share/nginx/html
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - bamul-network
+
+  # Backend (Spring Boot API)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bamul-backend
+    ports:
+      - "9092:9092"
+    environment:
+      - SPRING_PROFILES_ACTIVE=production
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@//129.159.231.57:1521/FREEPDB1
+      - SPRING_DATASOURCE_USERNAME=bamul
+      - SPRING_DATASOURCE_PASSWORD=Bamul2026
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    volumes:
+      - ./uploads:/app/customer-portal-uploads
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9092/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - bamul-network
+
+volumes:
+  uploads:
+  logs:
+
+networks:
+  bamul-network:
+    driver: bridge

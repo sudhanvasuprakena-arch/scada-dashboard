@@ -1,0 +1,41 @@
+<div class="container">
+  <div class="row" style="display: flex; justify-content: center; align-items: center; min-height: calc(100vh - 80px);">
+    <div class="col-md-5">
+      <div class="card">
+        <div class="card-header bg-primary text-white text-center">
+          <h4><i class="fa fa-sign-in"></i> Login</h4>
+          <p style="margin: 0; font-size: 13px;">BAMUL Customer Master Portal</p>
+        </div>
+        <div class="card-body" style="padding: 30px;">
+          <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+
+            <div class="form-group">
+              <label>Username</label>
+              <input type="text" class="form-control" formControlName="username" placeholder="Enter EBS username (e.g. SYSADMIN)">
+            </div>
+
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" class="form-control" formControlName="password" placeholder="Enter password">
+            </div>
+
+            <div *ngIf="errorMessage" class="alert alert-danger" style="font-size: 13px;">
+              <i class="fa fa-exclamation-circle"></i> {{ errorMessage }}
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" [disabled]="loginForm.invalid || loading">
+              <i class="fa fa-sign-in" *ngIf="!loading"></i>
+              <i class="fa fa-spinner fa-spin" *ngIf="loading"></i>
+              {{ loading ? 'Logging in...' : 'Login' }}
+            </button>
+
+          </form>
+          <div class="text-center" style="margin-top: 15px;">
+            <p style="font-size: 13px; color: #666;">Don't have an account? <a routerLink="/register" style="color: #1a73e8; font-weight: 600;">Register Here</a></p>
+            <p style="font-size: 13px; color: #666;"><a routerLink="/reset-password" style="color: #1a73e8; font-weight: 600;">Reset Password</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

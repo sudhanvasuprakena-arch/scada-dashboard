@@ -1,0 +1,215 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header bg-primary text-white" style="padding: 15px 20px;">
+          <h4><i class="fa fa-edit"></i> Update Customer Details</h4>
+        </div>
+        <div class="card-body" style="padding: 20px;">
+
+          <!-- SEARCH -->
+          <div *ngIf="!editing" class="panel panel-default">
+            <div class="panel-heading"><strong>Search Customer</strong></div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-md-6 form-group">
+                  <div class="input-group">
+                    <input type="text" class="form-control" [(ngModel)]="searchQuery" placeholder="Search by Account Number or Customer Name" (keyup.enter)="search()">
+                    <span class="input-group-btn">
+                      <button class="btn btn-primary" (click)="search()"><i class="fa fa-search"></i> Search</button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Search Results -->
+              <table class="table table-bordered table-striped" *ngIf="searchResults.length > 0" style="margin-top: 15px;">
+                <thead class="thead-dark">
+                  <tr>
+                    <th>Account No</th>
+                    <th>Customer Name</th>
+                    <th>Type</th>
+                    <th>Class</th>
+                    <th>Source</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let cust of searchResults">
+                    <td>{{ cust.accountNumber }}</td>
+                    <td>{{ cust.customerName }}</td>
+                    <td>{{ cust.customerType }}</td>
+                    <td>{{ cust.customerClass }}</td>
+                    <td><span class="label" [ngClass]="{'label-info': cust.source === 'OCI', 'label-warning': cust.source === 'LEGACY'}">{{ cust.source }}</span></td>
+                    <td>{{ cust.status || '-' }}</td>
+                    <td><button class="btn btn-sm btn-info" (click)="selectCustomer(cust)"><i class="fa fa-edit"></i> Edit</button></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div *ngIf="message" class="alert" [ngClass]="{'alert-warning': messageType === 'warning'}" style="margin-top: 10px;">{{ message }}</div>
+            </div>
+          </div>
+
+          <!-- EDIT FORM -->
+          <div *ngIf="editing && selectedCustomer">
+            <div class="panel panel-default">
+              <div class="panel-heading"><strong>Basic Information</strong></div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-4 form-group">
+                    <label>Customer Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" [(ngModel)]="selectedCustomer.customerName">
+                  </div>
+                  <div class="col-md-4 form-group">
+                    <label>Account Number</label>
+                    <input type="text" class="form-control" [(ngModel)]="selectedCustomer.accountNumber" readonly style="background-color: #eee;">
+                  </div>
+                  <div class="col-md-4 form-group">
+                    <label>Customer Type</label>
+                    <select class="form-control" [(ngModel)]="selectedCustomer.customerType">
+                      <option value="PERSON">PERSON</option>
+                      <option value="ORGANIZATION">ORGANIZATION</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4 form-group">
+                    <label>PAN No</label>
+                    <input type="text" class="form-control" [(ngModel)]="selectedCustomer.panNo" maxlength="10" style="text-transform: uppercase;">
+                  </div>
+                  <div class="col-md-4 form-group">
+                    <label>GSTIN</label>
+                    <input type="text" class="form-control" [(ngModel)]="selectedCustomer.gstinNumber" maxlength="15" style="text-transform: uppercase;">
+                  </div>
+                  <div class="col-md-4 form-group">
+                    <label>Email</label>
+                    <input type="email" class="form-control" [(ngModel)]="selectedCustomer.emailId">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel panel-default">
+              <div class="panel-heading"><strong>Address Details</strong></div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-6 form-group">
+                    <label>Address Line 1</label>
+                    <input type="text" class="form-control" [(ngModel)]="selectedCustomer.address1">
+                  </div>
+                  <div class="col-md-6 form-group">
+                    <label>Address Line 2</label>
+                    <input type="text" class="form-control" [(ngModel)]="selectedCustomer.address2">
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3 form-group">
+                    <label>City</label>
+                    <input type="text" class="form-control" [(ngModel)]="selectedCustomer.city">
+                  </div>
+                  <div class="col-md-3 form-group">
+                    <label>State</label>
+                    <input type="text" class="form-control" [(ngModel)]="selectedCustomer.state">
+                  </div>
+                  <div class="col-md-3 form-group">
+                    <label>Postal Code</label>
+                    <input type="text" class="form-control" [(ngModel)]="selectedCustomer.postalCode" maxlength="6">
+                  </div>
+                  <div class="col-md-3 form-group">
+                    <label>Country</label>
+                    <input type="text" class="form-control" value="India" readonly style="background-color: #eee;">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel panel-default">
+              <div class="panel-heading"><strong>Contact Details</strong></div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-4 form-group">
+                    <label>Contact Person</label>
+                    <input type="text" class="form-control" [(ngModel)]="selectedCustomer.contactPerson">
+                  </div>
+                  <div class="col-md-4 form-group">
+                    <label>Mobile Number</label>
+                    <div class="input-group">
+                      <span class="input-group-addon">+91</span>
+                      <input type="text" class="form-control" [(ngModel)]="selectedCustomer.mobileNumber" maxlength="10">
+                    </div>
+                  </div>
+                  <div class="col-md-4 form-group">
+                    <label>Email</label>
+                    <input type="email" class="form-control" [(ngModel)]="selectedCustomer.emailId">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel panel-default">
+              <div class="panel-heading"><strong>Bank Details</strong></div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-3 form-group">
+                    <label>Bank Name</label>
+                    <input type="text" class="form-control" [(ngModel)]="selectedCustomer.bankName">
+                  </div>
+                  <div class="col-md-3 form-group">
+                    <label>Branch Name</label>
+                    <input type="text" class="form-control" [(ngModel)]="selectedCustomer.branchName">
+                  </div>
+                  <div class="col-md-3 form-group">
+                    <label>Account Number</label>
+                    <input type="text" class="form-control" [(ngModel)]="selectedCustomer.bankAccountNumber">
+                  </div>
+                  <div class="col-md-3 form-group">
+                    <label>IFSC Code</label>
+                    <input type="text" class="form-control" [(ngModel)]="selectedCustomer.ifscCode" maxlength="11" style="text-transform: uppercase;">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel panel-default">
+              <div class="panel-heading"><strong>Payment Details</strong></div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-3 form-group">
+                    <label>Payment Terms</label>
+                    <select class="form-control" [(ngModel)]="selectedCustomer.paymentTerms">
+                      <option value="">-- Select --</option>
+                      <option value="IMMEDIATE">IMMEDIATE</option>
+                      <option value="1 NET">1 NET</option>
+                      <option value="30 NET">30 NET</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3 form-group">
+                    <label>Credit Limit (₹)</label>
+                    <input type="number" class="form-control" [(ngModel)]="selectedCustomer.creditLimit">
+                  </div>
+                  <div class="col-md-3 form-group">
+                    <label>Deposit (₹)</label>
+                    <input type="number" class="form-control" [(ngModel)]="selectedCustomer.deposit">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SUBMIT -->
+            <div class="text-center" style="margin-top: 20px;">
+              <button class="btn btn-success btn-lg" (click)="submitUpdate()">
+                <i class="fa fa-paper-plane"></i> Submit Update for Approval
+              </button>
+              <button class="btn btn-default btn-lg" (click)="cancel()" style="margin-left: 10px;">
+                <i class="fa fa-times"></i> Cancel
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

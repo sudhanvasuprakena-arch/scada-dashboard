@@ -1,0 +1,83 @@
+<div class="container-fluid" style="padding: 20px;">
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2">
+      <div class="card">
+        <div class="card-header bg-primary text-white" style="padding: 15px 20px;">
+          <h4><i class="fa fa-user-plus"></i> Employee Registration</h4>
+          <p style="margin: 0; font-size: 13px;">BAMUL Customer Master Portal - New Employee Registration</p>
+        </div>
+        <div class="card-body" style="padding: 25px;">
+          <form [formGroup]="registrationForm" (ngSubmit)="onRegister()">
+
+            <div class="panel panel-default">
+              <div class="panel-heading"><strong>Employee Information</strong></div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-4 form-group">
+                    <label>Employee Number <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" formControlName="employeeNumber" placeholder="e.g. 005004">
+                  </div>
+                  <div class="col-md-4 form-group">
+                    <label>Department <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" formControlName="department">
+                  </div>
+                  <div class="col-md-4 form-group">
+                    <label>Manager Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" formControlName="supervisorName">
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4 form-group">
+                    <label>First Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" formControlName="firstName">
+                  </div>
+                  <div class="col-md-4 form-group">
+                    <label>Last Name</label>
+                    <input type="text" class="form-control" formControlName="lastName">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel panel-default">
+              <div class="panel-heading"><strong>Contact Information</strong></div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-6 form-group">
+                    <label>Email Address <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" formControlName="emailAddress" placeholder="email@example.com" onpaste="return false" oncopy="return false">
+                    <div *ngIf="registrationForm.get('emailAddress').touched && registrationForm.get('emailAddress').invalid" class="text-danger" style="font-size:11px; margin-top:3px;">Only .coop email addresses allowed (e.g. name@bamul.coop)</div>
+                  </div>
+                  <div class="col-md-6 form-group">
+                    <label>Confirm Email Address <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" formControlName="confirmEmail" placeholder="Re-enter email" onpaste="return false" oncopy="return false">
+                    <div *ngIf="registrationForm.get('confirmEmail').value && registrationForm.get('emailAddress').value !== registrationForm.get('confirmEmail').value" class="text-danger" style="font-size:11px; margin-top:3px;">Emails do not match</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- MESSAGE -->
+            <div *ngIf="message" class="alert" [ngClass]="{'alert-success': messageType === 'success', 'alert-danger': messageType === 'danger'}" style="font-size: 13px;">
+              {{ message }}
+            </div>
+
+            <!-- SUBMIT -->
+            <div class="text-center" style="margin-top: 20px;">
+              <button type="submit" class="btn btn-primary btn-lg" [disabled]="registrationForm.invalid || loading || registrationForm.get('emailAddress').value !== registrationForm.get('confirmEmail').value" style="padding: 12px 40px;">
+                <i class="fa fa-check" *ngIf="!loading"></i>
+                <i class="fa fa-spinner fa-spin" *ngIf="loading"></i>
+                {{ loading ? 'Registering...' : 'Register' }}
+              </button>
+            </div>
+
+            <p class="text-center" style="margin-top: 15px; font-size: 13px;">
+              Already registered? <a routerLink="/login" style="color: #1a73e8; font-weight: 600;">Login here</a>
+            </p>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

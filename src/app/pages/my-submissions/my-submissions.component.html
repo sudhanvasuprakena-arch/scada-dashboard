@@ -1,0 +1,57 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header bg-primary text-white" style="padding: 15px 20px;">
+          <h4><i class="fa fa-list"></i> My Submissions</h4>
+          <p style="margin: 0; font-size: 13px;">Track your customer creation/update requests</p>
+        </div>
+        <div class="card-body">
+          <div *ngIf="loading" class="text-center" style="padding: 30px;"><i class="fa fa-spinner fa-spin fa-2x"></i></div>
+          <table class="table table-bordered table-striped" *ngIf="!loading && submissions.length > 0">
+            <thead class="thead-dark">
+              <tr>
+                <th>#</th>
+                <th>Customer Name</th>
+                <th>Account No</th>
+                <th>Type</th>
+                <th>Submitted Date</th>
+                <th>Status</th>
+                <th>Actioned By</th>
+                <th>Error/Reason</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let s of submissions; let i = index">
+                <td>{{ i + 1 }}</td>
+                <td>{{ s.customerName }}</td>
+                <td>{{ s.accountNumber || '-' }}</td>
+                <td>{{ s.customerType || '-' }}</td>
+                <td>{{ s.creationDate | date:'dd-MMM-yyyy HH:mm' }}</td>
+                <td>
+                  <span class="label" [ngClass]="{'label-warning': s.pickedStatus === 'PA', 'label-success': s.pickedStatus === 'S', 'label-danger': s.pickedStatus === 'REJECTED' || s.pickedStatus === 'E'}">
+                    {{ getStatusLabel(s.pickedStatus) }}
+                  </span>
+                </td>
+                <td>{{ s.approvedBy || '-' }}</td>
+                <td>{{ s.errorMsg || '-' }}</td>
+                <td>
+                  <button *ngIf="s.pickedStatus === 'REJECTED'" class="btn btn-xs btn-warning" (click)="resubmit(s)">
+                    <i class="fa fa-refresh"></i> Edit & Resubmit
+                  </button>
+                  <span *ngIf="s.pickedStatus === 'PA'" style="color: #999; font-size: 12px;">Awaiting Approval</span>
+                  <span *ngIf="s.pickedStatus === 'S'" style="color: #5cb85c; font-size: 12px;"><i class="fa fa-check"></i> Approved</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div *ngIf="!loading && submissions.length === 0" class="text-center" style="padding: 30px; color: #999;">
+            <i class="fa fa-inbox" style="font-size: 40px;"></i>
+            <p>No submissions found</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

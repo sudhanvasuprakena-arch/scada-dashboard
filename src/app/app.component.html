@@ -1,0 +1,21 @@
+<nav *ngIf="showNav" class="navbar navbar-default navbar-fixed-top" style="background-color: #1a73e8; border: none;">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" style="color: white; font-weight: bold; font-size: 18px;">
+        <i class="fa fa-building"></i> BAMUL - Customer Master Portal
+      </a>
+    </div>
+    <ul class="nav navbar-nav navbar-right">
+      <li><a routerLink="/customer-form" style="color: white;"><i class="fa fa-user-plus"></i> Customer Form</a></li>
+      <li><a routerLink="/customer-update" style="color: white;"><i class="fa fa-edit"></i> Update Customer</a></li>
+      <li><a routerLink="/my-submissions" style="color: white;"><i class="fa fa-list"></i> My Submissions</a></li>
+      <li *ngIf="userRole === 'MASTER'"><a routerLink="/admin-approval" style="color: white;"><i class="fa fa-users"></i> Employee Approval</a></li>
+      <li *ngIf="userRole === 'MASTER'"><a routerLink="/finance-approval" style="color: white;"><i class="fa fa-check-circle"></i> Customer Approval</a></li>
+      <li><a href="javascript:void(0)" (click)="logout()" style="color: white;"><i class="fa fa-sign-out"></i> Logout</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div [style.margin-top]="showNav ? '60px' : '0'">
+  <router-outlet></router-outlet>
+</div>

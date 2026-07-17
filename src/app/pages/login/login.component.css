@@ -1,0 +1,27 @@
+:host {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 80px);
+}
+
+.card {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border: none;
+  border-radius: 8px;
+  width: 400px;
+}
+
+.card-header {
+  border-radius: 8px 8px 0 0;
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.btn-block {
+  padding: 12px;
+  font-size: 16px;
+}
