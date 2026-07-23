@@ -489,8 +489,8 @@ a.panel{text-decoration:none;color:inherit;display:flex}
     <div class="hint">Cream removed before pasteurization</div>
     <div class="rows stacked">
       <div class="rw"><span class="l">Cream received</span><span class="v none" id="cream-qty">—<small>Kg</small></span></div>
-      <div class="rw"><span class="l">Entries</span><span class="v none" id="cream-entries">—</span></div>
-      <div class="rw"><span class="l">Average fat</span><span class="v none" id="cream-fat">—<small>%</small></span></div>
+      <div class="rw"><span class="l">To RMST</span><span class="v none" id="cream-to-rmst">—<small>Kg</small></span></div>
+      <div class="rw"><span class="l">To Product</span><span class="v none" id="cream-to-product">—<small>Kg</small></span></div>
     </div>
     <div class="panel-foot" id="cream-foot"><span class="chip mute">Awaiting data</span><span class="chip cream">Cream in / out</span></div>
   </section>
@@ -583,9 +583,9 @@ a.panel{text-decoration:none;color:inherit;display:flex}
     </div>
     <div class="minis">
       <div class="mini"><span class="lbl">Total milk transferred</span><span class="val num" id="disp-total">—<small>Kg</small></span></div>
-      <div class="mini"><span class="lbl">Trucks</span><span class="val none" id="disp-trucks">—</span></div>
-      <div class="mini"><span class="lbl">Completed</span><span class="val none" id="disp-completed">—</span></div>
-      <div class="mini"><span class="lbl">Avg net / truck</span><span class="val none" id="disp-avg">—<small>Kg</small></span></div>
+      <div class="mini"><span class="lbl">→ Product block</span><span class="val none" id="disp-product">—<small>Kg</small></span></div>
+      <div class="mini"><span class="lbl">→ NMP</span><span class="val none" id="disp-nmp">—<small>Kg</small></span></div>
+      <div class="mini"><span class="lbl">→ Other unions</span><span class="val none" id="disp-other">—<small>Kg</small></span></div>
     </div>
   </a>
 
@@ -698,15 +698,14 @@ async function loadRMST(){
 async function loadCream(){
   const d = await fetchData('cream');
   if(!d) return;
-  // D1=12 → CBT To CST (received), D1=11 → CST To Product Dairy (sent)
+  // Only "Cream received" maps unambiguously (LineType D1=12, received line).
+  // "To RMST" and "To Product" are left as their original "—" placeholder —
+  // the endpoint doesn't provide a confirmed value for either.
   const received = d.find(r=>r.LineType && r.LineType.includes('Received'));
-  const qty = received ? num(received.TotalQty) : d.reduce((s,r)=>s+num(r.TotalQty),0);
-  const entries = d.reduce((s,r)=>s+int(r.Entries),0);
-  const fat = received && num(received.AvgFat)>0 ? num(received.AvgFat).toFixed(2) : '—';
-  setHTML('cream-qty', `${formatIN(Math.round(qty))}<small>Kg</small>`);
-  setHTML('cream-entries', `${entries}`);
-  setHTML('cream-fat', fat !== '—' ? `${fat}<small>%</small>` : '—');
-  clearNone('#cream-qty,#cream-entries,#cream-fat');
+  const entries  = d.reduce((s,r)=>s+int(r.Entries),0);
+  const qtyIn  = received ? num(received.TotalQty) : d.reduce((s,r)=>s+num(r.TotalQty),0);
+  setHTML('cream-qty', `${formatIN(Math.round(qtyIn))}<small>Kg</small>`);
+  clearNone('#cream-qty');
   setFoot('cream-foot', `<span class="chip green">${entries} entries</span><span class="chip cream">Cream in / out</span>`);
 }
 
@@ -760,12 +759,11 @@ async function loadDispatch(){
   const net = d.reduce((s,r)=>{ const n=num(r.NetWeight); return s+(n>0?n:Math.max(0,num(r.GrossWeight)-num(r.TareWeight))); },0);
   const completed = d.filter(r=>r.IsCompleted).length;
   const pct = d.length ? ((completed/d.length)*100).toFixed(1) : 0;
-  const avg = d.length ? Math.round(net/d.length) : 0;
+  // Only the total transferred is filled. The destination split
+  // (→ Product block / → NMP / → Other unions) needs a DairyCode→destination
+  // mapping we don't have, so those rows keep their original "—" placeholder.
   setHTML('disp-total', `${formatIN(net)}<small>Kg</small>`);
-  setHTML('disp-trucks', `${d.length}`);
-  setHTML('disp-completed', `${completed}/${d.length}`);
-  setHTML('disp-avg', `${formatIN(avg)}<small>Kg</small>`);
-  clearNone('#disp-total,#disp-trucks,#disp-completed,#disp-avg');
+  clearNone('#disp-total');
   setFoot('disp-foot', `<span class="chip green">${completed}/${d.length} trucks · ${pct}%</span>`);
 }
 
