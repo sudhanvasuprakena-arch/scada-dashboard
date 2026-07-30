@@ -28,25 +28,26 @@ sql.connect(sqlConfig).then(pool => {
 // dateOnly=true  → plain date compare (MilkRecipt, MilkDispatch — date-only fields)
 // dateOnly=false → 04:45 dairy shift (BAMUL_MIS LogTime — full datetime fields)
 function dateCond(field, filter, start, end, startTime, endTime, dateOnly = false) {
+    const NOW = 'DATEADD(MINUTE,330,GETDATE())';
     if (dateOnly) {
-        if (filter === 'today')     return `CAST(${field} AS DATE) = CAST(GETDATE() AS DATE)`;
-        if (filter === 'yesterday') return `CAST(${field} AS DATE) = CAST(DATEADD(DAY,-1,GETDATE()) AS DATE)`;
-        if (filter === 'week')      return `CAST(${field} AS DATE) >= CAST(DATEADD(DAY,1-DATEPART(WEEKDAY,GETDATE()),GETDATE()) AS DATE) AND CAST(${field} AS DATE) <= CAST(GETDATE() AS DATE)`;
-        if (filter === 'month')     return `CAST(${field} AS DATE) >= DATEFROMPARTS(YEAR(GETDATE()),MONTH(GETDATE()),1) AND CAST(${field} AS DATE) <= CAST(GETDATE() AS DATE)`;
+        if (filter === 'today')     return `CAST(${field} AS DATE) = CAST(${NOW} AS DATE)`;
+        if (filter === 'yesterday') return `CAST(${field} AS DATE) = CAST(DATEADD(DAY,-1,${NOW}) AS DATE)`;
+        if (filter === 'week')      return `CAST(${field} AS DATE) >= CAST(DATEADD(DAY,1-DATEPART(WEEKDAY,${NOW}),${NOW}) AS DATE) AND CAST(${field} AS DATE) <= CAST(GETDATE() AS DATE)`;
+        if (filter === 'month')     return `CAST(${field} AS DATE) >= DATEFROMPARTS(YEAR(${NOW}),MONTH(${NOW}),1) AND CAST(${field} AS DATE) <= CAST(${NOW} AS DATE)`;
         if (filter === 'custom' && start && end) return `CAST(${field} AS DATE) >= '${start}' AND CAST(${field} AS DATE) <= '${end}'`;
-        return `CAST(${field} AS DATE) >= DATEFROMPARTS(YEAR(GETDATE()),MONTH(GETDATE()),1) AND CAST(${field} AS DATE) <= CAST(GETDATE() AS DATE)`;
+        return `CAST(${field} AS DATE) >= DATEFROMPARTS(YEAR(${NOW}),MONTH(${NOW}),1) AND CAST(${field} AS DATE) <= CAST(${NOW} AS DATE)`;
     }
     // Full datetime: 04:45 dairy shift
-    if (filter === 'today')     return `${field} >= DATEADD(MINUTE,285,CAST(CAST(GETDATE() AS DATE) AS DATETIME)) AND ${field} < DATEADD(MINUTE,284,CAST(CAST(DATEADD(DAY,1,GETDATE()) AS DATE) AS DATETIME))`;
-    if (filter === 'yesterday') return `${field} >= DATEADD(MINUTE,285,CAST(CAST(DATEADD(DAY,-1,GETDATE()) AS DATE) AS DATETIME)) AND ${field} < DATEADD(MINUTE,284,CAST(CAST(GETDATE() AS DATE) AS DATETIME))`;
-    if (filter === 'week')      return `${field} >= DATEADD(MINUTE,285,CAST(CAST(DATEADD(DAY,1-DATEPART(WEEKDAY,GETDATE()),GETDATE()) AS DATE) AS DATETIME)) AND ${field} < DATEADD(MINUTE,284,CAST(CAST(DATEADD(DAY,1,GETDATE()) AS DATE) AS DATETIME))`;
-    if (filter === 'month')     return `${field} >= DATEADD(MINUTE,285,CAST(DATEFROMPARTS(YEAR(GETDATE()),MONTH(GETDATE()),1) AS DATETIME)) AND ${field} < DATEADD(MINUTE,284,CAST(CAST(DATEADD(DAY,1,GETDATE()) AS DATE) AS DATETIME))`;
+    if (filter === 'today')     return `${field} >= DATEADD(MINUTE,285,CAST(CAST(${NOW} AS DATE) AS DATETIME)) AND ${field} < DATEADD(MINUTE,284,CAST(CAST(DATEADD(DAY,1,${NOW}) AS DATE) AS DATETIME))`;
+    if (filter === 'yesterday') return `${field} >= DATEADD(MINUTE,285,CAST(CAST(DATEADD(DAY,-1,${NOW}) AS DATE) AS DATETIME)) AND ${field} < DATEADD(MINUTE,284,CAST(CAST(${NOW} AS DATE) AS DATETIME))`;
+    if (filter === 'week')      return `${field} >= DATEADD(MINUTE,285,CAST(CAST(DATEADD(DAY,1-DATEPART(WEEKDAY,${NOW}),${NOW}) AS DATE) AS DATETIME)) AND ${field} < DATEADD(MINUTE,284,CAST(CAST(DATEADD(DAY,1,${NOW}) AS DATE) AS DATETIME))`;
+    if (filter === 'month')     return `${field} >= DATEADD(MINUTE,285,CAST(DATEFROMPARTS(YEAR(${NOW}),MONTH(${NOW}),1) AS DATETIME)) AND ${field} < DATEADD(MINUTE,284,CAST(CAST(DATEADD(DAY,1,${NOW}) AS DATE) AS DATETIME))`;
     if (filter === 'custom' && start && end) {
         const from = startTime ? `'${start}T${startTime}'` : `'${start}T04:45:00'`;
         const to   = endTime   ? `'${end}T${endTime}'`     : `'${end}T04:44:00'`;
         return `${field} >= ${from} AND ${field} <= ${to}`;
     }
-    return `${field} >= DATEADD(MINUTE,285,CAST(DATEFROMPARTS(YEAR(GETDATE()),MONTH(GETDATE()),1) AS DATETIME)) AND ${field} < DATEADD(MINUTE,284,CAST(CAST(DATEADD(DAY,1,GETDATE()) AS DATE) AS DATETIME))`;
+    return `${field} >= DATEADD(MINUTE,285,CAST(DATEFROMPARTS(YEAR(${NOW}),MONTH(${NOW}),1) AS DATETIME)) AND ${field} < DATEADD(MINUTE,284,CAST(CAST(DATEADD(DAY,1,${NOW}) AS DATE) AS DATETIME))`;
 }
 
 function pool(res) {
@@ -64,7 +65,8 @@ app.get('/api/bangalore/truck-entry', async (req, res) => {
                 DCNumber_Sender, GrossWeight, TareWeight, NetWeight,
                 Fat_First, SNF_First, IsCompleted
             FROM BAMUL.dbo.MilkRecipt
-            WHERE ${dateCond('[Date]', filter, start, end, startTime, endTime, true)} AND ISNULL(IsDel,0)=0
+            WHERE ${dateCond('CAST([Date] AS DATETIME)+CAST(REPLACE(ArrivalTime,\'.\',\':\') AS DATETIME)', filter, start, end, startTime, endTime)} AND ISNULL(IsDel,0)=0
+            ${req.query.all !== 'true' ? "AND ProductCode IN ('RAW MILK','PAST MILK','SKIM MILK','SKIM MILK POWDER','Homogenised milk')" : ''}
             ORDER BY [Date] DESC, ArrivalTime DESC
         `);
         res.json({ success: true, data: r.recordset });
@@ -80,7 +82,8 @@ app.get('/api/bangalore/milk-dispatch-truck', async (req, res) => {
             SELECT CAST([Date] AS DATE) AS Date, TruckNumber, DairyCode, ProductCode,
                 GrossWeight, TareWeight, NetWeight, Fat_First, SNF_First, IsCompleted
             FROM BAMUL.dbo.MilkDispatch
-            WHERE ${dateCond('[Date]', filter, start, end, startTime, endTime, true)} AND ISNULL(IsDel,0)=0
+            WHERE ${dateCond('CAST([Date] AS DATETIME)+CAST(REPLACE(DispatchTime,\'.\',\':\') AS DATETIME)', filter, start, end, startTime, endTime)} AND ISNULL(IsDel,0)=0 AND IsCompleted=1
+            ${req.query.all !== 'true' ? "AND ProductCode IN ('RAW MILK','PAST MILK','SKIM MILK','SKIM MILK POWDER','Homogenised milk')" : ''}
             ORDER BY [Date] DESC
         `);
         res.json({ success: true, data: r.recordset });
@@ -147,13 +150,13 @@ app.get('/api/bangalore/cream', async (req, res) => {
         const { filter, start, end, startTime, endTime } = req.query;
         const r = await p.request().query(`
             SELECT
-                CASE D1 WHEN 12 THEN 'CBT To CST (Received)' WHEN 11 THEN 'CST To Product Dairy (Sent)' ELSE CAST(D1 AS VARCHAR) END AS LineType,
+                CASE D1 WHEN 12 THEN 'CBT To CST (Received)' WHEN 11 THEN 'CST To Product Dairy (Sent)' WHEN 10 THEN 'CST To RMST (Sent)' ELSE CAST(D1 AS VARCHAR) END AS LineType,
                 COUNT(*) AS Entries,
                 SUM(ISNULL(D4,0)) AS TotalQty,
                 ROUND(AVG(NULLIF(D6,0)),2) AS AvgFat,
                 ROUND(AVG(NULLIF(D7,0)),2) AS AvgSNF
             FROM BAMUL_MIS.dbo.Batch_Log
-            WHERE D1 IN (11,12)
+            WHERE D1 IN (10,11,12)
             AND ${dateCond('LogTime', filter, start, end, startTime, endTime)}
             GROUP BY D1
             ORDER BY D1 DESC
@@ -163,15 +166,20 @@ app.get('/api/bangalore/cream', async (req, res) => {
 });
 
 // ── PMST ── BAMUL_MIS.dbo.MPL_Batch ───────────────────────────────────────────
-// D3: 6=PMST-5, 7=PMST-6, 8=PMST-7, 9=PMST-8, 10=PMST-9, 11=PMST-10
-// D9=TransferQty
-// D13: 1=Shubham,2=Toned Milk,3=NSP,4=Skim Milk,5=HCM,6=Curd Milk,7=Npro Milk,8=Samruddhi,9=Full Cream Milk
+// D1=Line(1=MP-01,2=MP-02,3=MP-03,4=MP-04), D2=Source RMST(1-5), D3=Dest PMST(6-11)
+// D9=TransferQty, D10=TimeTaken(sec), D11=StartQty, D12=EndQty, D13=Variant
+// StartDate=DATEADD(SECOND,-D9,LogTime)
 app.get('/api/bangalore/pmst', async (req, res) => {
     try {
         const p = pool(res); if (!p) return;
         const { filter, start, end, startTime, endTime } = req.query;
         const r = await p.request().query(`
             SELECT
+                CASE D1
+                    WHEN 1 THEN 'MP-01' WHEN 2 THEN 'MP-02'
+                    WHEN 3 THEN 'MP-03' WHEN 4 THEN 'MP-04'
+                    ELSE CAST(D1 AS VARCHAR)
+                END AS LineName,
                 CASE D3
                     WHEN 6  THEN 'PMST-5'  WHEN 7  THEN 'PMST-6'
                     WHEN 8  THEN 'PMST-7'  WHEN 9  THEN 'PMST-8'
@@ -179,6 +187,7 @@ app.get('/api/bangalore/pmst', async (req, res) => {
                     ELSE CAST(D3 AS VARCHAR)
                 END AS PMSID,
                 CASE D13
+                    WHEN 0 THEN 'No Selection'
                     WHEN 1 THEN 'Shubham'       WHEN 2 THEN 'Toned Milk'
                     WHEN 3 THEN 'NSP'            WHEN 4 THEN 'Skim Milk'
                     WHEN 5 THEN 'HCM'            WHEN 6 THEN 'Curd Milk'
@@ -188,9 +197,9 @@ app.get('/api/bangalore/pmst', async (req, res) => {
                 COUNT(*) AS Entries,
                 SUM(ISNULL(D9,0)) AS TotalProcessed
             FROM BAMUL_MIS.dbo.MPL_Batch
-            WHERE ${dateCond('LogTime', filter, start, end, startTime, endTime)}
-            GROUP BY D3, D13
-            ORDER BY D3, D13
+            WHERE ${dateCond('DATEADD(SECOND,-ISNULL(D9,0),LogTime)', filter, start, end, startTime, endTime)}
+            GROUP BY D1, D3, D13
+            ORDER BY D1, D3, D13
         `);
         res.json({ success: true, data: r.recordset });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
@@ -198,7 +207,7 @@ app.get('/api/bangalore/pmst', async (req, res) => {
 
 // ── HMST ── BAMUL_MIS.dbo.Batch_Log (D1 IN 3,4,5 → PMST Loading Lines) ────────
 // D3: 12=HMST-1, 13=HMST-2, 14=HMST-3, 15=HMST-4, 16=HMST-5
-// D4=TransferredQty, D6=FAT, D7=SNF
+// D4=TransferredQty, D6=FAT, D7=SNF, D12=Variant
 app.get('/api/bangalore/hmst', async (req, res) => {
     try {
         const p = pool(res); if (!p) return;
@@ -210,23 +219,31 @@ app.get('/api/bangalore/hmst', async (req, res) => {
                     WHEN 14 THEN 'HMST-3' WHEN 15 THEN 'HMST-4'
                     WHEN 16 THEN 'HMST-5' ELSE CAST(D3 AS VARCHAR)
                 END AS HMSTID,
+                CASE D12
+                    WHEN 0 THEN 'No Selection'
+                    WHEN 1 THEN 'Shubham'       WHEN 2 THEN 'Toned Milk'
+                    WHEN 3 THEN 'NSP'            WHEN 4 THEN 'Skim Milk'
+                    WHEN 5 THEN 'HCM'            WHEN 6 THEN 'Curd Milk'
+                    WHEN 7 THEN 'Npro Milk'      WHEN 8 THEN 'Samruddhi'
+                    WHEN 9 THEN 'Full Cream Milk' ELSE 'Unknown'
+                END AS Variant,
                 COUNT(*) AS Entries,
                 SUM(ISNULL(D4,0)) AS TotalQty,
                 ROUND(AVG(NULLIF(D6,0)),2) AS AvgFat,
                 ROUND(AVG(NULLIF(D7,0)),2) AS AvgSNF
             FROM BAMUL_MIS.dbo.Batch_Log
             WHERE D1 IN (3,4,5) AND D3 IN (12,13,14,15,16)
-            AND ${dateCond('LogTime', filter, start, end, startTime, endTime)}
-            GROUP BY D3
-            ORDER BY D3
+            AND ${dateCond('DATEADD(SECOND,-ISNULL(D5,0),LogTime)', filter, start, end, startTime, endTime)}
+            GROUP BY D3, D12
+            ORDER BY D3, D12
         `);
         res.json({ success: true, data: r.recordset });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
 // ── Curd ── BAMUL_MIS.dbo.Curd_Batch ──────────────────────────────────────────
-// D1: 1=CP-01, 2=CP-02 | D3: 17=Curd Tank-1, 18=Curd Tank-2
-// D9=TransferQty
+// D1=Line(1=CP-01,2=CP-02), D2=Source PMST(6-11), D3=Dest(17=Curd Tank-1,18=Curd Tank-2)
+// D9=TransferQty, D10=Duration(sec), StartDate=DATEADD(SECOND,-D10,LogTime)
 app.get('/api/bangalore/curd', async (req, res) => {
     try {
         const p = pool(res); if (!p) return;
@@ -243,9 +260,55 @@ app.get('/api/bangalore/curd', async (req, res) => {
                 SUM(ISNULL(D9,0)) AS TotalQty
             FROM BAMUL_MIS.dbo.Curd_Batch
             WHERE D3 IN (17,18)
-            AND ${dateCond('LogTime', filter, start, end, startTime, endTime)}
+            AND ${dateCond('DATEADD(SECOND,-ISNULL(D10,0),LogTime)', filter, start, end, startTime, endTime)}
             GROUP BY D3, D1
             ORDER BY D3, D1
+        `);
+        res.json({ success: true, data: r.recordset });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+// ── Product Dairy Dispatch ── BAMUL_MIS.dbo.Batch_Log (D3 IN 25,40) ──────────
+// D4=TransferredQty, D6=FAT, D7=SNF, StartDate=DATEADD(SECOND,-D5,LogTime)
+app.get('/api/bangalore/product-dispatch', async (req, res) => {
+    try {
+        const p = pool(res); if (!p) return;
+        const { filter, start, end, startTime, endTime } = req.query;
+        const r = await p.request().query(`
+            SELECT
+                CASE D1 WHEN 11 THEN 'CST To Product Dairy' WHEN 13 THEN 'Dispatch Line-1' WHEN 14 THEN 'Dispatch Line-2' ELSE CAST(D1 AS VARCHAR) END AS LineName,
+                COUNT(*) AS Entries,
+                SUM(ISNULL(D4,0)) AS TotalQty,
+                ROUND(AVG(NULLIF(D6,0)),2) AS AvgFat,
+                ROUND(AVG(NULLIF(D7,0)),2) AS AvgSNF
+            FROM BAMUL_MIS.dbo.Batch_Log
+            WHERE D3 IN (25,40)
+            AND ${dateCond('DATEADD(SECOND,-ISNULL(D5,0),LogTime)', filter, start, end, startTime, endTime)}
+            GROUP BY D1
+            ORDER BY D1
+        `);
+        res.json({ success: true, data: r.recordset });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+// ── NMP Dispatch ── BAMUL_MIS.dbo.Batch_Log (D1 IN 13,14 → Dispatch Lines, D3=39 NMP) ──
+// D4=TransferredQty, D6=FAT, D7=SNF, StartDate=DATEADD(SECOND,-D5,LogTime)
+app.get('/api/bangalore/nmp-dispatch', async (req, res) => {
+    try {
+        const p = pool(res); if (!p) return;
+        const { filter, start, end, startTime, endTime } = req.query;
+        const r = await p.request().query(`
+            SELECT
+                CASE D1 WHEN 13 THEN 'Dispatch Line-1' WHEN 14 THEN 'Dispatch Line-2' ELSE CAST(D1 AS VARCHAR) END AS LineName,
+                COUNT(*) AS Entries,
+                SUM(ISNULL(D4,0)) AS TotalQty,
+                ROUND(AVG(NULLIF(D6,0)),2) AS AvgFat,
+                ROUND(AVG(NULLIF(D7,0)),2) AS AvgSNF
+            FROM BAMUL_MIS.dbo.Batch_Log
+            WHERE D1 IN (13,14) AND D3=39
+            AND ${dateCond('DATEADD(SECOND,-ISNULL(D5,0),LogTime)', filter, start, end, startTime, endTime)}
+            GROUP BY D1
+            ORDER BY D1
         `);
         res.json({ success: true, data: r.recordset });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
@@ -260,8 +323,8 @@ app.get('/api/bangalore/milk-dispatch', async (req, res) => {
             SELECT DairyCode, ProductCode,
                 COUNT(*) AS Trucks,
                 SUM(ISNULL(NetWeight,0)) AS TotalQty,
-                ROUND(AVG(NULLIF(Fat_First,0)),2) AS AvgFat,
-                ROUND(AVG(NULLIF(SNF_First,0)),2) AS AvgSNF,
+                ROUND(AVG(NULLIF(TRY_CAST(Fat_First AS FLOAT),0)),2) AS AvgFat,
+                ROUND(AVG(NULLIF(TRY_CAST(SNF_First AS FLOAT),0)),2) AS AvgSNF,
                 SUM(CASE WHEN IsCompleted=1 THEN 1 ELSE 0 END) AS Completed
             FROM BAMUL.dbo.MilkDispatch
             WHERE ${dateCond('[Date]', filter, start, end, startTime, endTime, true)} AND ISNULL(IsDel,0)=0

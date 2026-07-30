@@ -183,7 +183,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
   .brand p{display:none}
 }
 </style>
-</head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script></head>
 <body>
 
 <!-- ===== Top bar ===== -->
@@ -215,6 +215,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
       </div>
     </div>
     <a class="btn" href="bangalore-dairy-dashboard.html">← Back to plant flow</a>
+    <button class="btn" onclick="downloadPDF()">📥 PDF</button>
     <button class="btn primary">Logout</button>
   </div>
 </header>
@@ -300,16 +301,16 @@ async function fetchData(path){
 
 const wrap = document.getElementById('tanks');
 
-/* Render fixed HMST 1–5, merging live rows keyed by HMSTID.
-   Note: the API does not return per-tank variants, so that row stays "—". */
+/* Render fixed HMST 1–5, merging live rows keyed by HMSTID. */
 function render(rows){
   const fixed = ['HMST-1','HMST-2','HMST-3','HMST-4','HMST-5'];
   const byId = {};
   (rows || []).forEach(r=>{
     const id = String(r.HMSTID);
-    if(!byId[id]) byId[id] = { kg:0, fatSum:0, snfSum:0, n:0 };
+    if(!byId[id]) byId[id] = { kg:0, fatSum:0, snfSum:0, n:0, variants:new Set() };
     byId[id].kg += num(r.TotalQty);
     byId[id].fatSum += num(r.AvgFat); byId[id].snfSum += num(r.AvgSNF); byId[id].n++;
+    if(r.Variant && r.Variant !== 'No Selection' && r.Variant !== 'Unknown') byId[id].variants.add(r.Variant);
   });
   wrap.innerHTML = '';
   fixed.forEach((id,i)=>{
@@ -320,6 +321,9 @@ function render(rows){
     const snf = has && t.snfSum > 0 ? (t.snfSum/t.n).toFixed(2) : '—';
     const label = id.replace('HMST-','');
     const chip = has ? '<span class="chip green">Receiving</span>' : '<span class="chip mute">Awaiting data</span>';
+    const varList = has && t.variants.size > 0
+      ? [...t.variants].map(v=>`<span class="vchip">${v}</span>`).join('')
+      : '<span class="vchip empty">—</span>';
     wrap.insertAdjacentHTML('beforeend', `
       <section class="tank reveal" style="animation-delay:${i*0.04}s">
         <div class="tank-head">
@@ -333,6 +337,10 @@ function render(rows){
         <div class="fs">
           <div class="cell"><div class="lbl">Avg Fat</div><div class="v num">${fat}${fat!=='—'?'<small>%</small>':''}</div></div>
           <div class="cell"><div class="lbl">Avg SNF</div><div class="v num">${snf}${snf!=='—'?'<small>%</small>':''}</div></div>
+        </div>
+        <div class="vars">
+          <div class="lbl">Variants</div>
+          <div class="vlist">${varList}</div>
         </div>
         ${chip}
       </section>`);
@@ -415,5 +423,8 @@ document.addEventListener('click',ev=>{
   if(!customRange.contains(ev.target) && !ev.target.closest('[data-custom]')) customRange.hidden = true;
 });
 </script>
+<script>function downloadPDF(){const opt={margin:0.3,filename:document.title+'.pdf',image:{type:'png'},html2canvas:{scale:3,useCORS:true,backgroundColor:'#ffffff',logging:false},jsPDF:{unit:'in',format:'a4',orientation:'landscape'}};html2pdf().set(opt).from(document.body).save();}
+</script>
+<script>(function(){var t=new Date();var mn=new Date(t);mn.setMonth(mn.getMonth()-4);var fmt=d=>d.toISOString().split("T")[0];["startDate","endDate"].forEach(function(id){var el=document.getElementById(id);if(el){el.min=fmt(mn);el.max=fmt(t);}});})();/*dateLimit*/</script>
 </body>
 </html>

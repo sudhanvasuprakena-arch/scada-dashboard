@@ -380,7 +380,7 @@ a.panel{text-decoration:none;color:inherit;display:flex}
   .p-disp .minis{grid-template-columns:1fr}
 }
 </style>
-</head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script></head>
 <body>
 
 <!-- ===== Top bar ===== -->
@@ -412,6 +412,7 @@ a.panel{text-decoration:none;color:inherit;display:flex}
       </div>
     </div>
     <span class="sync" id="sync-time">Syncing...</span>
+    <button class="btn" onclick="downloadPDF()">📥 PDF</button>
     <button class="btn">← Back</button>
     <button class="btn primary">Logout</button>
   </div>
@@ -489,8 +490,8 @@ a.panel{text-decoration:none;color:inherit;display:flex}
     <div class="hint">Cream removed before pasteurization</div>
     <div class="rows stacked">
       <div class="rw"><span class="l">Cream received</span><span class="v none" id="cream-qty">—<small>Kg</small></span></div>
-      <div class="rw"><span class="l">Entries</span><span class="v none" id="cream-entries">—</span></div>
-      <div class="rw"><span class="l">Average fat</span><span class="v none" id="cream-fat">—<small>%</small></span></div>
+      <div class="rw"><span class="l">To RMST</span><span class="v none" id="cream-to-rmst">—<small>Kg</small></span></div>
+      <div class="rw"><span class="l">To Product</span><span class="v none" id="cream-to-product">—<small>Kg</small></span></div>
     </div>
     <div class="panel-foot" id="cream-foot"><span class="chip mute">Awaiting data</span><span class="chip cream">Cream in / out</span></div>
   </section>
@@ -583,9 +584,9 @@ a.panel{text-decoration:none;color:inherit;display:flex}
     </div>
     <div class="minis">
       <div class="mini"><span class="lbl">Total milk transferred</span><span class="val num" id="disp-total">—<small>Kg</small></span></div>
-      <div class="mini"><span class="lbl">Trucks</span><span class="val none" id="disp-trucks">—</span></div>
-      <div class="mini"><span class="lbl">Completed</span><span class="val none" id="disp-completed">—</span></div>
-      <div class="mini"><span class="lbl">Avg net / truck</span><span class="val none" id="disp-avg">—<small>Kg</small></span></div>
+      <div class="mini"><span class="lbl">→ Product block</span><span class="val none" id="disp-product">—<small>Kg</small></span></div>
+      <div class="mini"><span class="lbl">→ NMP</span><span class="val none" id="disp-nmp">—<small>Kg</small></span></div>
+      <div class="mini"><span class="lbl">→ Other unions</span><span class="val none" id="disp-other">—<small>Kg</small></span></div>
     </div>
   </a>
 
@@ -650,9 +651,9 @@ async function loadSummary(){
   if(dout){ milkOut = dout.reduce((s,r)=>s+num(r.NetWeight),0); dispatched = dout.length; }
   const used = milkIn - milkOut;
 
-  setText('sum-in',  milkIn  > 0 ? formatIN(milkIn)  : '—');
-  setText('sum-out', milkOut > 0 ? formatIN(milkOut) : '—');
-  setText('sum-used',used    > 0 ? formatIN(used)    : '—');
+  setText('sum-in',  milkIn  > 0 ? formatIN(milkIn)  : '0');
+  setText('sum-out', milkOut > 0 ? formatIN(milkOut) : '0');
+  setText('sum-used',used    > 0 ? formatIN(used)    : '0');
   setHTML('truck-count', trucks > 0 ? `From <b>${trucks} trucks</b>` : 'Awaiting data');
   setHTML('used-meta', milkIn > 0 ? `<b>${((used/milkIn)*100).toFixed(1)}%</b> of received milk` : 'Awaiting data');
   setHTML('dispatch-count', dispatched > 0 ? `<b>${dispatched}</b> trucks dispatched` : 'Awaiting data');
@@ -666,8 +667,8 @@ async function loadWeighBridge(){
   const net = d.reduce((s,r)=>{ const n=num(r.NetWeight); return s+(n>0?n:Math.max(0,num(r.GrossWeight)-num(r.TareWeight))); },0);
   const fatRows = d.filter(r=>num(r.Fat_First)>0);
   const snfRows  = d.filter(r=>num(r.SNF_First)>0);
-  const fat = fatRows.length ? (fatRows.reduce((s,r)=>s+num(r.Fat_First),0)/fatRows.length).toFixed(2) : '—';
-  const snf = snfRows.length ? (snfRows.reduce((s,r)=>s+num(r.SNF_First),0)/snfRows.length).toFixed(2) : '—';
+  const fat = fatRows.length ? (fatRows.reduce((s,r)=>s+num(r.Fat_First),0)/fatRows.length).toFixed(2) : '0';
+  const snf = snfRows.length ? (snfRows.reduce((s,r)=>s+num(r.SNF_First),0)/snfRows.length).toFixed(2) : '0';
   setHTML('wb-net', `${formatIN(net)}<small>Kg</small>`);
   setHTML('wb-fat', `${fat}<small>%</small>`);
   setHTML('wb-snf', `${snf}<small>%</small>`);
@@ -684,12 +685,12 @@ async function loadRMST(){
   const snfRows2  = d.filter(r=>num(r.AvgSNF)>0);
   const fatTotalQty = fatRows2.reduce((s,r)=>s+num(r.TotalQty),0);
   const snfTotalQty = snfRows2.reduce((s,r)=>s+num(r.TotalQty),0);
-  const fat = fatTotalQty>0 ? (fatRows2.reduce((s,r)=>s+num(r.AvgFat)*num(r.TotalQty),0)/fatTotalQty).toFixed(2) : '—';
-  const snf = snfTotalQty>0 ? (snfRows2.reduce((s,r)=>s+num(r.AvgSNF)*num(r.TotalQty),0)/snfTotalQty).toFixed(2) : '—';
+  const fat = fatTotalQty>0 ? (fatRows2.reduce((s,r)=>s+num(r.AvgFat)*num(r.TotalQty),0)/fatTotalQty).toFixed(2) : '0';
+  const snf = snfTotalQty>0 ? (snfRows2.reduce((s,r)=>s+num(r.AvgSNF)*num(r.TotalQty),0)/snfTotalQty).toFixed(2) : '0';
   const tanks = new Set(d.map(r=>r.RMSID)).size;
   setHTML('rmst-net', `${formatIN(Math.round(qty))}<small>Kg</small>`);
-  setHTML('rmst-fat', fat !== '—' ? `${fat}<small>%</small>` : '—');
-  setHTML('rmst-snf', snf !== '—' ? `${snf}<small>%</small>` : '—');
+  setHTML('rmst-fat', `${fat}<small>%</small>`);
+  setHTML('rmst-snf', `${snf}<small>%</small>`);
   clearNone('#rmst-net,#rmst-fat,#rmst-snf');
   setFoot('rmst-foot', `<span class="chip green">${tanks} tanks</span><span class="chip blue">Feeds dispatch ↓</span>`);
 }
@@ -698,15 +699,17 @@ async function loadRMST(){
 async function loadCream(){
   const d = await fetchData('cream');
   if(!d) return;
-  // D1=12 → CBT To CST (received), D1=11 → CST To Product Dairy (sent)
-  const received = d.find(r=>r.LineType && r.LineType.includes('Received'));
-  const qty = received ? num(received.TotalQty) : d.reduce((s,r)=>s+num(r.TotalQty),0);
-  const entries = d.reduce((s,r)=>s+int(r.Entries),0);
-  const fat = received && num(received.AvgFat)>0 ? num(received.AvgFat).toFixed(2) : '—';
-  setHTML('cream-qty', `${formatIN(Math.round(qty))}<small>Kg</small>`);
-  setHTML('cream-entries', `${entries}`);
-  setHTML('cream-fat', fat !== '—' ? `${fat}<small>%</small>` : '—');
-  clearNone('#cream-qty,#cream-entries,#cream-fat');
+  // Cream flows through the Cream Storage Tank (CST). Endpoint lines:
+  //   Received  → CBT → CST   → "Cream received"
+  //   To RMST   → CST → RMST  → "To RMST"
+  //   To Product→ CST → Product Dairy → "To Product"
+  const received  = d.find(r=>r.LineType && r.LineType.includes('Received'));
+  const toRmst    = d.find(r=>r.LineType && r.LineType.includes('RMST'));
+  const toProduct = d.find(r=>r.LineType && r.LineType.includes('Product'));
+  const entries  = d.reduce((s,r)=>s+int(r.Entries),0);
+  if(received){ setHTML('cream-qty', `${formatIN(Math.round(num(received.TotalQty)))}<small>Kg</small>`); clearNone('#cream-qty'); }
+  if(toRmst){ setHTML('cream-to-rmst', `${formatIN(Math.round(num(toRmst.TotalQty)))}<small>Kg</small>`); clearNone('#cream-to-rmst'); }
+  if(toProduct){ setHTML('cream-to-product', `${formatIN(Math.round(num(toProduct.TotalQty)))}<small>Kg</small>`); clearNone('#cream-to-product'); }
   setFoot('cream-foot', `<span class="chip green">${entries} entries</span><span class="chip cream">Cream in / out</span>`);
 }
 
@@ -717,8 +720,8 @@ async function loadPMST(){
   const qty = d.reduce((s,r)=>s+num(r.TotalProcessed),0);
   const tanks = new Set(d.map(r=>r.PMSID)).size;
   setHTML('pmst-net', `${formatIN(Math.round(qty))}<small>Kg</small>`);
-  setHTML('pmst-fat', '—');
-  setHTML('pmst-snf', '—');
+  setHTML('pmst-fat', '0');
+  setHTML('pmst-snf', '0');
   clearNone('#pmst-net,#pmst-fat,#pmst-snf');
   setFoot('pmst-foot', `<span class="chip green">${tanks} tanks</span><span class="chip blue">Feeds dispatch ↓</span><span class="chip blue">Click for tank-wise details</span>`);
 }
@@ -743,12 +746,12 @@ async function loadHMST(){
   const hsnfRows  = d.filter(r=>num(r.AvgSNF)>0);
   const hfatQty = hfatRows.reduce((s,r)=>s+num(r.TotalQty),0);
   const hsnfQty = hsnfRows.reduce((s,r)=>s+num(r.TotalQty),0);
-  const fat = hfatQty>0 ? (hfatRows.reduce((s,r)=>s+num(r.AvgFat)*num(r.TotalQty),0)/hfatQty).toFixed(2) : '—';
-  const snf = hsnfQty>0 ? (hsnfRows.reduce((s,r)=>s+num(r.AvgSNF)*num(r.TotalQty),0)/hsnfQty).toFixed(2) : '—';
+  const fat = hfatQty>0 ? (hfatRows.reduce((s,r)=>s+num(r.AvgFat)*num(r.TotalQty),0)/hfatQty).toFixed(2) : '0';
+  const snf = hsnfQty>0 ? (hsnfRows.reduce((s,r)=>s+num(r.AvgSNF)*num(r.TotalQty),0)/hsnfQty).toFixed(2) : '0';
   const tanks = new Set(d.map(r=>r.HMSTID)).size;
   setHTML('hmst-net', `${formatIN(Math.round(qty))}<small>Kg</small>`);
-  setHTML('hmst-fat', fat !== '—' ? `${fat}<small>%</small>` : '—');
-  setHTML('hmst-snf', snf !== '—' ? `${snf}<small>%</small>` : '—');
+  setHTML('hmst-fat', `${fat}<small>%</small>`);
+  setHTML('hmst-snf', `${snf}<small>%</small>`);
   clearNone('#hmst-net,#hmst-fat,#hmst-snf');
   setFoot('hmst-foot', `<span class="chip green">${tanks} tanks</span><span class="chip blue">Click for tank-wise details</span>`);
 }
@@ -760,17 +763,47 @@ async function loadDispatch(){
   const net = d.reduce((s,r)=>{ const n=num(r.NetWeight); return s+(n>0?n:Math.max(0,num(r.GrossWeight)-num(r.TareWeight))); },0);
   const completed = d.filter(r=>r.IsCompleted).length;
   const pct = d.length ? ((completed/d.length)*100).toFixed(1) : 0;
-  const avg = d.length ? Math.round(net/d.length) : 0;
   setHTML('disp-total', `${formatIN(net)}<small>Kg</small>`);
-  setHTML('disp-trucks', `${d.length}`);
-  setHTML('disp-completed', `${completed}/${d.length}`);
-  setHTML('disp-avg', `${formatIN(avg)}<small>Kg</small>`);
-  clearNone('#disp-total,#disp-trucks,#disp-completed,#disp-avg');
+  clearNone('#disp-total');
   setFoot('disp-foot', `<span class="chip green">${completed}/${d.length} trucks · ${pct}%</span>`);
+  // Product Dairy from Batch_Log D3 IN (25,40)
+  const prod = await fetchData('product-dispatch');
+  if(prod && prod.length){
+    const prodQty = prod.reduce((s,r)=>s+num(r.TotalQty),0);
+    setHTML('disp-product', `${formatIN(Math.round(prodQty))}<small>Kg</small>`);
+    clearNone('#disp-product');
+  }
+  // NMP from Batch_Log
+  const nmp = await fetchData('nmp-dispatch');
+  if(nmp && nmp.length){
+    const nmpQty = nmp.reduce((s,r)=>s+num(r.TotalQty),0);
+    setHTML('disp-nmp', `${formatIN(Math.round(nmpQty))}<small>Kg</small>`);
+    clearNone('#disp-nmp');
+  }
+  // Other unions from MilkDispatch (excluding NMP, milk products only)
+  const others = await fetchData('milk-dispatch');
+  if(others && others.length){
+    const milkProducts = ['RAW MILK','PAST MILK','SKIM MILK','HOMOGENISED MILK'];
+    const otherQty = others
+      .filter(r=>milkProducts.includes((r.ProductCode||'').toUpperCase()) && !(r.DairyCode||'').toUpperCase().includes('NMP'))
+      .reduce((s,r)=>s+num(r.TotalQty),0);
+    setHTML('disp-other', `${formatIN(Math.round(otherQty))}<small>Kg</small>`);
+    clearNone('#disp-other');
+  }
 }
 
 /* ---------- Load everything ---------- */
+function resetCards(){
+  ['sum-in','sum-out','sum-used'].forEach(id=>setText(id,'0'));
+  ['truck-count','used-meta','dispatch-count'].forEach(id=>setHTML(id,'Awaiting data'));
+  ['wb-net','rmst-net','cream-qty','cream-to-rmst','cream-to-product','pmst-net','curd-qty','hmst-net','disp-total'].forEach(id=>setHTML(id,'0<small>Kg</small>'));
+  ['wb-fat','wb-snf','rmst-fat','rmst-snf','cream-fat','pmst-fat','pmst-snf','hmst-fat','hmst-snf'].forEach(id=>setHTML(id,'0<small>%</small>'));
+  ['cream-entries','disp-trucks','disp-completed','disp-avg'].forEach(id=>setHTML(id,'0'));
+  ['wb-foot','rmst-foot','cream-foot','pmst-foot','curd-foot','hmst-foot','disp-foot'].forEach(id=>setFoot(id,''));
+}
+
 function loadAllData(){
+  resetCards();
   loadSummary();
   loadWeighBridge();
   loadRMST();
@@ -835,5 +868,8 @@ document.addEventListener('click',(ev)=>{
   }
 });
 </script>
+<script>function downloadPDF(){const opt={margin:0.3,filename:document.title+'.pdf',image:{type:'png'},html2canvas:{scale:3,useCORS:true,backgroundColor:'#ffffff',logging:false},jsPDF:{unit:'in',format:'a4',orientation:'landscape'}};html2pdf().set(opt).from(document.body).save();}
+</script>
+<script>(function(){var t=new Date();var mn=new Date(t);mn.setMonth(mn.getMonth()-4);var fmt=d=>d.toISOString().split("T")[0];["startDate","endDate"].forEach(function(id){var el=document.getElementById(id);if(el){el.min=fmt(mn);el.max=fmt(t);}});})();/*dateLimit*/</script>
 </body>
 </html>

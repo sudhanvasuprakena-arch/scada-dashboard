@@ -36,10 +36,10 @@
         @media (max-width: 1024px) { .navbar { padding: 20px 16px; } .navbar h1 { font-size: 20px; } .back-btn { position: static; transform: none; margin-top: 10px; } .dashboard { padding: 16px 12px; } .table-box { padding: 16px 12px; } }
         @media (max-width: 768px) { .navbar h1 { font-size: 16px; } .data-table { display: block; overflow-x: auto; white-space: nowrap; } .data-table th, .data-table td { padding: 6px 4px; font-size: 10px; } }
     </style>
-</head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script></head>
 <body>
     <div class="navbar">
-        <button class="back-btn" onclick="window.history.back()">← Back</button>
+        <button class="back-btn" onclick="window.history.back()">← Back</button><button class="back-btn" style="right:180px" onclick="downloadPDF()">📥 PDF</button>
         <h1 id="pageTitle">CLEANING & PRODUCTION</h1>
         <p class="navbar-subtitle" id="pageSubtitle">CIP Cleaning, Return Tank & Final Production Output</p>
     </div>
@@ -117,5 +117,6 @@
         window.addEventListener('resize', () => setTimeout(drawConnections, 100));
         window.addEventListener('scroll', () => requestAnimationFrame(drawConnections));
     </script>
+<script>function downloadPDF(){const opt={margin:0.3,filename:document.title+'.pdf',image:{type:'png'},html2canvas:{scale:3,useCORS:true,backgroundColor:'#ffffff',logging:false},jsPDF:{unit:'in',format:'a4',orientation:'landscape'}};html2pdf().set(opt).from(document.body).save();}</script>
 </body>
 </html>

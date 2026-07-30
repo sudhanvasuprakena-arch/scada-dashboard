@@ -191,7 +191,7 @@ tfoot td.kg{font-family:'Bricolage Grotesque',sans-serif;font-size:14px;color:va
   .brand p{display:none}
 }
 </style>
-</head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script></head>
 <body>
 
 <!-- ===== Top bar ===== -->
@@ -223,6 +223,7 @@ tfoot td.kg{font-family:'Bricolage Grotesque',sans-serif;font-size:14px;color:va
       </div>
     </div>
     <a class="btn" href="bangalore-dairy-dashboard.html">← Back to plant flow</a>
+    <button class="btn" onclick="downloadPDF()">📥 PDF</button>
     <button class="btn primary">Logout</button>
   </div>
 </header>
@@ -292,9 +293,9 @@ function getActiveFilter(){
   return f || 'month';
 }
 
-async function fetchData(path){
+async function fetchData(path, extra=''){
   try{
-    const res = await fetch(`${BASE_URL}/papi/${dairySlug()}/${path}?filter=${getActiveFilter()}`);
+    const res = await fetch(`${BASE_URL}/papi/${dairySlug()}/${path}?filter=${getActiveFilter()}${extra}`);
     const json = await res.json();
     if(json && json.success && Array.isArray(json.data)) return json.data;
   }catch(e){}
@@ -377,7 +378,7 @@ function renderSection(product, rows, catIndex){
 }
 
 async function loadAll(){
-  const d = await fetchData('truck-entry');
+  const d = await fetchData('truck-entry', '&all=true');
   const main = document.getElementById('main-content');
 
   if(!d || !d.length){
@@ -464,5 +465,8 @@ document.addEventListener('click',ev=>{
   if(!customRange.contains(ev.target) && !ev.target.closest('[data-custom]')) customRange.hidden = true;
 });
 </script>
+<script>function downloadPDF(){const opt={margin:0.3,filename:document.title+'.pdf',image:{type:'png'},html2canvas:{scale:3,useCORS:true,backgroundColor:'#ffffff',logging:false},jsPDF:{unit:'in',format:'a4',orientation:'landscape'}};html2pdf().set(opt).from(document.body).save();}
+</script>
+<script>(function(){var t=new Date();var mn=new Date(t);mn.setMonth(mn.getMonth()-4);var fmt=d=>d.toISOString().split("T")[0];["startDate","endDate"].forEach(function(id){var el=document.getElementById(id);if(el){el.min=fmt(mn);el.max=fmt(t);}});})();/*dateLimit*/</script>
 </body>
 </html>

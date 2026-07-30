@@ -592,13 +592,12 @@
             .anim-icon { width: 44px; height: 44px; font-size: 22px; }
         }
     </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script></head>
+</head>
 <body>
     <div class="navbar">
         <h1>Welcome to Milk Procurement Dashboard</h1>
         <p class="navbar-subtitle">Track supply chain and logistics details across the procurement network</p>
         <button class="logout-btn" onclick="logout()">Logout</button>
-        <button class="logout-btn" style="right:260px" onclick="downloadPDF()">📥 PDF</button>
     </div>
 
     <div id="totalOverview" style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:20px;text-align:center;padding:28px 48px;background:#ffffff;box-shadow:0 2px 12px rgba(27,42,74,0.08);border-bottom:2px solid #e2e8f0;">
@@ -1384,9 +1383,6 @@
         window.addEventListener('scroll', () => {
             requestAnimationFrame(drawConnections);
         });
-</script>
-<script>function downloadPDF(){const opt={margin:0.3,filename:document.title+'.pdf',image:{type:'png'},html2canvas:{scale:3,useCORS:true,backgroundColor:'#ffffff',logging:false},jsPDF:{unit:'in',format:'a4',orientation:'landscape'}};html2pdf().set(opt).from(document.body).save();}
-</script>
-<script>(function(){var t=new Date();var mn=new Date(t);mn.setMonth(mn.getMonth()-4);var fmt=d=>d.toISOString().split("T")[0];["startDate","endDate"].forEach(function(id){var el=document.getElementById(id);if(el){el.min=fmt(mn);el.max=fmt(t);}});})();/*dateLimit*/</script>
+    </script>
 </body>
 </html>

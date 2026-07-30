@@ -7,7 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
+</script>
 <style>
 :root{
   --blue:#2563EB;--blue-deep:#1D4ED8;--blue-ink:#0B1B3F;--milk:#F5F8FF;--sky:#E8EFFD;
@@ -537,6 +538,7 @@ h1,h2,h3,.display{font-family:'Bricolage Grotesque','Inter',sans-serif}
                 <button class="seg-btn" onclick="toggleCustomRange(this)">Custom</button>
             </div>
             <span class="sync-time">Last sync : <span id="lastSync">--</span></span>
+            <button class="btn" onclick="downloadPDF()">📥 PDF</button>
             <button class="btn" onclick="window.history.back()">← Back</button>
             <button class="btn primary" onclick="logout()">Logout</button>
         </div>
@@ -982,9 +984,10 @@ h1,h2,h3,.display{font-family:'Bricolage Grotesque','Inter',sans-serif}
 
         function downloadPDF() {
             const el = document.body;
-            const opt = { margin: 0.3, filename: document.title + '.pdf', image: {type:'jpeg',quality:0.98}, html2canvas: {scale:2,useCORS:true}, jsPDF: {unit:'in',format:'a4',orientation:'landscape'} };
+            const opt = { margin: 0.3, filename: document.title + '.pdf', image: {type:'png'}, html2canvas: {scale:3,useCORS:true,backgroundColor:'#ffffff',logging:false}, jsPDF: {unit:'in',format:'a4',orientation:'landscape'} };
             html2pdf().set(opt).from(el).save();
         }
-    </script>
+</script>
+<script>(function(){var t=new Date();var mn=new Date(t);mn.setMonth(mn.getMonth()-4);var fmt=d=>d.toISOString().split("T")[0];["startDate","endDate"].forEach(function(id){var el=document.getElementById(id);if(el){el.min=fmt(mn);el.max=fmt(t);}});})();/*dateLimit*/</script>
 </body>
 </html>
