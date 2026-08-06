@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cleaning & Production</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #f0f4f8; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; min-height: 100vh; font-weight: 600; }
+        .navbar { background: #1b2a4a; color: white; padding: 28px 50px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); text-align: center; position: sticky; top: 0; z-index: 100; }
+        .navbar h1 { font-size: 26px; font-weight: 600; color: white; margin-bottom: 6px; }
+        .navbar-subtitle { font-size: 14px; color: #94a3c4; font-weight: 400; }
+        .back-btn { position: absolute; right: 40px; top: 50%; transform: translateY(-50%); background: white; color: #1b2a4a; border: 2px solid white; padding: 10px 22px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .back-btn:hover { background: #e8edf5; }
+        .dashboard { padding: 30px 24px; max-width: 100%; margin: 0 auto; }
+        .level { display: flex; justify-content: center; align-items: flex-start; margin: 50px 0; }
+        .level-1 { margin-top: 10px; }
+        .table-box { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px 16px; box-shadow: 0 4px 16px rgba(27,42,74,0.06), 0 1px 4px rgba(0,0,0,0.04); flex: 1; min-width: 0; position: relative; overflow: auto; transition: all 0.3s ease; width: 100%; }
+        .table-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #1b2a4a, #2d4a7a, #4a6fa5); }
+        .table-box:hover { box-shadow: 0 12px 32px rgba(27,42,74,0.12), 0 4px 12px rgba(0,0,0,0.06); border-color: #c7d2e0; }
+        .table-box h3 { text-align: center; margin-bottom: 14px; color: #1a1a1a; font-size: 16px; font-weight: 700; }
+        .sub-label { text-align: center; font-size: 11px; font-weight: 700; color: #1b2a4a; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .data-table th { background: #f3f4f6; padding: 10px 8px; text-align: center; font-weight: 600; font-size: 13px; color: #374151; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
+        .data-table td { padding: 10px 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280; text-align: center; font-size: 13px; white-space: nowrap; }
+        .anim-strip { height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; overflow: hidden; position: relative; background: linear-gradient(135deg, rgba(27,42,74,0.05), rgba(45,74,122,0.03)); border-radius: 12px; }
+        svg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        line { stroke: #2d4a7a; stroke-width: 2; opacity: 0.4; filter: drop-shadow(0 1px 3px rgba(27,42,74,0.2)); }
+        @keyframes boxBounce { 0%,100% { transform: translateY(0) rotate(0deg); } 35% { transform: translateY(-20px) rotate(-5deg); } 55% { transform: translateY(-12px) rotate(3deg); } 75% { transform: translateY(-17px) rotate(-2deg); } }
+        @keyframes boxGlow { 0%,100% { filter: drop-shadow(0 0 0px #a78bfa); } 50% { filter: drop-shadow(0 0 12px #a78bfa); } }
+        .box1 { font-size: 46px; animation: boxBounce 1.1s ease-in-out infinite, boxGlow 2s ease-in-out infinite; }
+        .box2 { font-size: 38px; animation: boxBounce 1.1s ease-in-out infinite, boxGlow 2s ease-in-out infinite; animation-delay: 0.18s, 0.6s; }
+        .box3 { font-size: 28px; animation: boxBounce 1.1s ease-in-out infinite, boxGlow 2s ease-in-out infinite; animation-delay: 0.36s, 1.2s; }
+
+        @media (max-width: 1024px) { .navbar { padding: 20px 16px; } .navbar h1 { font-size: 20px; } .back-btn { position: static; transform: none; margin-top: 10px; } .dashboard { padding: 16px 12px; } .table-box { padding: 16px 12px; } }
+        @media (max-width: 768px) { .navbar h1 { font-size: 16px; } .data-table { display: block; overflow-x: auto; white-space: nowrap; } .data-table th, .data-table td { padding: 6px 4px; font-size: 10px; } }
+    </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script></head>
+<body>
+    <div class="navbar">
+        <button class="back-btn" onclick="window.history.back()">← Back</button><button class="back-btn" style="right:180px" onclick="downloadPDF()">📥 PDF</button>
+        <h1 id="pageTitle">CLEANING & PRODUCTION</h1>
+        <p class="navbar-subtitle" id="pageSubtitle">CIP Cleaning, Return Tank & Final Production Output</p>
+    </div>
+
+    <svg id="connectionLines"></svg>
+
+    <div class="dashboard">
+
+        <!-- CIP Cleaning -->
+        <div class="level level-1">
+            <div class="table-box" id="box-cip">
+                <div class="anim-strip"><span style="font-size:52px;">🧼</span></div>
+                <h3>CLEANING SYSTEM (CIP)</h3>
+                <div class="sub-label">CIP Report 100 &nbsp;|&nbsp; CIP COP Report</div>
+                <table class="data-table">
+                    <thead><tr><th>Date</th><th>Unit</th><th>Type</th><th>Start Time</th><th>End Time</th><th>Duration</th><th>Status</th></tr></thead>
+                    <tbody id="cip-body"><tr><td colspan="7" style="text-align:center;">Coming Soon</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Return Tank (RWT) -->
+        <div class="level level-1">
+            <div class="table-box" id="box-rwt">
+                <div class="anim-strip"><span style="font-size:52px;">🔄</span></div>
+                <h3>RETURN / BALANCE TANK — RWT 15KL</h3>
+                <div class="sub-label">Fermented / Return Report</div>
+                <table class="data-table">
+                    <thead><tr><th>Date</th><th>Qty In (L)</th><th>Qty Out (L)</th><th>Balance (L)</th><th>Type</th><th>Status</th></tr></thead>
+                    <tbody id="rwt-body"><tr><td colspan="6" style="text-align:center;">Coming Soon</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Final Output / Production -->
+        <div class="level level-1">
+            <div class="table-box" id="box-production">
+                <div class="anim-strip">
+                    <span class="box1">📦</span><span class="box2">📦</span><span class="box3">📦</span>
+                </div>
+                <h3>FINAL OUTPUT — PRODUCTION REPORT</h3>
+                <div class="sub-label">Production Report</div>
+                <table class="data-table">
+                    <thead><tr><th>Date</th><th>Variant</th><th>Pack Size</th><th>Packets</th><th>Total Qty (L)</th><th>Status</th></tr></thead>
+                    <tbody id="production-body"><tr><td colspan="6" style="text-align:center;">Coming Soon</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const dairy = params.get('dairy') || 'bengaluru';
+        const dairyNames = { bengaluru: 'BANGALORE DAIRY', hoskote: 'HOSAKOTE DAIRY', kanakapura: 'KANAKAPURA DAIRY' };
+        document.getElementById('pageTitle').textContent = (dairyNames[dairy] || 'DAIRY') + ' — CLEANING & PRODUCTION';
+
+        function drawConnections() {
+            const svg = document.getElementById('connectionLines');
+            svg.innerHTML = '';
+            function line(x1,y1,x2,y2) {
+                const el = document.createElementNS('http://www.w3.org/2000/svg','line');
+                el.setAttribute('x1',x1); el.setAttribute('y1',y1);
+                el.setAttribute('x2',x2); el.setAttribute('y2',y2);
+                svg.appendChild(el);
+            }
+            const cip = document.getElementById('box-cip').getBoundingClientRect();
+            const rwt = document.getElementById('box-rwt').getBoundingClientRect();
+            const prod = document.getElementById('box-production').getBoundingClientRect();
+            const cx = cip.left + cip.width/2;
+            line(cx, cip.bottom, cx, rwt.top);
+            line(cx, rwt.bottom, cx, prod.top);
+        }
+        window.addEventListener('load', () => { setTimeout(drawConnections, 200); });
+        window.addEventListener('resize', () => setTimeout(drawConnections, 100));
+        window.addEventListener('scroll', () => requestAnimationFrame(drawConnections));
+    </script>
+<script>function downloadPDF(){const opt={margin:0.3,filename:document.title+'.pdf',image:{type:'png'},html2canvas:{scale:3,useCORS:true,backgroundColor:'#ffffff',logging:false},jsPDF:{unit:'in',format:'a4',orientation:'landscape'}};html2pdf().set(opt).from(document.body).save();}</script>
+</body>
+</html>
