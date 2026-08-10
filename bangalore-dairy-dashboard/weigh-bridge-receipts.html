@@ -321,10 +321,14 @@ function renderSection(product, rows, catIndex){
     ? `<td class="r kg">${avgFat ? avgFat+'<small>%</small>' : '—'}</td><td class="r kg">${avgSNF ? avgSNF+'<small>%</small>' : '—'}</td>`
     : '';
 
-  /* Group by DairyCode (source) */
+  /* Group by DairyCode (source).
+     All BMC codes (BMC_44, BMC-7, "BMC 64", BMC_43D, …) are rolled up into a
+     single "BMC" row — the separator/suffix varies in the data but they are
+     all the same source type. Everything else keeps its own row. */
+  const srcKey = code => /bmc/i.test(code) ? 'BMC' : code;
   const bySource = {};
   rows.forEach(r=>{
-    const src = r.DairyCode || 'Unknown';
+    const src = srcKey(r.DairyCode || 'Unknown');
     if(!bySource[src]) bySource[src] = [];
     bySource[src].push(r);
   });
@@ -338,12 +342,13 @@ function renderSection(product, rows, catIndex){
     const fatSnfCells = showFS
       ? `<td class="r pc">${sFat !== '—' ? sFat+'<small>%</small>' : '—'}</td><td class="r pc">${sSNF !== '—' ? sSNF+'<small>%</small>' : '—'}</td>`
       : '';
+    const sDone = srows.filter(r=>r.IsCompleted).length;
     return `<tr>
       <td><span class="src">${src}</span></td>
       <td class="r">${srows.length} trucks</td>
       <td class="r kg">${formatIN(Math.round(sNet))}<small>Kg</small></td>
       ${fatSnfCells}
-      <td class="r"><span class="chip ${srows.filter(r=>r.IsCompleted).length===srows.length?'green':'amber'}">${srows.filter(r=>r.IsCompleted).length}/${srows.length}</span></td>
+      <td class="r"><span class="chip ${sDone===srows.length?'green':'amber'}">${sDone}/${srows.length}</span></td>
     </tr>`;
   }).join('');
 

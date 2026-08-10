@@ -291,7 +291,8 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 
   <div class="section-head reveal" style="margin-top:26px">
     <span class="cat-tag">Category 2</span>
-    <h3>Milk Dispatched to Product Dairy</h3>
+    <h3>Milk Dispatched to Product Dairy
+</h3>
     <span class="hint">Internal transfer</span>
     <span class="rule"></span>
     <span class="tot num" id="tot-pd">—<small> Kg</small></span>
@@ -300,7 +301,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 
   <div class="section-head reveal" style="margin-top:26px">
     <span class="cat-tag">Category 3</span>
-    <h3>Milk Dispatched to NMP</h3>
+    <h3>Milk Dispatched to NMP (Nandini Milk Products)</h3>
     <span class="hint">Internal transfer</span>
     <span class="rule"></span>
     <span class="tot num" id="tot-nmp">—<small> Kg</small></span>
@@ -470,6 +471,51 @@ async function loadDispatchKpis(){
   renderSection(wb.map(toEntry), 'sec-wb', 'tot-wb', 'No weigh bridge dispatches for this range.');
 }
 
+/* Merge only the "Dispatch Line-N" rows into a single entry; any other row
+   (e.g. "CST To Product Dairy", which is a cream transfer) is left untouched.
+   Quantities and trucks are summed; Fat/SNF are quantity-weighted averages
+   (the correct way to combine two streams — a plain mean would misreport
+   when the lines carry very different volumes). Rows with no Fat/SNF are
+   skipped in the weighting so they don't drag the average down. */
+function combineLines(rows, label){
+  const isLine = r => /dispatch\s*line/i.test(r.LineName || '');
+  const lines  = rows.filter(isLine);
+  const others = rows.filter(r => !isLine(r));
+
+  const toEntry = r => ({
+    name: r.LineName,
+    kg: Math.round(n2(r.TotalQty)),
+    trucks: parseInt(r.Entries,10) || 0,
+    fat: n2(r.AvgFat) || null,
+    snf: n2(r.AvgSNF) || null,
+    source: 'Batch_Log'
+  });
+
+  const out = [];
+  if(lines.length){
+    let kg = 0, trucks = 0, fatQty = 0, fatSum = 0, snfQty = 0, snfSum = 0;
+    lines.forEach(r=>{
+      const q = n2(r.TotalQty);
+      kg += q;
+      trucks += (parseInt(r.Entries,10) || 0);
+      const f = n2(r.AvgFat), s = n2(r.AvgSNF);
+      if(f > 0 && q > 0){ fatSum += f * q; fatQty += q; }
+      if(s > 0 && q > 0){ snfSum += s * q; snfQty += q; }
+    });
+    out.push({
+      name: label,
+      kg: Math.round(kg),
+      trucks: trucks,
+      fat: fatQty > 0 ? parseFloat((fatSum/fatQty).toFixed(2)) : null,
+      snf: snfQty > 0 ? parseFloat((snfSum/snfQty).toFixed(2)) : null,
+      source: 'Batch_Log'
+    });
+  }
+  // keep non-dispatch-line rows as their own cards
+  others.forEach(r => out.push(toEntry(r)));
+  return out;
+}
+
 async function loadProductDairy(){
   let d = null;
   try{
@@ -479,8 +525,7 @@ async function loadProductDairy(){
   }catch(e){}
   const el = document.getElementById('sec-pd'); if(el) el.innerHTML='';
   if(!d || !d.length){ renderSection([], 'sec-pd', 'tot-pd', 'No product dairy transfers for this range.'); return; }
-  const entries = d.map(r=>({ name:r.LineName, kg:Math.round(n2(r.TotalQty)), trucks:r.Entries, fat:n2(r.AvgFat)||null, snf:n2(r.AvgSNF)||null, source:'Batch_Log' }));
-  renderSection(entries, 'sec-pd', 'tot-pd', 'No product dairy transfers for this range.');
+  renderSection(combineLines(d, 'PMST to Production Dairy'), 'sec-pd', 'tot-pd', 'No product dairy transfers for this range.');
 }
 
 async function loadNMP(){
@@ -492,8 +537,7 @@ async function loadNMP(){
   }catch(e){}
   const el = document.getElementById('sec-nmp'); if(el) el.innerHTML='';
   if(!d || !d.length){ renderSection([], 'sec-nmp', 'tot-nmp', 'No NMP transfers for this range.'); return; }
-  const entries = d.map(r=>({ name:r.LineName, kg:Math.round(n2(r.TotalQty)), trucks:r.Entries, fat:n2(r.AvgFat)||null, snf:n2(r.AvgSNF)||null, source:'Batch_Log' }));
-  renderSection(entries, 'sec-nmp', 'tot-nmp', 'No NMP transfers for this range.');
+  renderSection(combineLines(d, 'PMST to NMP'), 'sec-nmp', 'tot-nmp', 'No NMP transfers for this range.');
 }
 function heroDateLabel(){
   const f = getActiveFilter();
