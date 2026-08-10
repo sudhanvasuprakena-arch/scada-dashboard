@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PMST — Bangalore Main Dairy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#2563EB;
+  --blue-deep:#1D4ED8;
+  --blue-ink:#0B1B3F;
+  --milk:#F5F8FF;
+  --sky:#E8EFFD;
+  --sky-line:#D5E2FA;
+  --card:#FFFFFF;
+  --text:#233355;
+  --muted:#6B7CA3;
+  --green:#0E9F6E;
+  --green-soft:#E3F6EE;
+  --amber:#B45309;
+  --amber-soft:#FDF1DF;
+  --radius:14px;
+  --shadow:0 1px 2px rgba(11,27,63,.05), 0 6px 18px -10px rgba(37,99,235,.16);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--milk);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;display:flex;flex-direction:column;
+}
+h1,h2,h3{font-family:'Bricolage Grotesque','Inter',sans-serif}
+.num{font-variant-numeric:tabular-nums}
+button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+/* ===== Top bar ===== */
+.topbar{background:var(--card);border-bottom:1px solid var(--sky-line);position:sticky;top:0;z-index:50;overflow:visible}
+.topbar-inner{
+  max-width:1400px;margin:0 auto;width:100%;padding:8px 20px;
+  display:flex;align-items:center;gap:14px;
+}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-mark{
+  width:34px;height:34px;border-radius:10px;flex:none;
+  background:linear-gradient(140deg,var(--blue),var(--blue-deep));
+  display:grid;place-items:center;color:#fff;
+  box-shadow:0 3px 10px -3px rgba(37,99,235,.5);
+}
+.brand-mark svg{width:18px;height:18px}
+.brand h1{font-size:17px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em;line-height:1.1;white-space:nowrap}
+.brand p{font-size:17px;color:var(--muted);font-weight:500;white-space:nowrap}
+.crumb{font-size:16px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px}
+.crumb b{color:var(--blue-deep)}
+.range-group{position:relative;margin-left:auto}
+.range-pills{display:flex;gap:4px;background:var(--sky);padding:3px;border-radius:10px;flex-wrap:nowrap;}
+.custom-range{
+  position:absolute;top:calc(100% + 6px);right:0;z-index:60;
+  display:flex;align-items:flex-end;gap:8px;
+  background:var(--card);padding:12px;border:1px solid var(--sky-line);
+  border-radius:12px;box-shadow:0 12px 30px -10px rgba(11,27,63,.28);
+}
+.custom-range[hidden]{display:none}
+.cr-field{display:flex;flex-direction:column;gap:4px}
+.cr-field label{font-size:13.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.date-input{font:inherit;font-size:14.5px;color:var(--blue-ink);padding:7px 9px;border:1px solid var(--sky-line);border-radius:8px;background:var(--card);min-width:180px;}
+.pill{
+  font:inherit;font-size:16px;font-weight:600;color:var(--muted);
+  border:none;background:transparent;border-radius:7px;padding:5px 10px;cursor:pointer;transition:.15s;white-space:nowrap;font-size:13px;
+}
+.pill:hover{color:var(--blue-deep)}
+.pill.active{background:#fff;color:var(--blue-deep);box-shadow:0 1px 4px rgba(11,27,63,.12)}
+.btn{
+  font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;border-radius:9px;
+  padding:7px 13px;border:1px solid var(--sky-line);background:var(--card);color:var(--blue-ink);
+  transition:.15s;white-space:nowrap;text-decoration:none;display:inline-block;
+}
+.btn:hover{background:var(--sky)}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover{background:var(--blue-deep)}
+
+/* ===== Hero ===== */
+.hero{
+  background:linear-gradient(160deg,#1E4FD6 0%,#2563EB 55%,#3B77F2 100%);
+  color:#fff;position:relative;overflow:hidden;flex:none;
+}
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(500px 160px at 88% -30%,rgba(255,255,255,.16),transparent 70%)}
+.hero-inner{
+  max-width:1400px;margin:0 auto;width:100%;padding:18px 20px 22px;position:relative;z-index:1;
+}
+.hero-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.hero-head h2{font-size:23px;font-weight:800;letter-spacing:-.02em}
+.hero-head .sub{font-size:14.5px;color:rgba(255,255,255,.78);font-weight:500}
+.hero-date-row{display:flex;justify-content:flex-end;margin-bottom:10px}
+.hero-date{font-size:17px;color:#fff;font-weight:700;letter-spacing:.4px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.kpi{
+  background:rgba(255,255,255,.97);border-radius:var(--radius);
+  padding:14px 18px;box-shadow:0 8px 22px -12px rgba(6,22,68,.45);
+  display:flex;align-items:center;gap:14px;
+}
+.kpi .ico{width:38px;height:38px;border-radius:10px;background:var(--sky);flex:none;display:grid;place-items:center;color:var(--blue)}
+.kpi .ico svg{width:20px;height:20px}
+.kpi .tag{font-size:14.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--blue-deep)}
+.kpi .value{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(20px,2vw,28px);font-weight:800;color:var(--blue-ink);letter-spacing:-.02em;line-height:1.15}
+.kpi .value small{font-size:.5em;font-weight:700;color:var(--muted);margin-left:3px}
+.kpi .meta{font-size:17px;color:var(--muted);font-weight:500}
+.kpi .meta b{color:var(--text)}
+
+/* ===== Tank grid ===== */
+.main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:20px 20px 48px}
+.section-head{display:flex;align-items:baseline;gap:10px;margin-bottom:14px}
+.section-head h3{font-size:17.5px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em}
+.section-head .hint{font-size:16px;color:var(--muted);font-weight:500}
+.section-head .rule{flex:1;height:1px;background:var(--sky-line)}
+.tanks{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.tank{
+  background:var(--card);border:1px solid var(--sky-line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:14px 16px;
+  display:flex;flex-direction:column;gap:10px;
+  transition:transform .18s,box-shadow .18s;
+}
+.tank:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(11,27,63,.06),0 12px 28px -14px rgba(37,99,235,.28)}
+.tank-head{display:flex;align-items:center;gap:10px}
+.tank-badge{
+  width:38px;height:38px;border-radius:10px;flex:none;
+  background:var(--sky);display:grid;place-items:center;
+  font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:800;color:var(--blue-deep);
+}
+.tank-head h3{font-size:16px;font-weight:800;color:var(--blue-ink)}
+.tank-head .sub{font-size:14.5px;color:var(--muted);font-weight:500}
+.tank .qty{
+  background:var(--milk);border-radius:10px;padding:8px 12px;
+}
+.tank .qty .lbl{font-size:13.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.tank .qty .v{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(18px,1.7vw,23px);font-weight:800;color:var(--muted);line-height:1.2}
+.tank .qty .v small{font-size:.5em;font-weight:700;margin-left:2px}
+.tank .fs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tank .fs .cell{
+  border:1px dashed var(--sky-line);border-radius:9px;padding:6px 10px;
+}
+.tank .fs .lbl{font-size:17px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.tank .fs .v{font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:800;color:var(--muted)}
+.tank .fs .v small{font-size:.6em;font-weight:600}
+.chip{
+  display:inline-block;font-size:13.5px;font-weight:700;border-radius:99px;padding:2px 8px;white-space:nowrap;align-self:flex-start;
+}
+.chip.mute{background:var(--sky);color:var(--muted)}
+.chip.green{background:var(--green-soft);color:var(--green)}
+
+/* Reveal */
+.reveal{opacity:0;transform:translateY(8px);animation:rise .5s ease forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .reveal{opacity:1;transform:none}
+}
+@media (max-width:1000px){
+  .tanks{grid-template-columns:repeat(2,1fr)}
+  .kpis{grid-template-columns:1fr}
+}
+@media (max-width:860px){
+  .topbar-inner{flex-wrap:wrap;gap:8px 12px}
+  .crumb{order:5;flex-basis:100%;margin-left:0}
+  .range-pills{margin-left:0}
+  .hero-head h2{font-size:18px}
+}
+@media (max-width:640px){
+  .range-pills{width:100%;justify-content:space-between;margin-left:0}
+  .pill{flex:1;text-align:center;padding:6px 6px}
+  .topbar-inner .btn{flex:1;text-align:center}
+  .hero-inner{padding:16px 16px 18px}
+  .main{padding:16px 16px 40px}
+}
+@media (max-width:560px){
+  .tanks{grid-template-columns:1fr}
+  .brand p{display:none}
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script></head>
+<body>
+
+<!-- ===== Top bar ===== -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5c3.5 4.6 6.5 8 6.5 12a6.5 6.5 0 1 1-13 0c0-4 3-7.4 6.5-12Z"/><path d="M9.5 14.5a2.5 2.5 0 0 0 2.5 2.5"/></svg>
+      </div>
+      <div>
+        <h1>Bangalore Main Dairy</h1>
+        <p>Plant flow · Milk logistics</p>
+      </div>
+    </div>
+    <span class="crumb">Plant flow → <b>Stage 4 · Pasteurization → PMST</b></span>
+    <div class="range-group">
+      <div class="range-pills" role="tablist" aria-label="Date range">
+        <button class="pill" role="tab" aria-selected="false" data-filter="yesterday">Yesterday</button>
+        <button class="pill" role="tab" aria-selected="false" data-filter="week">This week</button>
+        <button class="pill active" role="tab" aria-selected="true" data-filter="month">This month</button>
+        <button class="pill" role="tab" aria-selected="false" data-custom data-filter="custom">Custom</button>
+      </div>
+      <div class="custom-range" id="customRange" hidden>
+        <div class="cr-field"><label for="startDate">From date</label><input type="date" id="startDate" class="date-input"></div>
+        <div class="cr-field"><label for="startTime">From time</label><input type="time" id="startTime" class="date-input" value="04:45"></div>
+        <div class="cr-field"><label for="endDate">To date</label><input type="date" id="endDate" class="date-input"></div>
+        <div class="cr-field"><label for="endTime">To time</label><input type="time" id="endTime" class="date-input" value="04:44"></div>
+        <button class="btn primary" id="applyRange" type="button">Apply</button>
+      </div>
+    </div>
+    <a class="btn" id="back-btn" href="bangalore-dairy-dashboard.html">← Back to plant flow</a>
+    <button class="btn" onclick="downloadPDF()">📥 PDF</button>
+    <button class="btn primary">Logout</button>
+  </div>
+</header>
+
+<!-- ===== Hero ===== -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-head">
+      <h2>Pasteurized Milk Storage Tanks · PMST</h2>
+      <span class="sub">Tank-wise milk received, quality per tank</span>
+    </div>
+    <div class="hero-date-row"><span class="hero-date" id="hero-date"></span></div>
+      <div class="kpis">
+      <div class="kpi reveal" style="animation-delay:.08s">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v14a6 6 0 0 1-12 0Z"/><path d="M6 11h12"/></svg></span>
+        <div>
+          <div class="tag">Total milk into PMST</div>
+          <div class="value num" id="kpi-total">—<small>Kg</small></div>
+          <div class="meta">Across all tanks</div>
+        </div>
+      </div>
+      <div class="kpi reveal">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+        <div>
+          <div class="tag">Storage tanks</div>
+          <div class="value num" id="kpi-tanks">6</div>
+          <div class="meta">PMST 5 – PMST 10</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 8 tanks ===== -->
+<main class="main">
+  <div class="section-head reveal">
+    <h3>Tank-wise receipts</h3>
+    <span class="hint">Total milk received · Average Fat · Average SNF per tank</span>
+    <span class="rule"></span>
+  </div>
+
+  <div class="tanks" id="tanks"></div>
+</main>
+
+<script>
+const BASE_URL = '';
+const params = new URLSearchParams(window.location.search);
+const dairy  = params.get('dairy') || 'bengaluru';
+function dairySlug(){ return dairy === 'bengaluru' ? 'bangalore' : dairy; }
+function formatIN(n){ return Number(n).toLocaleString('en-IN'); }
+function num(v){ return parseFloat(v || 0); }
+
+function getActiveFilter(){
+  const a = document.querySelector('.pill.active');
+  if(!a) return 'month';
+  const f = a.dataset.filter;
+  if(f === 'custom'){
+    const sd = document.getElementById('startDate').value;
+    const ed = document.getElementById('endDate').value;
+    if(!sd || !ed) return 'month';
+    const st = document.getElementById('startTime').value || '00:00';
+    const et = document.getElementById('endTime').value || '23:59';
+    return `custom&start=${sd}&end=${ed}&startTime=${st}:00&endTime=${et}:00`;
+  }
+  return f || 'month';
+}
+
+async function fetchData(path){
+  try{
+    const res = await fetch(`${BASE_URL}/papi/${dairySlug()}/${path}?filter=${getActiveFilter()}`);
+    const json = await res.json();
+    if(json && json.success && Array.isArray(json.data)) return json.data;
+  }catch(e){ /* keep placeholders */ }
+  return null;
+}
+
+const wrap = document.getElementById('tanks');
+
+/* Render fixed PMST 5–10, merging live rows keyed by PMSID (qty = TotalProcessed). */
+function render(rows){
+  const fixed = ['PMST-5','PMST-6','PMST-7','PMST-8','PMST-9','PMST-10'];
+  const byId = {};
+  (rows || []).forEach(r=>{
+    const id = String(r.PMSID);
+    if(!byId[id]) byId[id] = { kg:0, n:0 };
+    byId[id].kg += num(r.TotalProcessed);
+    byId[id].n++;
+  });
+  wrap.innerHTML = '';
+  fixed.forEach((id,i)=>{
+    const t = byId[id];
+    const has = t && t.n > 0;
+    const kg  = has ? formatIN(Math.round(t.kg)) : '—';
+    const label = id.replace('PMST-','');
+    const chip = has ? '<span class="chip green">Processed</span>' : '<span class="chip mute">Awaiting data</span>';
+    wrap.insertAdjacentHTML('beforeend', `
+      <section class="tank reveal" style="animation-delay:${i*0.04}s">
+        <div class="tank-head">
+          <span class="tank-badge num">${label}</span>
+          <div><h3>${id}</h3><div class="sub">Pasteurized milk storage tank</div></div>
+        </div>
+        <div class="qty">
+          <div class="lbl">Total milk processed</div>
+          <div class="v num" style="${has?'color:var(--blue-ink)':''}">${kg}<small>Kg</small></div>
+        </div>
+        ${chip}
+      </section>`);
+  });
+}
+
+function renderKpis(rows){
+  if(!rows || !rows.length){
+    document.getElementById('kpi-total').innerHTML = '—<small>Kg</small>';
+    return;
+  }
+  const total = rows.reduce((s,r)=>s+num(r.TotalProcessed),0);
+  const tanks = new Set(rows.map(r=>String(r.PMSID))).size;
+  document.getElementById('kpi-total').innerHTML = `${formatIN(Math.round(total))}<small>Kg</small>`;
+}
+
+async function loadData(){
+  const rows = await fetchData('pmst');
+  renderKpis(rows);
+  render(rows);
+}
+function heroDateLabel(){
+  const f = getActiveFilter();
+  const el = document.getElementById('hero-date');
+  if(!el) return;
+  const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const fmt = d => { const x=new Date(d); return x.getDate()+' '+M[x.getMonth()]+' '+x.getFullYear(); };
+  const fmtD = d => d.getDate()+' '+M[d.getMonth()]+' '+d.getFullYear();
+  const today = new Date();
+  const yest = new Date(today); yest.setDate(yest.getDate()-1);
+  if(f==='yesterday'){ el.textContent=fmtD(yest); }
+  else if(f==='week'){ const mon=new Date(today); mon.setDate(today.getDate()-today.getDay()+(today.getDay()===0?-6:1)); el.textContent=fmtD(mon)+' – '+fmtD(today); }
+  else if(f==='month'){ const s=new Date(today.getFullYear(),today.getMonth(),1); el.textContent=fmtD(s)+' – '+fmtD(today); }
+  else if(f.startsWith('custom')){ const cp=new URLSearchParams(f.replace(/^custom&?/,'')); const sd=cp.get('start'),ed=cp.get('end'); if(sd&&ed) el.textContent=fmt(sd)+' – '+fmt(ed); }
+}
+heroDateLabel();
+loadData();
+
+const customRange = document.getElementById('customRange');
+document.querySelectorAll('.pill').forEach(p=>{
+  p.addEventListener('click',()=>{
+    document.querySelectorAll('.pill').forEach(x=>{x.classList.remove('active');x.setAttribute('aria-selected','false')});
+    p.classList.add('active'); p.setAttribute('aria-selected','true');
+    if(p.hasAttribute('data-custom')){
+      customRange.hidden = !customRange.hidden;
+    } else {
+      customRange.hidden = true;
+      loadData(); heroDateLabel();
+    }
+  });
+});
+document.getElementById('applyRange').addEventListener('click',()=>{
+  const s = document.getElementById('startDate').value;
+  const e = document.getElementById('endDate').value;
+  if(!s || !e){ alert('Please pick both a start and end date.'); return; }
+  const today = new Date().toISOString().split('T')[0];
+  if(s > today){ alert('From date cannot be in the future.'); return; }
+  if(e > today){ alert('To date cannot be in the future.'); return; }
+  if(s > e){ alert('From date cannot be greater than To date.'); return; }
+  customRange.hidden = true;
+  loadData(); heroDateLabel();
+});
+document.addEventListener('click',ev=>{
+  if(customRange.hidden) return;
+  if(!customRange.contains(ev.target) && !ev.target.closest('[data-custom]')) customRange.hidden = true;
+});
+</script>
+<script>function downloadPDF(){const opt={margin:0.3,filename:document.title+'.pdf',image:{type:'png'},html2canvas:{scale:3,useCORS:true,backgroundColor:'#ffffff',logging:false},jsPDF:{unit:'in',format:'a4',orientation:'landscape'}};html2pdf().set(opt).from(document.body).save();}
+</script>
+<script>(function(){var t=new Date();var mn=new Date(t);mn.setMonth(mn.getMonth()-4);var fmt=d=>d.toISOString().split("T")[0];["startDate","endDate"].forEach(function(id){var el=document.getElementById(id);if(el){el.min=fmt(mn);el.max=fmt(t);}});})();/*dateLimit*/</script>
+<script>(function(){function upd(){var b=document.getElementById("back-btn");if(!b)return;var h=b.getAttribute("href").split("?")[0];b.setAttribute("href",h+"?filter="+getActiveFilter());}document.querySelectorAll(".pill").forEach(function(p){p.addEventListener("click",upd);});var ab=document.getElementById("applyRange");if(ab)ab.addEventListener("click",upd);upd();})();</script>
+</body>
+</html>
