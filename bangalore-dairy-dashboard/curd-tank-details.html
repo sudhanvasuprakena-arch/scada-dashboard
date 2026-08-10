@@ -51,12 +51,12 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
   box-shadow:0 3px 10px -3px rgba(37,99,235,.5);
 }
 .brand-mark svg{width:18px;height:18px}
-.brand h1{font-size:15px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em;line-height:1.1;white-space:nowrap}
-.brand p{font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap}
-.crumb{font-size:12px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px}
+.brand h1{font-size:17px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em;line-height:1.1;white-space:nowrap}
+.brand p{font-size:17px;color:var(--muted);font-weight:500;white-space:nowrap}
+.crumb{font-size:16px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px}
 .crumb b{color:var(--blue-deep)}
 .range-group{position:relative;margin-left:auto}
-.range-pills{display:flex;gap:4px;background:var(--sky);padding:3px;border-radius:10px}
+.range-pills{display:flex;gap:4px;background:var(--sky);padding:3px;border-radius:10px;flex-wrap:nowrap;}
 .custom-range{
   position:absolute;top:calc(100% + 6px);right:0;z-index:60;
   display:flex;align-items:flex-end;gap:8px;
@@ -65,16 +65,16 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 }
 .custom-range[hidden]{display:none}
 .cr-field{display:flex;flex-direction:column;gap:4px}
-.cr-field label{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
-.date-input{font:inherit;font-size:12.5px;color:var(--blue-ink);padding:7px 9px;border:1px solid var(--sky-line);border-radius:8px;background:var(--card);min-width:180px;}
+.cr-field label{font-size:13.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.date-input{font:inherit;font-size:14.5px;color:var(--blue-ink);padding:7px 9px;border:1px solid var(--sky-line);border-radius:8px;background:var(--card);min-width:180px;}
 .pill{
-  font:inherit;font-size:12px;font-weight:600;color:var(--muted);
-  border:none;background:transparent;border-radius:7px;padding:5px 12px;cursor:pointer;transition:.15s;
+  font:inherit;font-size:16px;font-weight:600;color:var(--muted);
+  border:none;background:transparent;border-radius:7px;padding:5px 10px;cursor:pointer;transition:.15s;white-space:nowrap;font-size:13px;
 }
 .pill:hover{color:var(--blue-deep)}
 .pill.active{background:#fff;color:var(--blue-deep);box-shadow:0 1px 4px rgba(11,27,63,.12)}
 .btn{
-  font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;border-radius:9px;
+  font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;border-radius:9px;
   padding:7px 13px;border:1px solid var(--sky-line);background:var(--card);color:var(--blue-ink);
   transition:.15s;white-space:nowrap;text-decoration:none;display:inline-block;
 }
@@ -92,8 +92,10 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
   max-width:1400px;margin:0 auto;width:100%;padding:18px 20px 22px;position:relative;z-index:1;
 }
 .hero-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
-.hero-head h2{font-size:21px;font-weight:800;letter-spacing:-.02em}
-.hero-head .sub{font-size:12.5px;color:rgba(255,255,255,.78);font-weight:500}
+.hero-head h2{font-size:23px;font-weight:800;letter-spacing:-.02em}
+.hero-head .sub{font-size:14.5px;color:rgba(255,255,255,.78);font-weight:500}
+.hero-date-row{display:flex;justify-content:flex-end;margin-bottom:10px}
+.hero-date{font-size:17px;color:#fff;font-weight:700;letter-spacing:.4px}
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .kpi{
   background:rgba(255,255,255,.97);border-radius:var(--radius);
@@ -102,17 +104,17 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 }
 .kpi .ico{width:38px;height:38px;border-radius:10px;background:var(--sky);flex:none;display:grid;place-items:center;color:var(--blue)}
 .kpi .ico svg{width:20px;height:20px}
-.kpi .tag{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--blue-deep)}
+.kpi .tag{font-size:14.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--blue-deep)}
 .kpi .value{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(20px,2vw,28px);font-weight:800;color:var(--blue-ink);letter-spacing:-.02em;line-height:1.15}
 .kpi .value small{font-size:.5em;font-weight:700;color:var(--muted);margin-left:3px}
-.kpi .meta{font-size:11px;color:var(--muted);font-weight:500}
+.kpi .meta{font-size:17px;color:var(--muted);font-weight:500}
 .kpi .meta b{color:var(--text)}
 
 /* ===== Tank grid ===== */
 .main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:20px 20px 48px}
 .section-head{display:flex;align-items:baseline;gap:10px;margin-bottom:14px}
-.section-head h3{font-size:15.5px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em}
-.section-head .hint{font-size:12px;color:var(--muted);font-weight:500}
+.section-head h3{font-size:17.5px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em}
+.section-head .hint{font-size:16px;color:var(--muted);font-weight:500}
 .section-head .rule{flex:1;height:1px;background:var(--sky-line)}
 .tanks{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:820px}
 .tank{
@@ -126,25 +128,25 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 .tank-badge{
   width:38px;height:38px;border-radius:10px;flex:none;
   background:var(--sky);display:grid;place-items:center;
-  font-family:'Bricolage Grotesque',sans-serif;font-size:15px;font-weight:800;color:var(--blue-deep);
+  font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:800;color:var(--blue-deep);
 }
-.tank-head h3{font-size:14px;font-weight:800;color:var(--blue-ink)}
-.tank-head .sub{font-size:10.5px;color:var(--muted);font-weight:500}
+.tank-head h3{font-size:16px;font-weight:800;color:var(--blue-ink)}
+.tank-head .sub{font-size:14.5px;color:var(--muted);font-weight:500}
 .tank .qty{
   background:var(--milk);border-radius:10px;padding:8px 12px;
 }
-.tank .qty .lbl{font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.tank .qty .lbl{font-size:13.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .tank .qty .v{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(18px,1.7vw,23px);font-weight:800;color:var(--muted);line-height:1.2}
 .tank .qty .v small{font-size:.5em;font-weight:700;margin-left:2px}
 .tank .fs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .tank .fs .cell{
   border:1px dashed var(--sky-line);border-radius:9px;padding:6px 10px;
 }
-.tank .fs .lbl{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-.tank .fs .v{font-family:'Bricolage Grotesque',sans-serif;font-size:15px;font-weight:800;color:var(--muted)}
+.tank .fs .lbl{font-size:17px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.tank .fs .v{font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:800;color:var(--muted)}
 .tank .fs .v small{font-size:.6em;font-weight:600}
 .chip{
-  display:inline-block;font-size:9.5px;font-weight:700;border-radius:99px;padding:2px 8px;white-space:nowrap;align-self:flex-start;
+  display:inline-block;font-size:13.5px;font-weight:700;border-radius:99px;padding:2px 8px;white-space:nowrap;align-self:flex-start;
 }
 .chip.mute{background:var(--sky);color:var(--muted)}
 .chip.green{background:var(--green-soft);color:var(--green)}
@@ -222,7 +224,8 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
       <h2>Curd Tanks</h2>
       <span class="sub">Milk received for curd, tank-wise quality</span>
     </div>
-    <div class="kpis">
+    <div class="hero-date-row"><span class="hero-date" id="hero-date"></span></div>
+      <div class="kpis">
       <div class="kpi reveal">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v14a6 6 0 0 1-12 0Z"/><path d="M6 11h12"/></svg></span>
         <div>
@@ -255,7 +258,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 </main>
 
 <script>
-const BASE_URL = 'http://129.159.231.57';
+const BASE_URL = '';
 const params = new URLSearchParams(window.location.search);
 const dairy  = params.get('dairy') || 'bengaluru';
 function dairySlug(){ return dairy === 'bengaluru' ? 'bangalore' : dairy; }
@@ -310,7 +313,7 @@ function render(rows){
     const entries = has ? t.entries : '—';
     const lines = has && t.lines.size > 0 ? [...t.lines].join(', ') : '—';
     const label = id.replace('Curd Tank-','');
-    const chip = has ? '<span class="chip green">Receiving</span>' : '<span class="chip mute">Awaiting data</span>';
+    const chip = has ? '<span class="chip green">Received</span>' : '<span class="chip mute">Awaiting data</span>';
     wrap.insertAdjacentHTML('beforeend', `
       <section class="tank reveal" style="animation-delay:${i*0.04}s">
         <div class="tank-head">
@@ -347,27 +350,21 @@ async function loadData(){
   renderKpis(rows);
   render(rows);
 }
-// Apply filter from URL before first load
-(()=>{
-  const f = new URLSearchParams(window.location.search).get('filter');
-  const s = new URLSearchParams(window.location.search).get('start');
-  const e = new URLSearchParams(window.location.search).get('end');
-  if(f){
-    document.querySelectorAll('.pill').forEach(p=>{
-      const m = p.dataset.filter === f;
-      p.classList.toggle('active', m);
-      p.setAttribute('aria-selected', String(m));
-    });
-    if(f === 'custom' && s && e){
-      document.getElementById('startDate').value = s;
-      document.getElementById('endDate').value = e;
-      const st = new URLSearchParams(window.location.search).get('startTime');
-      const et = new URLSearchParams(window.location.search).get('endTime');
-      if(st) document.getElementById('startTime').value = st.slice(0,5);
-      if(et) document.getElementById('endTime').value = et.slice(0,5);
-    }
-  }
-})();
+function heroDateLabel(){
+  const f = getActiveFilter();
+  const el = document.getElementById('hero-date');
+  if(!el) return;
+  const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const fmt = d => { const x=new Date(d); return x.getDate()+' '+M[x.getMonth()]+' '+x.getFullYear(); };
+  const fmtD = d => d.getDate()+' '+M[d.getMonth()]+' '+d.getFullYear();
+  const today = new Date();
+  const yest = new Date(today); yest.setDate(yest.getDate()-1);
+  if(f==='yesterday'){ el.textContent=fmtD(yest); }
+  else if(f==='week'){ const mon=new Date(today); mon.setDate(today.getDate()-today.getDay()+(today.getDay()===0?-6:1)); el.textContent=fmtD(mon)+' – '+fmtD(today); }
+  else if(f==='month'){ const s=new Date(today.getFullYear(),today.getMonth(),1); el.textContent=fmtD(s)+' – '+fmtD(today); }
+  else if(f.startsWith('custom')){ const cp=new URLSearchParams(f.replace(/^custom&?/,'')); const sd=cp.get('start'),ed=cp.get('end'); if(sd&&ed) el.textContent=fmt(sd)+' – '+fmt(ed); }
+}
+heroDateLabel();
 loadData();
 
 const customRange = document.getElementById('customRange');
@@ -379,7 +376,7 @@ document.querySelectorAll('.pill').forEach(p=>{
       customRange.hidden = !customRange.hidden;
     } else {
       customRange.hidden = true;
-      loadData();
+      loadData(); heroDateLabel();
     }
   });
 });
@@ -392,7 +389,7 @@ document.getElementById('applyRange').addEventListener('click',()=>{
   if(e > today){ alert('To date cannot be in the future.'); return; }
   if(s > e){ alert('From date cannot be greater than To date.'); return; }
   customRange.hidden = true;
-  loadData();
+  loadData(); heroDateLabel();
 });
 document.addEventListener('click',ev=>{
   if(customRange.hidden) return;
