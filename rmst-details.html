@@ -376,6 +376,26 @@ function heroDateLabel(){
   else if(f==='month'){ const s=new Date(today.getFullYear(),today.getMonth(),1); el.textContent=fmtD(s)+' – '+fmtD(today); }
   else if(f.startsWith('custom')){ const cp=new URLSearchParams(f.replace(/^custom&?/,'')); const sd=cp.get('start'),ed=cp.get('end'); if(sd&&ed) el.textContent=fmt(sd)+' – '+fmt(ed); }
 }
+(()=>{
+  const f = new URLSearchParams(window.location.search).get('filter');
+  const s = new URLSearchParams(window.location.search).get('start');
+  const e = new URLSearchParams(window.location.search).get('end');
+  if(f){
+    document.querySelectorAll('.pill').forEach(p=>{
+      const m = p.dataset.filter === f;
+      p.classList.toggle('active', m);
+      p.setAttribute('aria-selected', String(m));
+    });
+    if(f === 'custom' && s && e){
+      document.getElementById('startDate').value = s;
+      document.getElementById('endDate').value = e;
+      const st = new URLSearchParams(window.location.search).get('startTime');
+      const et = new URLSearchParams(window.location.search).get('endTime');
+      if(st) document.getElementById('startTime').value = st.slice(0,5);
+      if(et) document.getElementById('endTime').value = et.slice(0,5);
+    }
+  }
+})();
 heroDateLabel();
 loadData();
 
