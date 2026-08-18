@@ -17,9 +17,8 @@ jobs:
           key: ${{ secrets.OCI_SSH_KEY }}
           script: |
             set -e
-            git config --global --add safe.directory /opt/scada-dashboard || true
             cd /opt/scada-dashboard
-            git pull origin latest
+            sudo git pull origin latest
             sudo cp -r *.html /var/www/bangalore-dairy-dashboard/
             echo "$(date --iso-8601=seconds) | Dashboard deployed from GitHub Actions" >> /home/opc/deploy.log
 
