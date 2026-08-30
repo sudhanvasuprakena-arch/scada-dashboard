@@ -400,10 +400,8 @@ document.getElementById('truckCount').textContent = totalTrucks || '—';
 
 /* ============================================================
  * Live top-KPIs from the milk-dispatch-truck endpoint.
- * NOTE: the destination category sections above (Weigh Bridge /
- * Product Dairy / NMP) are NOT wired — the endpoint returns
- * DairyCode/ProductCode but there is no known code→destination
- * mapping, so those remain static empty-states for now.
+ * Weigh Bridge is populated from DairyCode in this endpoint.
+ * Product Dairy and NMP use their dedicated endpoints below.
  * ============================================================ */
 const BASE_URL = '';
 const dispParams = new URLSearchParams(window.location.search);
@@ -508,6 +506,20 @@ function heroDateLabel(){
   else if(f==='month'){ const s=new Date(today.getFullYear(),today.getMonth(),1); el.textContent=fmtD(s)+' – '+fmtD(today); }
   else if(f.startsWith('custom')){ const cp=new URLSearchParams(f.replace(/^custom&?/,'')); const sd=cp.get('start'),ed=cp.get('end'); if(sd&&ed) el.textContent=fmt(sd)+' – '+fmt(ed); }
 }
+
+function syncPageUrl(){
+  const url = new URL(window.location.href);
+  const parts = getActiveFilter().split('&');
+  url.searchParams.set('filter', parts.shift() || 'month');
+  ['start','end','startTime','endTime'].forEach(key=>url.searchParams.delete(key));
+  parts.forEach(part=>{
+    const separator = part.indexOf('=');
+    if(separator > 0){
+      url.searchParams.set(part.slice(0,separator), part.slice(separator+1));
+    }
+  });
+  window.history.replaceState(null, '', url.pathname + url.search);
+}
 (()=>{
   const f = new URLSearchParams(window.location.search).get('filter');
   const s = new URLSearchParams(window.location.search).get('start');
@@ -543,6 +555,8 @@ document.querySelectorAll('.pill').forEach(p=>{
       customRange.hidden = !customRange.hidden;
     } else {
       customRange.hidden = true;
+      syncPageUrl();
+      heroDateLabel();
       loadDispatchKpis(); loadNMP();  loadProductDairy();
     }
   });
@@ -556,6 +570,8 @@ document.getElementById('applyRange').addEventListener('click',()=>{
   if(e > today){ alert('To date cannot be in the future.'); return; }
   if(s > e){ alert('From date cannot be greater than To date.'); return; }
   customRange.hidden = true;
+  syncPageUrl();
+  heroDateLabel();
   loadDispatchKpis(); loadNMP();  loadProductDairy();
 });
 document.addEventListener('click',ev=>{
