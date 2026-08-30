@@ -261,7 +261,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
       <div class="kpi reveal" style="animation-delay:.08s">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
         <div>
-          <div class="tag">Total trucks dispatched</div>
+          <div class="tag">Total dispatches</div>
           <div class="value num" id="truckCount">—</div>
           <div class="meta" id="kpi-completed">Completed &amp; in progress</div>
         </div>
@@ -379,7 +379,7 @@ function renderSection(list, wrapId, totId, emptyMsg){
         </div>
         ${typesHtml ? `<div class="vars"><div class="lbl">Product Types</div><div class="vlist">${typesHtml}</div></div>` : ''}
         <div class="vars">
-          <div class="lbl">Trucks</div>
+          <div class="lbl">Dispatches</div>
           <div class="vlist"><span class="vchip">${d.trucks == null ? '—' : d.trucks}</span></div>
         </div>
         <span class="chip green">Dispatched</span>
@@ -390,7 +390,7 @@ function renderSection(list, wrapId, totId, emptyMsg){
 }
 
 const r1 = renderSection(dispatchData.viaWeighBridge, 'sec-wb', 'tot-wb',
-  'Destination cards appear here automatically as trucks are dispatched through the weigh bridge.');
+  'Destination cards appear here automatically as milk is dispatched through the weigh bridge.');
 const r2 = renderSection(dispatchData.productDairy, 'sec-pd', 'tot-pd',
   'Transfers to Product Dairy appear here from daily dispatch data.');
 const r3 = renderSection(dispatchData.nmp, 'sec-nmp', 'tot-nmp',
