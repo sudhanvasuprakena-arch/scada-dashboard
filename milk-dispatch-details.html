@@ -428,7 +428,7 @@ function getActiveFilter(){
 async function loadDispatchKpis(){
   let d = null;
   try{
-    const res = await fetch(`${BASE_URL}/papi/${dispSlug()}/milk-dispatch-truck?filter=${getActiveFilter()}&all=true`);
+    const res = await fetch(`${BASE_URL}/papi/${dispSlug()}/milk-dispatch-truck?filter=${getActiveFilter()}`);
     const json = await res.json();
     if(json && json.success && Array.isArray(json.data)) d = json.data;
   }catch(e){ /* keep placeholders */ }
