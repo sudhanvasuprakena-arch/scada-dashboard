@@ -261,7 +261,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
       <div class="kpi reveal" style="animation-delay:.08s">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
         <div>
-          <div class="tag">Total dispatches</div>
+          <div class="tag">Total trucks dispatched</div>
           <div class="value num" id="truckCount">—</div>
           <div class="meta" id="kpi-completed">Completed &amp; in progress</div>
         </div>
@@ -291,7 +291,8 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 
   <div class="section-head reveal" style="margin-top:26px">
     <span class="cat-tag">Category 2</span>
-    <h3>Milk Dispatched to Product Dairy</h3>
+    <h3>Milk Dispatched to Product Dairy
+</h3>
     <span class="hint">Internal transfer</span>
     <span class="rule"></span>
     <span class="tot num" id="tot-pd">—<small> Kg</small></span>
@@ -300,7 +301,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 
   <div class="section-head reveal" style="margin-top:26px">
     <span class="cat-tag">Category 3</span>
-    <h3>Milk Dispatched to NMP</h3>
+    <h3>Milk Dispatched to NMP (Nandini Milk Products)</h3>
     <span class="hint">Internal transfer</span>
     <span class="rule"></span>
     <span class="tot num" id="tot-nmp">—<small> Kg</small></span>
@@ -341,7 +342,6 @@ function renderSection(list, wrapId, totId, emptyMsg){
   const wrap = document.getElementById(wrapId);
   let totalKg = 0, trucks = 0;
   if (!list.length) {
-    document.getElementById(totId).innerHTML = '0<small> Kg</small>';
     wrap.insertAdjacentHTML('beforeend', `
       <div class="empty-state reveal">
         <div class="eico">
@@ -379,7 +379,7 @@ function renderSection(list, wrapId, totId, emptyMsg){
         </div>
         ${typesHtml ? `<div class="vars"><div class="lbl">Product Types</div><div class="vlist">${typesHtml}</div></div>` : ''}
         <div class="vars">
-          <div class="lbl">Dispatches</div>
+          <div class="lbl">Trucks</div>
           <div class="vlist"><span class="vchip">${d.trucks == null ? '—' : d.trucks}</span></div>
         </div>
         <span class="chip green">Dispatched</span>
@@ -390,7 +390,7 @@ function renderSection(list, wrapId, totId, emptyMsg){
 }
 
 const r1 = renderSection(dispatchData.viaWeighBridge, 'sec-wb', 'tot-wb',
-  'Destination cards appear here automatically as milk is dispatched through the weigh bridge.');
+  'Destination cards appear here automatically as trucks are dispatched through the weigh bridge.');
 const r2 = renderSection(dispatchData.productDairy, 'sec-pd', 'tot-pd',
   'Transfers to Product Dairy appear here from daily dispatch data.');
 const r3 = renderSection(dispatchData.nmp, 'sec-nmp', 'tot-nmp',
@@ -400,8 +400,10 @@ document.getElementById('truckCount').textContent = totalTrucks || '—';
 
 /* ============================================================
  * Live top-KPIs from the milk-dispatch-truck endpoint.
- * Weigh Bridge is populated from DairyCode in this endpoint.
- * Product Dairy and NMP use their dedicated endpoints below.
+ * NOTE: the destination category sections above (Weigh Bridge /
+ * Product Dairy / NMP) are NOT wired — the endpoint returns
+ * DairyCode/ProductCode but there is no known code→destination
+ * mapping, so those remain static empty-states for now.
  * ============================================================ */
 const BASE_URL = '';
 const dispParams = new URLSearchParams(window.location.search);
@@ -445,8 +447,8 @@ async function loadDispatchKpis(){
   document.getElementById('kpi-completed').innerHTML = `<b>${completed}</b> of ${d.length} completed`;
   document.getElementById('kpi-quality').innerHTML = `${fat}<small>% Fat</small> · ${snf}<small>% SNF</small>`;
 
-  // Populate the weigh-bridge section with milk dispatches, grouped by destination.
-  const MILK_PRODUCTS = ['RAW MILK','PAST MILK','SKIM MILK','SKIM MILK POWDER','HOMOGENISED MILK','TONED MILK','STANDARDISED MILK'];
+  // Populate WB and PD sections — filter to milk ProductCodes only
+  const MILK_PRODUCTS = ['RAW MILK','PAST MILK','SKIM MILK','HOMOGENISED MILK','TONED MILK','STANDARDISED MILK'];
   const isMilkType = r => MILK_PRODUCTS.includes((r.ProductCode||'').trim().toUpperCase());
   const byDairy = {};
   d.forEach(r=>{
@@ -461,10 +463,57 @@ async function loadDispatchKpis(){
     byDairy[key].snf += n2(r.SNF_First);
     byDairy[key].n++;
   });
-  const wb = Object.values(byDairy);
+  const isPD  = k => k.includes('PRE PACK') || k.includes('PRODUCT');
+  const isNMP = k => k === 'NMP';
+  const wb  = Object.values(byDairy).filter(x=>!isPD(x.name.toUpperCase()) && !isNMP(x.name.toUpperCase()));
   const toEntry = x => ({ name:x.name, kg:Math.round(x.kg), trucks:x.trucks, fat:x.n>0&&x.fat>0?parseFloat((x.fat/x.n).toFixed(2)):null, snf:x.n>0&&x.snf>0?parseFloat((x.snf/x.n).toFixed(2)):null, source:'BAMUL' });
   const el = document.getElementById('sec-wb'); if(el) el.innerHTML='';
   renderSection(wb.map(toEntry), 'sec-wb', 'tot-wb', 'No weigh bridge dispatches for this range.');
+}
+
+/* Merge only the "Dispatch Line-N" rows into a single entry; any other row
+   (e.g. "CST To Product Dairy", which is a cream transfer) is left untouched.
+   Quantities and trucks are summed; Fat/SNF are quantity-weighted averages
+   (the correct way to combine two streams — a plain mean would misreport
+   when the lines carry very different volumes). Rows with no Fat/SNF are
+   skipped in the weighting so they don't drag the average down. */
+function combineLines(rows, label){
+  const isLine = r => /dispatch\s*line/i.test(r.LineName || '');
+  const lines  = rows.filter(isLine);
+  const others = rows.filter(r => !isLine(r));
+
+  const toEntry = r => ({
+    name: r.LineName,
+    kg: Math.round(n2(r.TotalQty)),
+    trucks: parseInt(r.Entries,10) || 0,
+    fat: n2(r.AvgFat) || null,
+    snf: n2(r.AvgSNF) || null,
+    source: 'Batch_Log'
+  });
+
+  const out = [];
+  if(lines.length){
+    let kg = 0, trucks = 0, fatQty = 0, fatSum = 0, snfQty = 0, snfSum = 0;
+    lines.forEach(r=>{
+      const q = n2(r.TotalQty);
+      kg += q;
+      trucks += (parseInt(r.Entries,10) || 0);
+      const f = n2(r.AvgFat), s = n2(r.AvgSNF);
+      if(f > 0 && q > 0){ fatSum += f * q; fatQty += q; }
+      if(s > 0 && q > 0){ snfSum += s * q; snfQty += q; }
+    });
+    out.push({
+      name: label,
+      kg: Math.round(kg),
+      trucks: trucks,
+      fat: fatQty > 0 ? parseFloat((fatSum/fatQty).toFixed(2)) : null,
+      snf: snfQty > 0 ? parseFloat((snfSum/snfQty).toFixed(2)) : null,
+      source: 'Batch_Log'
+    });
+  }
+  // keep non-dispatch-line rows as their own cards
+  others.forEach(r => out.push(toEntry(r)));
+  return out;
 }
 
 async function loadProductDairy(){
@@ -476,8 +525,7 @@ async function loadProductDairy(){
   }catch(e){}
   const el = document.getElementById('sec-pd'); if(el) el.innerHTML='';
   if(!d || !d.length){ renderSection([], 'sec-pd', 'tot-pd', 'No product dairy transfers for this range.'); return; }
-  const entries = d.map(r=>({ name:r.LineName, kg:Math.round(n2(r.TotalQty)), trucks:r.Entries, fat:n2(r.AvgFat)||null, snf:n2(r.AvgSNF)||null, source:'Batch_Log' }));
-  renderSection(entries, 'sec-pd', 'tot-pd', 'No product dairy transfers for this range.');
+  renderSection(combineLines(d, 'PMST to Production Dairy'), 'sec-pd', 'tot-pd', 'No product dairy transfers for this range.');
 }
 
 async function loadNMP(){
@@ -489,8 +537,7 @@ async function loadNMP(){
   }catch(e){}
   const el = document.getElementById('sec-nmp'); if(el) el.innerHTML='';
   if(!d || !d.length){ renderSection([], 'sec-nmp', 'tot-nmp', 'No NMP transfers for this range.'); return; }
-  const entries = d.map(r=>({ name:r.LineName, kg:Math.round(n2(r.TotalQty)), trucks:r.Entries, fat:n2(r.AvgFat)||null, snf:n2(r.AvgSNF)||null, source:'Batch_Log' }));
-  renderSection(entries, 'sec-nmp', 'tot-nmp', 'No NMP transfers for this range.');
+  renderSection(combineLines(d, 'PMST to NMP'), 'sec-nmp', 'tot-nmp', 'No NMP transfers for this range.');
 }
 function heroDateLabel(){
   const f = getActiveFilter();
@@ -505,20 +552,6 @@ function heroDateLabel(){
   else if(f==='week'){ const mon=new Date(today); mon.setDate(today.getDate()-today.getDay()+(today.getDay()===0?-6:1)); el.textContent=fmtD(mon)+' – '+fmtD(today); }
   else if(f==='month'){ const s=new Date(today.getFullYear(),today.getMonth(),1); el.textContent=fmtD(s)+' – '+fmtD(today); }
   else if(f.startsWith('custom')){ const cp=new URLSearchParams(f.replace(/^custom&?/,'')); const sd=cp.get('start'),ed=cp.get('end'); if(sd&&ed) el.textContent=fmt(sd)+' – '+fmt(ed); }
-}
-
-function syncPageUrl(){
-  const url = new URL(window.location.href);
-  const parts = getActiveFilter().split('&');
-  url.searchParams.set('filter', parts.shift() || 'month');
-  ['start','end','startTime','endTime'].forEach(key=>url.searchParams.delete(key));
-  parts.forEach(part=>{
-    const separator = part.indexOf('=');
-    if(separator > 0){
-      url.searchParams.set(part.slice(0,separator), part.slice(separator+1));
-    }
-  });
-  window.history.replaceState(null, '', url.pathname + url.search);
 }
 (()=>{
   const f = new URLSearchParams(window.location.search).get('filter');
@@ -555,8 +588,6 @@ document.querySelectorAll('.pill').forEach(p=>{
       customRange.hidden = !customRange.hidden;
     } else {
       customRange.hidden = true;
-      syncPageUrl();
-      heroDateLabel();
       loadDispatchKpis(); loadNMP();  loadProductDairy();
     }
   });
@@ -570,8 +601,6 @@ document.getElementById('applyRange').addEventListener('click',()=>{
   if(e > today){ alert('To date cannot be in the future.'); return; }
   if(s > e){ alert('From date cannot be greater than To date.'); return; }
   customRange.hidden = true;
-  syncPageUrl();
-  heroDateLabel();
   loadDispatchKpis(); loadNMP();  loadProductDairy();
 });
 document.addEventListener('click',ev=>{
