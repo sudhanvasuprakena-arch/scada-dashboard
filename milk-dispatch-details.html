@@ -26,12 +26,13 @@
   --shadow:0 1px 2px rgba(11,27,63,.05), 0 6px 18px -10px rgba(37,99,235,.16);
 }
 *{margin:0;padding:0;box-sizing:border-box}
+html{font-size:300%;overflow-x:hidden;margin:0;padding:0;height:100%}
 body{
   font-family:'Inter',system-ui,sans-serif;
   background:var(--milk);
   color:var(--text);
   -webkit-font-smoothing:antialiased;
-  min-height:100vh;display:flex;flex-direction:column;
+  height:100%;overflow:hidden;display:flex;flex-direction:column;
 }
 h1,h2,h3{font-family:'Bricolage Grotesque','Inter',sans-serif}
 .num{font-variant-numeric:tabular-nums}
@@ -40,7 +41,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 /* ===== Top bar ===== */
 .topbar{background:var(--card);border-bottom:1px solid var(--sky-line);position:sticky;top:0;z-index:50;overflow:visible}
 .topbar-inner{
-  max-width:1400px;margin:0 auto;width:100%;padding:8px 20px;
+  max-width:100%;margin:0;width:100%;padding:8px 24px;
   display:flex;align-items:center;gap:14px;
 }
 .brand{display:flex;align-items:center;gap:10px}
@@ -51,9 +52,9 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
   box-shadow:0 3px 10px -3px rgba(37,99,235,.5);
 }
 .brand-mark svg{width:18px;height:18px}
-.brand h1{font-size:17px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em;line-height:1.1;white-space:nowrap}
-.brand p{font-size:17px;color:var(--muted);font-weight:500;white-space:nowrap}
-.crumb{font-size:16px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px}
+.brand h1{font-size:28px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em;line-height:1.1;white-space:nowrap}
+.brand p{font-size:22px;color:var(--muted);font-weight:500;white-space:nowrap}
+.crumb{font-size:20px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px}
 .crumb b{color:var(--blue-deep)}
 .range-group{position:relative;margin-left:auto}
 .range-pills{display:flex;gap:4px;background:var(--sky);padding:3px;border-radius:10px;flex-wrap:nowrap;}
@@ -65,8 +66,8 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 }
 .custom-range[hidden]{display:none}
 .cr-field{display:flex;flex-direction:column;gap:4px}
-.cr-field label{font-size:13.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
-.date-input{font:inherit;font-size:14.5px;color:var(--blue-ink);padding:7px 9px;border:1px solid var(--sky-line);border-radius:8px;background:var(--card);min-width:180px;}
+.cr-field label{font-size:17px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.date-input{font:inherit;font-size:18px;color:var(--blue-ink);padding:7px 9px;border:1px solid var(--sky-line);border-radius:8px;background:var(--card);min-width:180px;}
 .pill{
   font:inherit;font-size:16px;font-weight:600;color:var(--muted);
   border:none;background:transparent;border-radius:7px;padding:5px 10px;cursor:pointer;transition:.15s;white-space:nowrap;font-size:13px;
@@ -74,7 +75,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 .pill:hover{color:var(--blue-deep)}
 .pill.active{background:#fff;color:var(--blue-deep);box-shadow:0 1px 4px rgba(11,27,63,.12)}
 .btn{
-  font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;border-radius:9px;
+  font:inherit;font-size:18px;font-weight:600;cursor:pointer;border-radius:9px;
   padding:7px 13px;border:1px solid var(--sky-line);background:var(--card);color:var(--blue-ink);
   transition:.15s;white-space:nowrap;text-decoration:none;display:inline-block;
 }
@@ -89,11 +90,11 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 }
 .hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(500px 160px at 88% -30%,rgba(255,255,255,.16),transparent 70%)}
 .hero-inner{
-  max-width:1400px;margin:0 auto;width:100%;padding:18px 20px 22px;position:relative;z-index:1;
+  max-width:100%;margin:0;width:100%;padding:18px 24px 22px;position:relative;z-index:1;
 }
 .hero-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
-.hero-head h2{font-size:23px;font-weight:800;letter-spacing:-.02em}
-.hero-head .sub{font-size:14.5px;color:rgba(255,255,255,.78);font-weight:500}
+.hero-head h2{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.hero-head .sub{font-size:16px;color:rgba(255,255,255,.78);font-weight:500}
 .hero-date-row{display:flex;justify-content:flex-end;margin-bottom:10px}
 .hero-date{font-size:17px;color:#fff;font-weight:700;letter-spacing:.4px}
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
@@ -104,24 +105,27 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 }
 .kpi .ico{width:38px;height:38px;border-radius:10px;background:var(--sky);flex:none;display:grid;place-items:center;color:var(--blue)}
 .kpi .ico svg{width:20px;height:20px}
-.kpi .tag{font-size:14.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--blue-deep)}
-.kpi .value{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(20px,2vw,28px);font-weight:800;color:var(--blue-ink);letter-spacing:-.02em;line-height:1.15}
+.kpi .tag{font-size:18px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--blue-deep)}
+.kpi .value{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(28px,3vw,40px);font-weight:800;color:var(--blue-ink);letter-spacing:-.02em;line-height:1.15}
 .kpi .value small{font-size:.5em;font-weight:700;color:var(--muted);margin-left:3px}
-.kpi .meta{font-size:17px;color:var(--muted);font-weight:500}
+.kpi .meta{font-size:18px;color:var(--muted);font-weight:500}
 .kpi .meta b{color:var(--text)}
 
 /* ===== Tank grid ===== */
-.main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:20px 20px 48px}
+.main{flex:1;max-width:100%;margin:0;width:100%;padding:20px 24px 48px;overflow-y:auto}
 .section-head{display:flex;align-items:baseline;gap:10px;margin-bottom:14px}
-.section-head h3{font-size:17.5px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em}
-.section-head .hint{font-size:16px;color:var(--muted);font-weight:500}
+.section-head h3{font-size:34px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em}
+.section-head .hint{font-size:24px;color:var(--muted);font-weight:500}
 .section-head .rule{flex:1;height:1px;background:var(--sky-line)}
 .cat-tag{
-  font-size:17px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-deep);
+  font-size:26px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-deep);
   background:var(--sky);border-radius:99px;padding:4px 12px;white-space:nowrap;
 }
-.section-head .tot{font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:800;color:var(--blue-ink);white-space:nowrap}
-.section-head .tot small{font-size:17px;color:var(--muted);font-weight:600}
+.section-head .tot{font-family:'Bricolage Grotesque',sans-serif;font-size:30px;font-weight:800;color:var(--blue-ink);white-space:nowrap}
+.section-head .tot small{font-size:24px;color:var(--muted);font-weight:600}
+.section-total{margin:4px 0 12px;padding-left:48px}
+.section-total .tot{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(28px,3vw,40px);font-weight:800;color:var(--blue-ink)}
+.section-total .tot small{font-size:.5em;color:var(--muted);font-weight:600;margin-left:3px}
 .tanks{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .tank{
   background:var(--card);border:1px solid var(--sky-line);border-radius:var(--radius);
@@ -134,22 +138,22 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 .tank-badge{
   width:38px;height:38px;border-radius:10px;flex:none;
   background:var(--sky);display:grid;place-items:center;
-  font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:800;color:var(--blue-deep);
+  font-family:'Bricolage Grotesque',sans-serif;font-size:26px;font-weight:800;color:var(--blue-deep);
 }
-.tank-head h3{font-size:16px;font-weight:800;color:var(--blue-ink)}
-.tank-head .sub{font-size:14.5px;color:var(--muted);font-weight:500}
+.tank-head h3{font-size:36px;font-weight:800;color:var(--blue-ink)}
+.tank-head .sub{font-size:22px;color:var(--muted);font-weight:500}
 .tank .qty{
   background:var(--milk);border-radius:10px;padding:8px 12px;
 }
-.tank .qty .lbl{font-size:13.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-.tank .qty .v{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(18px,1.7vw,23px);font-weight:800;color:var(--muted);line-height:1.2}
+.tank .qty .lbl{font-size:26px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.tank .qty .v{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(44px,4vw,62px);font-weight:800;color:var(--muted);line-height:1.2}
 .tank .qty .v small{font-size:.5em;font-weight:700;margin-left:2px}
 .tank .fs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .tank .fs .cell{
   border:1px dashed var(--sky-line);border-radius:9px;padding:6px 10px;
 }
-.tank .fs .lbl{font-size:17px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-.tank .fs .v{font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:800;color:var(--muted)}
+.tank .fs .lbl{font-size:26px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.tank .fs .v{font-family:'Bricolage Grotesque',sans-serif;font-size:34px;font-weight:800;color:var(--muted)}
 .tank .fs .v small{font-size:.6em;font-weight:600}
 .chip{
   display:inline-block;font-size:13.5px;font-weight:700;border-radius:99px;padding:2px 8px;white-space:nowrap;align-self:flex-start;
@@ -216,10 +220,9 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
       </div>
       <div>
         <h1>Bangalore Main Dairy</h1>
-        <p>Plant flow · Milk logistics</p>
+        <p>Plant flow → Milk Dispatch</p>
       </div>
     </div>
-    <span class="crumb">Plant flow → <b>Milk Dispatch · Outbound</b></span>
     <div class="range-group">
       <div class="range-pills" role="tablist" aria-label="Date range">
         <button class="pill" role="tab" aria-selected="false" data-filter="yesterday">Yesterday</button>
@@ -246,7 +249,6 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
   <div class="hero-inner">
     <div class="hero-head">
       <h2>Milk Dispatch</h2>
-      <span class="sub">Outbound transfers from RMST &amp; PMST, destination-wise</span>
     </div>
     <div class="hero-date-row"><span class="hero-date" id="hero-date"></span></div>
       <div class="kpis">
@@ -255,7 +257,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
         <div>
           <div class="tag">Total milk dispatched</div>
           <div class="value num"><span id="kpi-net">—</span><small>Kg</small></div>
-          <div class="meta">Across all destinations</div>
+          <div class="meta"></div>
         </div>
       </div>
       <div class="kpi reveal" style="animation-delay:.08s">
@@ -271,40 +273,34 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
         <div>
           <div class="tag">Overall quality · Avg</div>
           <div class="value num" id="kpi-quality">—<small>% Fat</small> · —<small>% SNF</small></div>
-          <div class="meta">Weighted across dispatches</div>
+          <div class="meta"></div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== 8 tanks ===== -->
+<!-- ===== sections ===== -->
 <main class="main">
   <div class="section-head reveal">
     <span class="cat-tag">Category 1</span>
     <h3>Milk Dispatched via Weigh Bridge</h3>
-    <span class="hint">Destination-wise, from daily dispatch data</span>
-    <span class="rule"></span>
-    <span class="tot num" id="tot-wb">—<small> Kg</small></span>
   </div>
+  <div class="section-total reveal"><span class="tot num" id="tot-wb">—<small> Kg</small></span></div>
   <div class="tanks" id="sec-wb"></div>
 
   <div class="section-head reveal" style="margin-top:26px">
     <span class="cat-tag">Category 2</span>
     <h3>Milk Dispatched to Product Dairy</h3>
-    <span class="hint">Internal transfer</span>
-    <span class="rule"></span>
-    <span class="tot num" id="tot-pd">—<small> Kg</small></span>
   </div>
+  <div class="section-total reveal"><span class="tot num" id="tot-pd">—<small> Kg</small></span></div>
   <div class="tanks" id="sec-pd"></div>
 
   <div class="section-head reveal" style="margin-top:26px">
     <span class="cat-tag">Category 3</span>
-    <h3>Milk Dispatched to NMP</h3>
-    <span class="hint">Internal transfer</span>
-    <span class="rule"></span>
-    <span class="tot num" id="tot-nmp">—<small> Kg</small></span>
+    <h3>Milk Dispatched to NMP (Nandini Milk Products)</h3>
   </div>
+  <div class="section-total reveal"><span class="tot num" id="tot-nmp">—<small> Kg</small></span></div>
   <div class="tanks" id="sec-nmp"></div>
 
 </main>
@@ -428,7 +424,7 @@ function getActiveFilter(){
 async function loadDispatchKpis(){
   let d = null;
   try{
-    const res = await fetch(`${BASE_URL}/papi/${dispSlug()}/milk-dispatch-truck?filter=${getActiveFilter()}&all=true`);
+    const res = await fetch(`${BASE_URL}/papi/${dispSlug()}/milk-dispatch-truck?filter=${getActiveFilter()}`);
     const json = await res.json();
     if(json && json.success && Array.isArray(json.data)) d = json.data;
   }catch(e){ /* keep placeholders */ }
@@ -470,6 +466,51 @@ async function loadDispatchKpis(){
   renderSection(wb.map(toEntry), 'sec-wb', 'tot-wb', 'No weigh bridge dispatches for this range.');
 }
 
+/* Merge only the "Dispatch Line-N" rows into a single entry; any other row
+   (e.g. "CST To Product Dairy", which is a cream transfer) is left untouched.
+   Quantities and trucks are summed; Fat/SNF are quantity-weighted averages
+   (the correct way to combine two streams — a plain mean would misreport
+   when the lines carry very different volumes). Rows with no Fat/SNF are
+   skipped in the weighting so they don't drag the average down. */
+function combineLines(rows, label){
+  const isLine = r => /dispatch\s*line/i.test(r.LineName || '');
+  const lines  = rows.filter(isLine);
+  const others = rows.filter(r => !isLine(r));
+
+  const toEntry = r => ({
+    name: r.LineName,
+    kg: Math.round(n2(r.TotalQty)),
+    trucks: parseInt(r.Entries,10) || 0,
+    fat: n2(r.AvgFat) || null,
+    snf: n2(r.AvgSNF) || null,
+    source: 'Batch_Log'
+  });
+
+  const out = [];
+  if(lines.length){
+    let kg = 0, trucks = 0, fatQty = 0, fatSum = 0, snfQty = 0, snfSum = 0;
+    lines.forEach(r=>{
+      const q = n2(r.TotalQty);
+      kg += q;
+      trucks += (parseInt(r.Entries,10) || 0);
+      const f = n2(r.AvgFat), s = n2(r.AvgSNF);
+      if(f > 0 && q > 0){ fatSum += f * q; fatQty += q; }
+      if(s > 0 && q > 0){ snfSum += s * q; snfQty += q; }
+    });
+    out.push({
+      name: label,
+      kg: Math.round(kg),
+      trucks: trucks,
+      fat: fatQty > 0 ? parseFloat((fatSum/fatQty).toFixed(2)) : null,
+      snf: snfQty > 0 ? parseFloat((snfSum/snfQty).toFixed(2)) : null,
+      source: 'Batch_Log'
+    });
+  }
+  // keep non-dispatch-line rows as their own cards
+  others.forEach(r => out.push(toEntry(r)));
+  return out;
+}
+
 async function loadProductDairy(){
   let d = null;
   try{
@@ -479,8 +520,7 @@ async function loadProductDairy(){
   }catch(e){}
   const el = document.getElementById('sec-pd'); if(el) el.innerHTML='';
   if(!d || !d.length){ renderSection([], 'sec-pd', 'tot-pd', 'No product dairy transfers for this range.'); return; }
-  const entries = d.map(r=>({ name:r.LineName, kg:Math.round(n2(r.TotalQty)), trucks:r.Entries, fat:n2(r.AvgFat)||null, snf:n2(r.AvgSNF)||null, source:'Batch_Log' }));
-  renderSection(entries, 'sec-pd', 'tot-pd', 'No product dairy transfers for this range.');
+  renderSection(combineLines(d, 'PMST to Production Dairy'), 'sec-pd', 'tot-pd', 'No product dairy transfers for this range.');
 }
 
 async function loadNMP(){
@@ -492,8 +532,7 @@ async function loadNMP(){
   }catch(e){}
   const el = document.getElementById('sec-nmp'); if(el) el.innerHTML='';
   if(!d || !d.length){ renderSection([], 'sec-nmp', 'tot-nmp', 'No NMP transfers for this range.'); return; }
-  const entries = d.map(r=>({ name:r.LineName, kg:Math.round(n2(r.TotalQty)), trucks:r.Entries, fat:n2(r.AvgFat)||null, snf:n2(r.AvgSNF)||null, source:'Batch_Log' }));
-  renderSection(entries, 'sec-nmp', 'tot-nmp', 'No NMP transfers for this range.');
+  renderSection(combineLines(d, 'PMST to NMP'), 'sec-nmp', 'tot-nmp', 'No NMP transfers for this range.');
 }
 function heroDateLabel(){
   const f = getActiveFilter();

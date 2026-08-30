@@ -1,12 +1,24 @@
 const express = require('express');
 const cors = require('cors');
 const sql = require('mssql');
+const oracledb = require('oracledb');
 const path = require('path');
 const app = express();
 
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ── Oracle config ──────────────────────────────────────────────────────────────
+try { oracledb.initOracleClient({ libDir: '/opt/oracle/instantclient_23_4' }); } catch(e) {}
+const oracleConfig = {
+    user: 'apps_readonly',
+    password: 'GsdjdRuta975',
+    connectString: '115.124.111.4:1521/BMLPROD'
+};
+async function oraclePool() {
+    return await oracledb.getConnection(oracleConfig);
+}
 
 // ── SQL Server config ──────────────────────────────────────────────────────────
 const sqlConfig = {
@@ -379,6 +391,130 @@ app.get('/api/bangalore/ai-production', async (req, res) => {
         `);
         const row = r.recordset[0];
         res.json({ success: true, milkKg: row.milkKg || 0, milkPkts: row.milkPkts || 0, curdKg: row.curdKg || 0, curdPkts: row.curdPkts || 0 });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+// ── Milk Movement Summary ─────────────────────────────────────────────────────
+// ?filter=month|week|yesterday|custom&start=YYYY-MM-DD&end=YYYY-MM-DD&group=day|week|month
+app.get('/api/bangalore/milk-movement', async (req, res) => {
+    try {
+        const p = pool(res); if (!p) return;
+        const { filter, start, end, group } = req.query;
+
+        const recvCond = dateCond(`CAST([Date] AS DATETIME)+CAST(REPLACE(ArrivalTime,'.',':') AS DATETIME)`, filter, start, end, null, null, false);
+        const dispCond = dateCond(`CAST([Date] AS DATETIME)+CAST(REPLACE(DispatchTime,'.',':') AS DATETIME)`, filter, start, end, null, null, false);
+
+        const netWt = `CASE WHEN ISNULL(NetWeight,0)>0 THEN NetWeight ELSE ISNULL(GrossWeight,0)-ISNULL(TareWeight,0) END`;
+        const recvDt = `CAST([Date] AS DATETIME)+CAST(REPLACE(ArrivalTime,'.',':') AS DATETIME)`;
+        const dispDt = `CAST([Date] AS DATETIME)+CAST(REPLACE(DispatchTime,'.',':') AS DATETIME)`;
+
+        if (group === 'day' || group === 'week') {
+            // Group by the shifted date (day starts at 04:45)
+            // For week grouping: 0-based chunk from 1st of month (days 1-7 = week 0, 8-14 = week 1, etc)
+            const monthStart = `DATEFROMPARTS(YEAR(DATEADD(MINUTE,-285,${recvDt})),MONTH(DATEADD(MINUTE,-285,${recvDt})),1)`;
+            const monthStartD = `DATEFROMPARTS(YEAR(DATEADD(MINUTE,-285,${dispDt})),MONTH(DATEADD(MINUTE,-285,${dispDt})),1)`;
+            const recvGrp = group === 'day'
+                ? `CAST(DATEADD(MINUTE,-285,${recvDt}) AS DATE)`
+                : `DATEDIFF(DAY,${monthStart},CAST(DATEADD(MINUTE,-285,${recvDt}) AS DATE))/7`;
+            const dispGrp = group === 'day'
+                ? `CAST(DATEADD(MINUTE,-285,${dispDt}) AS DATE)`
+                : `DATEDIFF(DAY,${monthStartD},CAST(DATEADD(MINUTE,-285,${dispDt}) AS DATE))/7`;
+
+            const [recvQ, dispQ] = await Promise.all([
+                p.request().query(`
+                    SELECT ${recvGrp} AS grp,
+                        MIN(CAST(DATEADD(MINUTE,-285,${recvDt}) AS DATE)) AS StartDate,
+                        MAX(CAST(DATEADD(MINUTE,-285,${recvDt}) AS DATE)) AS EndDate,
+                        SUM(${netWt}) AS TotalReceived, COUNT(*) AS Trucks
+                    FROM BAMUL.dbo.MilkRecipt
+                    WHERE ${recvCond} AND ISNULL(IsDel,0)=0
+                    AND ProductCode IN ('RAW MILK','PAST MILK','SKIM MILK','SKIM MILK POWDER','Homogenised milk')
+                    GROUP BY ${recvGrp} ORDER BY MIN(${recvDt})`),
+                p.request().query(`
+                    SELECT ${dispGrp} AS grp,
+                        SUM(${netWt}) AS TotalDispatched, COUNT(*) AS Trucks
+                    FROM BAMUL.dbo.MilkDispatch
+                    WHERE ${dispCond} AND ISNULL(IsDel,0)=0 AND IsCompleted=1
+                    AND ProductCode IN ('RAW MILK','PAST MILK','SKIM MILK','SKIM MILK POWDER','Homogenised milk')
+                    GROUP BY ${dispGrp} ORDER BY MIN(${dispDt})`)
+            ]);
+
+            const recvMap = {}, dispMap = {};
+            recvQ.recordset.forEach(r => { recvMap[String(r.grp)] = r; });
+            dispQ.recordset.forEach(r => { dispMap[String(r.grp)] = r; });
+
+            const allKeys = [...new Set([...Object.keys(recvMap), ...Object.keys(dispMap)])].sort();
+
+            const rows = allKeys.map(k => {
+                const rv = recvMap[k] || {}, dv = dispMap[k] || {};
+                const received = rv.TotalReceived || 0;
+                const dispatched = dv.TotalDispatched || 0;
+                return {
+                    grp: k,
+                    startDate: rv.StartDate || null,
+                    endDate: rv.EndDate || null,
+                    received,
+                    receivedTrucks: rv.Trucks || 0,
+                    usedInProduction: Math.max(0, received - dispatched),
+                    dispatched,
+                    dispatchedTrucks: dv.Trucks || 0
+                };
+            });
+
+            const totals = rows.reduce((a, r) => {
+                a.received += r.received; a.receivedTrucks += r.receivedTrucks;
+                a.usedInProduction += r.usedInProduction;
+                a.dispatched += r.dispatched; a.dispatchedTrucks += r.dispatchedTrucks;
+                return a;
+            }, { received:0, receivedTrucks:0, usedInProduction:0, dispatched:0, dispatchedTrucks:0 });
+
+            return res.json({ success: true, rows, totals });
+        } else {
+            // single aggregate (month / yesterday / custom with no group)
+            const [recvQ, dispQ] = await Promise.all([
+                p.request().query(`SELECT SUM(${netWt}) AS TotalReceived, COUNT(*) AS Trucks FROM BAMUL.dbo.MilkRecipt WHERE ${recvCond} AND ISNULL(IsDel,0)=0 AND ProductCode IN ('RAW MILK','PAST MILK','SKIM MILK','SKIM MILK POWDER','Homogenised milk')`),
+                p.request().query(`SELECT SUM(${netWt}) AS TotalDispatched, COUNT(*) AS Trucks FROM BAMUL.dbo.MilkDispatch WHERE ${dispCond} AND ISNULL(IsDel,0)=0 AND IsCompleted=1 AND ProductCode IN ('RAW MILK','PAST MILK','SKIM MILK','SKIM MILK POWDER','Homogenised milk')`)
+            ]);
+            const rv = recvQ.recordset[0], dv = dispQ.recordset[0];
+            const received = rv.TotalReceived || 0;
+            const dispatched = dv.TotalDispatched || 0;
+            return res.json({ success: true, rows: [], totals: {
+                received, receivedTrucks: rv.Trucks || 0,
+                usedInProduction: Math.max(0, received - dispatched),
+                dispatched, dispatchedTrucks: dv.Trucks || 0
+            }});
+        }
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+// ── BMC / CC — Oracle RM_SHIPPING_HDR ──────────────────────────────────────────────────
+app.get('/api/bangalore/bmc-cc', async (req, res) => {
+    try {
+        const { filter, start, end } = req.query;
+        let dateCond;
+        if (filter === 'yesterday') {
+            dateCond = `SHIPPED_DATE >= TRUNC(SYSDATE)-1 AND SHIPPED_DATE < TRUNC(SYSDATE)`;
+        } else if (filter === 'week') {
+            dateCond = `SHIPPED_DATE >= TRUNC(SYSDATE) - 7 AND SHIPPED_DATE < TRUNC(SYSDATE)`;
+        } else if (filter === 'month') {
+            dateCond = `SHIPPED_DATE >= TRUNC(SYSDATE,'MM') AND SHIPPED_DATE < TRUNC(SYSDATE)+1`;
+        } else if (filter === 'custom' && start && end) {
+            dateCond = `SHIPPED_DATE >= TO_DATE('${start}','YYYY-MM-DD') AND SHIPPED_DATE < TO_DATE('${end}','YYYY-MM-DD')+1`;
+        } else {
+            dateCond = `SHIPPED_DATE >= TRUNC(SYSDATE)-1 AND SHIPPED_DATE < TRUNC(SYSDATE)`;
+        }
+        const conn = await oraclePool();
+        const result = await conn.execute(
+            `SELECT SHIPPED_DATE, RECEIPT_SOURCE_CODE, VENDOR_NAME, ROUTE_NO,
+                NET_WEIGHT, QUANTITY_SHIPPED, AVG_FAT, AVG_SNF, TEMPERATURE, RECEIPT_STATUS
+             FROM BMLCUSTM2.RM_SHIPPING_HDR
+             WHERE RECEIPT_SOURCE_CODE LIKE 'RMRD%'
+             AND ${dateCond}
+             ORDER BY SHIPPED_DATE DESC`,
+            {}, { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+        await conn.close();
+        res.json({ success: true, data: result.rows });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 

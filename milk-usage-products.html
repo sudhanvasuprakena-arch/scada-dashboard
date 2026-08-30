@@ -27,14 +27,15 @@
   --shadow:0 1px 2px rgba(11,27,63,.05), 0 6px 18px -10px rgba(37,99,235,.16);
 }
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%}
-body{
+html{font-size:300%;overflow-x:hidden;margin:0;padding:0;height:100%}
+html,body{width:100%;overflow-x:hidden;margin:0;padding:0;height:auto;margin:0;padding:0}
+body{width:100%;overflow-x:hidden;margin:0;padding:0;
   font-family:'Inter',system-ui,sans-serif;
   background:var(--milk);
   color:var(--text);
   -webkit-font-smoothing:antialiased;
   display:flex;flex-direction:column;
-  overflow:hidden;
+  height:100vh;overflow:hidden;
 }
 h1,h3{font-family:'Bricolage Grotesque','Inter',sans-serif}
 .num{font-variant-numeric:tabular-nums}
@@ -43,7 +44,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 /* ===== Top bar ===== */
 .topbar{background:var(--card);border-bottom:1px solid var(--sky-line);flex:none}
 .topbar-inner{
-  max-width:1680px;margin:0 auto;width:100%;padding:8px 20px;
+  max-width:100%;margin:0;width:100%;padding:6px 24px;
   display:flex;align-items:center;gap:14px;
 }
 .brand{display:flex;align-items:center;gap:10px}
@@ -54,23 +55,23 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
   box-shadow:0 3px 10px -3px rgba(37,99,235,.5);
 }
 .brand-mark svg{width:18px;height:18px}
-.brand h1{font-size:15px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em;line-height:1.1;white-space:nowrap}
-.brand p{font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap}
+.brand h1{font-size:28px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em;line-height:1.1;white-space:nowrap}
+.brand p{font-size:18px;color:var(--muted);font-weight:500;white-space:nowrap}
 .live-dot{
-  display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
+  display:inline-flex;align-items:center;gap:5px;font-size:16px;font-weight:600;
   color:var(--green);background:var(--green-soft);border-radius:99px;padding:3px 9px;
 }
 .live-dot::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 .range-pills{display:flex;gap:4px;background:var(--sky);padding:3px;border-radius:10px;margin-left:auto}
 .pill{
-  font:inherit;font-size:12px;font-weight:600;color:var(--muted);
+  font:inherit;font-size:16px;font-weight:600;color:var(--muted);
   border:none;background:transparent;border-radius:7px;padding:5px 12px;cursor:pointer;transition:.15s;
 }
 .pill:hover{color:var(--blue-deep)}
 .pill.active{background:#fff;color:var(--blue-deep);box-shadow:0 1px 4px rgba(11,27,63,.12)}
 .btn{
-  font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;border-radius:9px;
+  font:inherit;font-size:16px;font-weight:600;cursor:pointer;border-radius:9px;
   padding:7px 13px;border:1px solid var(--sky-line);background:var(--card);color:var(--blue-ink);
   transition:.15s;white-space:nowrap;text-decoration:none;display:inline-block;
 }
@@ -106,14 +107,14 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
   0%,100%{box-shadow:0 0 0 10px rgba(37,99,235,.14),0 0 0 22px rgba(37,99,235,.06),0 14px 40px -10px rgba(29,78,216,.55)}
   50%{box-shadow:0 0 0 16px rgba(37,99,235,.17),0 0 0 32px rgba(37,99,235,.07),0 14px 44px -8px rgba(29,78,216,.6)}
 }
-.sun .cap{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.92}
+.sun .cap{font-size:14px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.92}
 .sun .v{
   font-family:'Bricolage Grotesque',sans-serif;
-  font-size:clamp(20px,2.4vw,30px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin-top:3px;
+  font-size:clamp(28px,3vw,42px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin-top:3px;
   text-shadow:0 2px 8px rgba(6,22,68,.35);
 }
 .sun .v small{font-size:.48em;font-weight:700;opacity:.9;margin-left:2px}
-.sun .sub{font-size:9.5px;font-weight:600;opacity:.85;margin-top:3px}
+.sun .sub{font-size:13px;font-weight:600;opacity:.85;margin-top:3px}
 
 /* Product nodes */
 .node{
@@ -127,10 +128,10 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
   transition:transform .18s,box-shadow .18s,border-color .18s;
 }
 .node:hover{transform:translate(-50%,-50%) scale(1.06);border-color:var(--blue);box-shadow:0 2px 4px rgba(11,27,63,.06),0 14px 30px -12px rgba(37,99,235,.45)}
-.node .nm{font-size:10.5px;font-weight:800;color:var(--blue-ink);line-height:1.15;max-width:92%}
-.node .kg{font-family:'Bricolage Grotesque',sans-serif;font-size:15px;font-weight:800;color:var(--muted);line-height:1.25;white-space:nowrap;margin-top:2px}
-.node .kg small{font-size:9.5px;font-weight:600;margin-left:1px}
-.node .cap2{font-size:7.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:1px}
+.node .nm{font-size:14px;font-weight:800;color:var(--blue-ink);line-height:1.15;max-width:92%}
+.node .kg{font-family:'Bricolage Grotesque',sans-serif;font-size:20px;font-weight:800;color:var(--muted);line-height:1.25;white-space:nowrap;margin-top:2px}
+.node .kg small{font-size:13px;font-weight:600;margin-left:1px}
+.node .cap2{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:1px}
 
 /* Reveal */
 .reveal{opacity:0;animation:fadein .6s ease forwards}
@@ -149,8 +150,8 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
   .range-pills{margin-left:0;order:5}
 }
 @media (max-width:900px){
-  html,body{height:auto}
-  body{overflow:auto}
+  html,body{width:100%;overflow-x:hidden;margin:0;padding:0;height:auto;margin:0;padding:0}
+  body{width:100%;overflow-x:hidden;margin:0;padding:0;overflow:auto}
   /* Allow vertical room for the scaled stage and keep it centred */
   .stage-wrap{min-height:70vh;padding:10px 6px 24px;overflow-x:hidden}
   .stage{transform:scale(.78);transform-origin:center center}
@@ -188,7 +189,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
       <button class="pill active" role="tab" aria-selected="true" data-filter="month">This month</button>
       <button class="pill" role="tab" aria-selected="false" data-filter="week">This week</button>
     </div>
-    <a class="btn" href="./procurement-network.html">Procurement view</a>
+    <a class="btn" href="./predairy/index.html">Procurement view</a>
     <a class="btn" id="back-btn" href="./bangalore-dairy-dashboard.html">Plant flow →</a>
     <button class="btn primary">Logout</button>
   </div>

@@ -27,14 +27,15 @@
   --shadow:0 1px 2px rgba(11,27,63,.05), 0 6px 18px -10px rgba(37,99,235,.16);
 }
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%}
-body{
+html{font-size:300%;overflow-x:hidden;margin:0;padding:0}
+html,body{width:100%;overflow-x:hidden;margin:0;padding:0;height:auto;margin:0;padding:0}
+body{width:100%;overflow-x:hidden;margin:0;padding:0;
   font-family:'Inter',system-ui,sans-serif;
   background:var(--milk);
   color:var(--text);
   -webkit-font-smoothing:antialiased;
   display:flex;flex-direction:column;
-  overflow:hidden;
+  overflow:auto;
 }
 h1,h3{font-family:'Bricolage Grotesque','Inter',sans-serif}
 .num{font-variant-numeric:tabular-nums}
@@ -43,7 +44,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 /* ===== Top bar ===== */
 .topbar{background:var(--card);border-bottom:1px solid var(--sky-line);flex:none}
 .topbar-inner{
-  max-width:1680px;margin:0 auto;width:100%;padding:8px 20px;
+  max-width:100%;margin:0;width:100%;padding:8px 24px;
   display:flex;align-items:center;gap:14px;
 }
 .brand{display:flex;align-items:center;gap:10px}
@@ -54,23 +55,23 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
   box-shadow:0 3px 10px -3px rgba(37,99,235,.5);
 }
 .brand-mark svg{width:18px;height:18px}
-.brand h1{font-size:15px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em;line-height:1.1;white-space:nowrap}
-.brand p{font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap}
+.brand h1{font-size:28px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em;line-height:1.1;white-space:nowrap}
+.brand p{font-size:18px;color:var(--muted);font-weight:500;white-space:nowrap}
 .live-dot{
-  display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
+  display:inline-flex;align-items:center;gap:5px;font-size:16px;font-weight:600;
   color:var(--green);background:var(--green-soft);border-radius:99px;padding:3px 9px;
 }
 .live-dot::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 .range-pills{display:flex;gap:4px;background:var(--sky);padding:3px;border-radius:10px;margin-left:auto}
 .pill{
-  font:inherit;font-size:12px;font-weight:600;color:var(--muted);
+  font:inherit;font-size:16px;font-weight:600;color:var(--muted);
   border:none;background:transparent;border-radius:7px;padding:5px 12px;cursor:pointer;transition:.15s;
 }
 .pill:hover{color:var(--blue-deep)}
 .pill.active{background:#fff;color:var(--blue-deep);box-shadow:0 1px 4px rgba(11,27,63,.12)}
 .btn{
-  font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;border-radius:9px;
+  font:inherit;font-size:16px;font-weight:600;cursor:pointer;border-radius:9px;
   padding:7px 13px;border:1px solid var(--sky-line);background:var(--card);color:var(--blue-ink);
   transition:.15s;white-space:nowrap;text-decoration:none;display:inline-block;
 }
@@ -85,28 +86,28 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 }
 .hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(500px 160px at 88% -30%,rgba(255,255,255,.16),transparent 70%)}
 .hero-inner{
-  max-width:1680px;margin:0 auto;width:100%;padding:10px 20px;position:relative;z-index:1;
-  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-items:stretch;
+  max-width:100%;margin:0;width:100%;padding:10px 24px;position:relative;z-index:1;
+  display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:auto auto;gap:4px 12px;align-items:stretch;
 }
 .kpi{
   background:rgba(255,255,255,.97);border-radius:var(--radius);
-  padding:10px 16px;box-shadow:0 8px 22px -12px rgba(6,22,68,.45);
+  padding:10px 0;box-shadow:0 8px 22px -12px rgba(6,22,68,.45);
   display:flex;align-items:center;gap:12px;
 }
 .kpi .ico{width:34px;height:34px;border-radius:10px;background:var(--sky);flex:none;display:grid;place-items:center;color:var(--blue)}
 .kpi .ico svg{width:18px;height:18px}
-.kpi .tag{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--blue-deep)}
-.kpi .value{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(18px,1.6vw,23px);font-weight:800;color:var(--blue-ink);letter-spacing:-.02em;line-height:1.15}
+.kpi .tag{font-size:18px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--blue-deep)}
+.kpi .value{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(28px,2.8vw,38px);font-weight:800;color:var(--blue-ink);letter-spacing:-.02em;line-height:1.15}
 .kpi .value small{font-size:.5em;font-weight:700;color:var(--muted);margin-left:3px}
 .kpi .value.none{color:var(--muted)}
-.kpi .meta{font-size:10.5px;color:var(--muted);font-weight:500}
+.kpi .meta{font-size:18px;color:var(--muted);font-weight:500}
 
 /* ===== Network flow grid =====
    Cols: 1 MPCS | 2 branch | 3 BMC/CC stack | 4 tanker fan | 5 dairies stack */
 .flow{
   flex:1;min-height:0;
-  max-width:1680px;margin:0 auto;width:100%;
-  padding:14px 20px 16px;
+  max-width:100%;margin:0;width:100%;
+  padding:14px 24px 16px;
   display:grid;
   grid-template-columns:1.05fr 34px 1.05fr 44px 1.15fr;
   grid-template-rows:minmax(0,1fr);
@@ -120,21 +121,21 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
   transition:transform .18s,box-shadow .18s;
 }
 .panel:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(11,27,63,.06),0 12px 28px -14px rgba(37,99,235,.28)}
-.step-tag{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-deep);white-space:nowrap}
-.panel h3{font-size:13.5px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em;line-height:1.25;margin-top:1px}
-.panel .hint{font-size:10px;color:var(--muted);font-weight:500;margin:1px 0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.step-tag{font-size:18px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-deep);white-space:nowrap}
+.panel h3{font-size:22px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em;line-height:1.25;margin-top:1px}
+.panel .hint{font-size:16px;color:var(--muted);font-weight:500;margin:1px 0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rows{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:space-evenly;gap:2px}
 .rw{
   display:flex;flex-direction:column;align-items:flex-start;gap:0;
   border-top:1px dashed var(--sky-line);padding-top:4px;min-width:0;
 }
 .rw:first-child{border-top:none;padding-top:0}
-.rw .l{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rw .v{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(14px,1.15vw,18px);font-weight:800;color:var(--blue-ink);white-space:nowrap;line-height:1.25}
+.rw .l{font-size:16px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rw .v{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(22px,2vw,30px);font-weight:800;color:var(--blue-ink);white-space:nowrap;line-height:1.25}
 .rw .v small{font-size:.62em;color:var(--muted);font-weight:600;margin-left:1px}
 .rw .v.none{color:var(--muted)}
 .chip{
-  display:inline-block;font-size:9px;font-weight:700;border-radius:99px;padding:2px 7px;
+  display:inline-block;font-size:15px;font-weight:700;border-radius:99px;padding:3px 9px;
   white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;
 }
 .chip.blue{background:var(--sky);color:var(--blue-deep)}
@@ -144,26 +145,26 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 .panel-foot{flex:none;margin-top:6px;display:flex;gap:4px;flex-wrap:wrap}
 .tiles{flex:none;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .tile{background:var(--milk);border-radius:10px;padding:6px 10px;min-height:0;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
-.tile .l{font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tile .v{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(13px,1.05vw,17px);font-weight:800;color:var(--muted);white-space:nowrap;line-height:1.2}
+.tile .l{font-size:16px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .v{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(20px,1.8vw,26px);font-weight:800;color:var(--muted);white-space:nowrap;line-height:1.2}
 .tile .v small{font-size:.55em;font-weight:600;margin-left:2px}
 
 /* Camp list inside MPCS panel */
-.camp-cap{flex:none;font-size:9.5px;font-weight:800;color:var(--blue-deep);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 4px;padding-top:6px;border-top:1px dashed var(--sky-line)}
+.camp-cap{flex:none;font-size:16px;font-weight:800;color:var(--blue-deep);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 4px;padding-top:6px;border-top:1px dashed var(--sky-line)}
 .camp-list{
   flex:1;min-height:0;overflow:hidden;
   display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:minmax(0,1fr);gap:2px 10px;
 }
 .camp-it{display:flex;align-items:baseline;justify-content:space-between;gap:6px;min-width:0;border-bottom:1px dashed var(--sky-line);padding:1px 0}
-.camp-it .n{font-size:10px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.camp-it .k{font-family:'Bricolage Grotesque',sans-serif;font-size:11.5px;font-weight:800;color:var(--muted);white-space:nowrap}
-.camp-it .k small{font-size:8.5px;font-weight:600}
+.camp-it .n{font-size:16px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.camp-it .k{font-family:'Bricolage Grotesque',sans-serif;font-size:20px;font-weight:800;color:var(--muted);white-space:nowrap}
+.camp-it .k small{font-size:14px;font-weight:600}
 
 /* Camp office strip (unused) */
-.camps-wrap{flex:none;max-width:1680px;margin:0 auto;width:100%;padding:0 20px 16px}
+.camps-wrap{flex:none;max-width:1680px;margin:0 auto;width:100%;padding:0 24px 16px}
 .camps-head{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
-.camps-head h3{font-family:'Bricolage Grotesque',sans-serif;font-size:14px;font-weight:800;color:var(--blue-ink)}
-.camps-head .hint2{font-size:11px;color:var(--muted);font-weight:500}
+.camps-head h3{font-family:'Bricolage Grotesque',sans-serif;font-size:24px;font-weight:800;color:var(--blue-ink)}
+.camps-head .hint2{font-size:18px;color:var(--muted);font-weight:500}
 .camps-head .rule{flex:1;height:1px;background:var(--sky-line)}
 .camps{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}
 .camp{
@@ -172,10 +173,10 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
   transition:transform .15s,box-shadow .15s;
 }
 .camp:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(11,27,63,.06),0 10px 22px -12px rgba(37,99,235,.3)}
-.camp .nm{font-size:10.5px;font-weight:800;color:var(--blue-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.camp .kg{font-family:'Bricolage Grotesque',sans-serif;font-size:15px;font-weight:800;color:var(--muted);line-height:1.25;white-space:nowrap}
-.camp .kg small{font-size:9.5px;font-weight:600;margin-left:1px}
-.camp .fs2{display:flex;gap:8px;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+.camp .nm{font-size:18px;font-weight:800;color:var(--blue-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.camp .kg{font-family:'Bricolage Grotesque',sans-serif;font-size:24px;font-weight:800;color:var(--muted);line-height:1.25;white-space:nowrap}
+.camp .kg small{font-size:15px;font-weight:600;margin-left:1px}
+.camp .fs2{display:flex;gap:8px;font-size:15px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
 .camp .fs2 b{font-family:'Bricolage Grotesque',sans-serif;color:var(--muted);font-weight:800}
 
 /* ---- Placement ---- */
@@ -195,8 +196,8 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 .dcell.c2{grid-column:span 2}
 .dcell.c3{grid-column:span 3}
 .dcell{background:var(--milk);border-radius:9px;padding:6px 10px;min-width:0;overflow:hidden}
-.dcell .l{font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dcell .v{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(13px,1.05vw,16px);font-weight:800;color:var(--muted);white-space:nowrap;line-height:1.25}
+.dcell .l{font-size:16px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dcell .v{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(20px,1.8vw,26px);font-weight:800;color:#000;white-space:nowrap;line-height:1.25}
 .dcell .v small{font-size:.6em;font-weight:600}
 
 /* ---- Branch: MPCS -> BMC / CC (stubs at 25% & 75%) ---- */
@@ -237,7 +238,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 .fan i:nth-of-type(3){top:83.3%}
 .fan .lbl{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-160%) rotate(-90deg);
-  font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--blue-deep);
+  font-size:16px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--blue-deep);
   background:var(--milk);padding:1px 6px;border-radius:6px;white-space:nowrap;
 }
 
@@ -254,11 +255,11 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
    screens we release the viewport-height lock so panels size to their content
    instead of being compressed (which overlaps rows/chips). */
 @media (max-width:1080px), (max-height:600px){
-  html,body{height:auto}
-  body{overflow:auto}
+  html,body{width:100%;overflow-x:hidden;margin:0;padding:0;height:auto;margin:0;padding:0}
+  body{width:100%;overflow-x:hidden;margin:0;padding:0;overflow:auto}
   .flow{
     display:flex;flex-direction:column;gap:12px;
-    flex:none;min-height:0;height:auto;padding:12px 16px 24px;
+    flex:none;min-height:0;height:auto;padding:12px 0 24px;
   }
   .branch,.fan{display:none}
   .mid-stack,.dairy-stack{display:flex;flex-direction:column;gap:12px}
@@ -315,12 +316,12 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
         <p>MPCS → BMC / CC → Dairies</p>
       </div>
     </div>
-    <span class="live-dot">Live</span>
+
     <div class="range-pills" role="tablist" aria-label="Date range">
-      <button class="pill" role="tab" aria-selected="false">Yesterday</button>
-      <button class="pill active" role="tab" aria-selected="true">Today</button>
+      <button class="pill active" role="tab" aria-selected="true">Yesterday</button>
       <button class="pill" role="tab" aria-selected="false">This week</button>
-      <button class="pill" role="tab" aria-selected="false">Custom</button>
+      <button class="pill" role="tab" aria-selected="false">This month</button>
+      <button class="pill" role="tab" aria-selected="false" id="custom-pill">Custom</button>
     </div>
     <a class="btn" href="./milk-usage-products.html">Milk Product</a>
     <a class="btn" id="back-btn" href="./bangalore-dairy-dashboard.html">Plant flow →</a>
@@ -331,12 +332,13 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 <!-- ===== Hero: network totals ===== -->
 <section class="hero" aria-label="Network totals">
   <div class="hero-inner">
+    <div style="grid-column:1/-1;font-size:18px;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:.02em;text-align:right" id="hero-date-range">—</div>
     <div class="kpi reveal">
       <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
       <div>
         <div class="tag">Total milk collected · MPCS</div>
         <div class="value none num">—<small>Kg</small></div>
-        <div class="meta">Across all societies, today</div>
+        <div class="meta">Across all societies</div>
       </div>
     </div>
     <div class="kpi reveal" style="animation-delay:.08s">
@@ -463,34 +465,164 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 
 </main>
 
+<div id="custom-picker" style="position:fixed;z-index:200;background:#fff;border:1px solid var(--sky-line);border-radius:14px;box-shadow:0 8px 32px -8px rgba(11,27,63,.18);padding:18px 20px 14px;min-width:260px;display:none;flex-direction:column;gap:12px">
+  <div><label style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px">From</label><input type="date" id="date-from" style="font:inherit;font-size:14px;width:100%;padding:8px 10px;border:1px solid var(--sky-line);border-radius:8px;color:var(--blue-ink);background:var(--milk)"/></div>
+  <div><label style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px">To</label><input type="date" id="date-to" style="font:inherit;font-size:14px;width:100%;padding:8px 10px;border:1px solid var(--sky-line);border-radius:8px;color:var(--blue-ink);background:var(--milk)"/></div>
+  <div id="picker-err" style="font-size:12px;color:#e53e3e;min-height:16px"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end">
+    <button class="btn" id="picker-cancel">Cancel</button>
+    <button class="btn primary" id="picker-apply">Apply</button>
+  </div>
+</div>
 <script>
-/* CAMP OFFICES — placeholder names; replace with the actual 16 names.
-   Each entry: { name, kg } */
-const campOffices = [
-  { name: "Camp Office 1",  kg: null }, { name: "Camp Office 2",  kg: null },
-  { name: "Camp Office 3",  kg: null }, { name: "Camp Office 4",  kg: null },
-  { name: "Camp Office 5",  kg: null }, { name: "Camp Office 6",  kg: null },
-  { name: "Camp Office 7",  kg: null }, { name: "Camp Office 8",  kg: null },
-  { name: "Camp Office 9",  kg: null }, { name: "Camp Office 10", kg: null },
-  { name: "Camp Office 11", kg: null }, { name: "Camp Office 12", kg: null },
-  { name: "Camp Office 13", kg: null }, { name: "Camp Office 14", kg: null },
-  { name: "Camp Office 15", kg: null }, { name: "Camp Office 16", kg: null },
-];
-function formatIN(n){ return n.toLocaleString('en-IN'); }
-const cl = document.getElementById('campList');
-campOffices.forEach(c=>{
-  const kg = c.kg == null ? '—' : formatIN(c.kg);
-  cl.insertAdjacentHTML('beforeend',
-    `<div class="camp-it"><span class="n">${c.name}</span><span class="k num">${kg}<small> Kg</small></span></div>`);
-});
+function formatIN(n){ return Math.round(n).toLocaleString('en-IN'); }
+function num(v){ return parseFloat(v)||0; }
+function nw(r){ const n=num(r.NetWeight); return n>0?n:Math.max(0,num(r.GrossWeight)-num(r.TareWeight)); }
+function avgFat(rows){ const t=rows.reduce((s,r)=>s+nw(r),0); return t>0?(rows.reduce((s,r)=>s+num(r.Fat_First)*nw(r),0)/t).toFixed(2):'—'; }
+function avgSnf(rows){ const t=rows.reduce((s,r)=>s+nw(r),0); return t>0?(rows.reduce((s,r)=>s+num(r.SNF_First)*nw(r),0)/t).toFixed(2):'—'; }
+function totalKg(rows){ return rows.reduce((s,r)=>s+nw(r),0); }
+
+function getFilter(){
+  const a=document.querySelector('.pill.active');
+  const t=a?a.textContent.trim():'';
+  if(t==='This month') return 'month';
+  if(t==='This week') return 'week';
+  return 'yesterday';
+}
+
+function getDateLabel(filter, s, e){
+  const now = new Date();
+  const fmt = d => d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  if(s && e) return fmt(new Date(s))+' – '+fmt(new Date(e));
+  if(filter==='yesterday'){ const y=new Date(now); y.setDate(y.getDate()-1); return fmt(y); }
+  if(filter==='week'){ const st=new Date(now); st.setDate(st.getDate()-st.getDay()+1); return fmt(st)+' – '+fmt(now); }
+  if(filter==='month'){ return fmt(new Date(now.getFullYear(),now.getMonth(),1))+' – '+fmt(now); }
+  return fmt(now);
+}
+
+let _customStart=null, _customEnd=null;
+
+async function loadAll(){
+  const filter = _customStart ? 'custom' : getFilter();
+  let url = '/papi/bangalore/bmc-cc?filter='+filter;
+  if(_customStart) url += '&start='+_customStart+'&end='+_customEnd;
+  let rows=[];
+  try{
+    const res=await fetch(url);
+    const j=await res.json();
+    if(j.success) rows=j.data||[];
+  }catch(e){}
+
+  // also load truck-entry for Bangalore Dairy panel
+  let truckRows=[];
+  try{
+    const filter2 = _customStart ? 'custom' : getFilter();
+    let url2 = '/papi/bangalore/truck-entry?filter='+filter2;
+    if(_customStart) url2 += '&start='+_customStart+'&end='+_customEnd;
+    const res2=await fetch(url2);
+    const j2=await res2.json();
+    if(j2.success) truckRows=j2.data||[];
+  }catch(e){}
+
+  const dateLabel=getDateLabel(filter,_customStart,_customEnd);
+  document.getElementById('hero-date-range').textContent=dateLabel;
+
+  // helpers
+  function avgF(arr){ return arr.length ? (arr.reduce((s,v)=>s+v,0)/arr.length).toFixed(2) : '—'; }
+  function fmtCount(n){ return Math.round(n).toLocaleString('en-IN'); }
+  function totalKgO(arr){ return arr.reduce((s,r)=>s+(r.NET_WEIGHT||0),0); }
+  function avgFatO(arr){ const t=totalKgO(arr); return t>0?(arr.reduce((s,r)=>s+(r.AVG_FAT||0)*(r.NET_WEIGHT||0),0)/t).toFixed(2):'—'; }
+  function avgSnfO(arr){ const t=totalKgO(arr); return t>0?(arr.reduce((s,r)=>s+(r.AVG_SNF||0)*(r.NET_WEIGHT||0),0)/t).toFixed(2):'—'; }
+
+  // MPCS panel — all rows, group by VENDOR_NAME
+  const doc1=rows.filter(r=>(r.RECEIPT_SOURCE_CODE||'').includes('DOC 1'));
+  const doc2=rows.filter(r=>(r.RECEIPT_SOURCE_CODE||'').includes('DOC 2'));
+  const allFat=rows.filter(r=>r.AVG_FAT).map(r=>r.AVG_FAT);
+  const allSnf=rows.filter(r=>r.AVG_SNF).map(r=>r.AVG_SNF);
+
+  // MPCS tiles - no data
+  document.querySelector('.p-mpcs .panel-foot').innerHTML='<span class="chip mute">Awaiting data</span><span class="chip blue">Feeds BMC &amp; CC →</span>';
+
+  // camp list - no data
+
+  // BMC panel (DOC 1)
+  const bmcVals=document.querySelectorAll('.mid-stack .panel:first-child .rw .v');
+  if(bmcVals[0]){ bmcVals[0].innerHTML=fmtCount(totalKgO(doc1))+'<small>Kg</small>'; bmcVals[0].classList.remove('none'); }
+  if(bmcVals[1]){ bmcVals[1].innerHTML=avgFatO(doc1)+'<small>%</small>'; bmcVals[1].classList.remove('none'); }
+  if(bmcVals[2]){ bmcVals[2].innerHTML=avgSnfO(doc1)+'<small>%</small>'; bmcVals[2].classList.remove('none'); }
+  document.querySelector('.mid-stack .panel:first-child .panel-foot').innerHTML='<span class="chip green">'+fmtCount(doc1.length)+' entries · '+fmtCount(totalKgO(doc1))+' Kg</span>';
+
+  // CC panel (DOC 2)
+  const ccVals=document.querySelectorAll('.mid-stack .panel:last-child .rw .v');
+  if(ccVals[0]){ ccVals[0].innerHTML=fmtCount(totalKgO(doc2))+'<small>Kg</small>'; ccVals[0].classList.remove('none'); }
+  if(ccVals[1]){ ccVals[1].innerHTML=avgFatO(doc2)+'<small>%</small>'; ccVals[1].classList.remove('none'); }
+  if(ccVals[2]){ ccVals[2].innerHTML=avgSnfO(doc2)+'<small>%</small>'; ccVals[2].classList.remove('none'); }
+  document.querySelector('.mid-stack .panel:last-child .panel-foot').innerHTML='<span class="chip green">'+fmtCount(doc2.length)+' entries · '+fmtCount(totalKgO(doc2))+' Kg</span>';
+
+  // Bangalore Dairy panel (truck-entry)
+  const bmc=truckRows.filter(r=>/^BMC/i.test(r.DairyCode||''));
+  const cc=truckRows.filter(r=>/CC\)/i.test(r.DairyCode||''));
+  const bangRows=document.querySelectorAll('.dairy-stack .panel:first-child .dcell .v');
+  if(bangRows[0]){ bangRows[0].innerHTML=formatIN(totalKg(truckRows))+'<small>Kg</small>'; }
+  if(bangRows[1]){ bangRows[1].innerHTML=formatIN(totalKg(bmc))+'<small>Kg</small>'; }
+  if(bangRows[2]){ bangRows[2].innerHTML=formatIN(totalKg(cc))+'<small>Kg</small>'; }
+  if(bangRows[3]){ bangRows[3].innerHTML=avgFat(truckRows)+'<small>%</small>'; }
+  if(bangRows[4]){ bangRows[4].innerHTML=avgSnf(truckRows)+'<small>%</small>'; }
+
+  // hero KPI metas only
+  const kpis=document.querySelectorAll('.kpi');
+  kpis[0].querySelector('.meta').textContent='Across all societies';
+  kpis[1].querySelector('.meta').textContent='Network-wide';
+  kpis[2].querySelector('.meta').textContent='Network-wide';
+}
+
+const picker=document.getElementById('custom-picker');
+const customPill=document.getElementById('custom-pill');
+const pickerErr=document.getElementById('picker-err');
 
 document.querySelectorAll('.pill').forEach(p=>{
-  p.addEventListener('click',()=>{
-    document.querySelectorAll('.pill').forEach(x=>{x.classList.remove('active');x.setAttribute('aria-selected','false')});
+  p.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    if(p.id==='custom-pill'){
+      const rect=customPill.getBoundingClientRect();
+      picker.style.top=(rect.bottom+8)+'px';
+      picker.style.right=(window.innerWidth-rect.right)+'px';
+      picker.style.left='auto';
+      picker.style.display=picker.style.display==='flex'?'none':'flex';
+      return;
+    }
+    _customStart=null; _customEnd=null;
+    document.querySelectorAll('.pill').forEach(x=>{x.classList.remove('active');x.setAttribute('aria-selected','false');});
     p.classList.add('active'); p.setAttribute('aria-selected','true');
+    picker.style.display='none';
+    loadAll();
   });
 });
+
+document.getElementById('picker-cancel').addEventListener('click',()=>{
+  picker.style.display='none'; pickerErr.textContent='';
+  document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
+  document.querySelector('.pill').classList.add('active');
+  _customStart=null; _customEnd=null; loadAll();
+});
+
+document.getElementById('picker-apply').addEventListener('click',()=>{
+  const from=document.getElementById('date-from').value;
+  const to=document.getElementById('date-to').value;
+  pickerErr.textContent='';
+  if(!from||!to){ pickerErr.textContent='Please select both dates.'; return; }
+  if(to<from){ pickerErr.textContent='To date must be after From date.'; return; }
+  picker.style.display='none';
+  _customStart=from; _customEnd=to;
+  document.querySelectorAll('.pill').forEach(x=>{x.classList.remove('active');});
+  customPill.classList.add('active');
+  loadAll();
+});
+
+document.addEventListener('click',e=>{ if(!picker.contains(e.target)&&e.target!==customPill) picker.style.display='none'; });
+
+loadAll();
 </script>
-<script>(function(){function upd(){var b=document.getElementById("back-btn");if(!b)return;var h=b.getAttribute("href").split("?")[0];b.setAttribute("href",h+"?filter="+getActiveFilter());}document.querySelectorAll(".pill").forEach(function(p){p.addEventListener("click",upd);});var ab=document.getElementById("applyRange");if(ab)ab.addEventListener("click",upd);upd();})();</script>
+<script>(function(){function upd(){var b=document.getElementById("back-btn");if(!b)return;var h=b.getAttribute("href").split("?")[0];b.setAttribute("href",h);}upd();})();</script>
 </body>
 </html>
