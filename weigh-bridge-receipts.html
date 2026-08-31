@@ -28,12 +28,13 @@
   --shadow:0 1px 2px rgba(11,27,63,.05), 0 6px 18px -10px rgba(37,99,235,.16);
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{
+html{font-size:300%;overflow-x:hidden;margin:0;padding:0;height:100%}
+body{width:100%;overflow-x:hidden;margin:0;padding:0;
   font-family:'Inter',system-ui,sans-serif;
   background:var(--milk);
   color:var(--text);
   -webkit-font-smoothing:antialiased;
-  min-height:100vh;display:flex;flex-direction:column;
+  height:100%;overflow:hidden;display:flex;flex-direction:column;
 }
 h1,h2,h3{font-family:'Bricolage Grotesque','Inter',sans-serif}
 .num{font-variant-numeric:tabular-nums}
@@ -42,7 +43,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 /* ===== Top bar ===== */
 .topbar{background:var(--card);border-bottom:1px solid var(--sky-line);position:sticky;top:0;z-index:50;overflow:visible}
 .topbar-inner{
-  max-width:1400px;margin:0 auto;width:100%;padding:8px 20px;
+  max-width:100%;margin:0;width:100%;padding:8px 24px;
   display:flex;align-items:center;gap:14px;
 }
 .brand{display:flex;align-items:center;gap:10px}
@@ -53,9 +54,9 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
   box-shadow:0 3px 10px -3px rgba(37,99,235,.5);
 }
 .brand-mark svg{width:18px;height:18px}
-.brand h1{font-size:17px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em;line-height:1.1;white-space:nowrap}
-.brand p{font-size:17px;color:var(--muted);font-weight:500;white-space:nowrap}
-.crumb{font-size:16px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px}
+.brand h1{font-size:28px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em;line-height:1.1;white-space:nowrap}
+.brand p{font-size:22px;color:var(--muted);font-weight:500;white-space:nowrap}
+.crumb{font-size:20px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px}
 .crumb b{color:var(--blue-deep)}
 .range-group{position:relative;margin-left:auto}
 .range-pills{display:flex;gap:4px;background:var(--sky);padding:3px;border-radius:10px;flex-wrap:nowrap;}
@@ -67,8 +68,8 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 }
 .custom-range[hidden]{display:none}
 .cr-field{display:flex;flex-direction:column;gap:4px}
-.cr-field label{font-size:13.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
-.date-input{font:inherit;font-size:14.5px;color:var(--blue-ink);padding:7px 9px;border:1px solid var(--sky-line);border-radius:8px;background:var(--card);min-width:180px;}
+.cr-field label{font-size:17px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.date-input{font:inherit;font-size:18px;color:var(--blue-ink);padding:7px 9px;border:1px solid var(--sky-line);border-radius:8px;background:var(--card);min-width:180px;}
 .pill{
   font:inherit;font-size:16px;font-weight:600;color:var(--muted);
   border:none;background:transparent;border-radius:7px;padding:5px 10px;cursor:pointer;transition:.15s;white-space:nowrap;font-size:13px;
@@ -76,7 +77,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 .pill:hover{color:var(--blue-deep)}
 .pill.active{background:#fff;color:var(--blue-deep);box-shadow:0 1px 4px rgba(11,27,63,.12)}
 .btn{
-  font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;border-radius:9px;
+  font:inherit;font-size:18px;font-weight:600;cursor:pointer;border-radius:9px;
   padding:7px 13px;border:1px solid var(--sky-line);background:var(--card);color:var(--blue-ink);
   transition:.15s;white-space:nowrap;text-decoration:none;display:inline-block;
 }
@@ -91,42 +92,43 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 }
 .hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(500px 160px at 88% -30%,rgba(255,255,255,.16),transparent 70%)}
 .hero-inner{
-  max-width:1400px;margin:0 auto;width:100%;padding:18px 20px 22px;position:relative;z-index:1;
+  max-width:100%;margin:0;width:100%;padding:10px 24px 12px;position:relative;z-index:1;
 }
-.hero-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
-.hero-head h2{font-size:23px;font-weight:800;letter-spacing:-.02em}
-.hero-head .sub{font-size:14.5px;color:rgba(255,255,255,.78);font-weight:500}
-.hero-date-row{display:flex;justify-content:flex-end;margin-bottom:10px}
+.hero-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.hero-head h2{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.hero-head .sub{font-size:16px;color:rgba(255,255,255,.78);font-weight:500}
+.hero-date-row{display:flex;justify-content:flex-end;margin-bottom:6px}
 .hero-date{font-size:17px;color:#fff;font-weight:700;letter-spacing:.4px}
-.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .kpi{
   background:rgba(255,255,255,.97);border-radius:var(--radius);
-  padding:14px 18px;box-shadow:0 8px 22px -12px rgba(6,22,68,.45);
+  padding:10px 18px;box-shadow:0 8px 22px -12px rgba(6,22,68,.45);
   display:flex;align-items:center;gap:14px;
 }
-.kpi .ico{width:38px;height:38px;border-radius:10px;background:var(--sky);flex:none;display:grid;place-items:center;color:var(--blue)}
-.kpi .ico svg{width:20px;height:20px}
-.kpi .tag{font-size:14.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--blue-deep)}
-.kpi .value{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(20px,2vw,28px);font-weight:800;color:var(--blue-ink);letter-spacing:-.02em;line-height:1.15}
+.kpi .ico{width:36px;height:36px;border-radius:9px;background:var(--sky);flex:none;display:grid;place-items:center;color:var(--blue)}
+.kpi>div{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:10px;flex:1;min-width:0}
+.kpi .ico svg{width:18px;height:18px}
+.kpi .tag{font-size:18px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--blue-deep);flex:1}
+.kpi .value{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(28px,3vw,40px);font-weight:800;color:var(--blue-ink);letter-spacing:-.02em;line-height:1.15;white-space:nowrap}
 .kpi .value small{font-size:.5em;font-weight:700;color:var(--muted);margin-left:3px}
-.kpi .meta{font-size:17px;color:var(--muted);font-weight:500}
+.kpi .meta{font-size:18px;color:var(--muted);font-weight:500}
 .kpi .meta b{color:var(--text)}
 
 /* ===== Main ===== */
-.main{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:20px 20px 48px}
+.main{flex:1;max-width:100%;margin:0;width:100%;padding:20px 24px 48px;overflow-y:auto}
 .section-head{display:flex;align-items:baseline;gap:10px;margin:22px 0 10px}
 .section-head:first-child{margin-top:0}
 .cat-tag{
-  font-size:17px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-deep);
+  font-size:26px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-deep);
   background:var(--sky);border-radius:99px;padding:4px 12px;white-space:nowrap;
 }
-.section-head h3{font-size:17.5px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em}
-.section-head .hint{font-size:16px;color:var(--muted);font-weight:500}
+.section-head h3{font-size:34px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em}
+.section-head .hint{font-size:24px;color:var(--muted);font-weight:500}
 .section-head .rule{flex:1;height:1px;background:var(--sky-line)}
 .section-head .tot{
-  font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:800;color:var(--blue-ink);white-space:nowrap;
+  font-family:'Bricolage Grotesque',sans-serif;font-size:30px;font-weight:800;color:var(--blue-ink);white-space:nowrap;
 }
-.section-head .tot small{font-size:17px;color:var(--muted);font-weight:600}
+.section-head .tot small{font-size:24px;color:var(--muted);font-weight:600}
 
 /* Tables */
 .tblcard{
@@ -135,32 +137,32 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 }
 table{width:100%;border-collapse:collapse}
 thead th{
-  font-size:14.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
-  background:var(--milk);text-align:left;padding:9px 16px;border-bottom:1px solid var(--sky-line);white-space:nowrap;
+  font-size:26px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+  background:var(--milk);text-align:left;padding:12px 0;border-bottom:1px solid var(--sky-line);white-space:nowrap;
 }
 thead th.r, td.r{text-align:right}
 tbody td{
-  font-size:17px;padding:10px 16px;border-bottom:1px solid var(--sky-line);white-space:nowrap;
+  font-size:28px;padding:14px 0;border-bottom:1px solid var(--sky-line);white-space:nowrap;
 }
 tbody tr:last-child td{border-bottom:none}
 tbody tr{transition:background .12s}
 tbody tr:hover{background:var(--milk)}
 td .src{color:var(--text);font-weight:600}
-td.kg{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;color:var(--blue-ink);font-size:14px}
-td.kg small,td.pc small{font-size:14.5px;color:var(--muted);font-weight:600;margin-left:2px}
-td.pc{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;color:var(--text);font-size:13px}
-td .time{font-size:13.5px;color:var(--muted)}
+td.kg{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;color:var(--blue-ink);font-size:28px}
+td.kg small,td.pc small{font-size:20px;color:var(--muted);font-weight:600;margin-left:2px}
+td.pc{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;color:var(--text);font-size:28px}
+td .time{font-size:22px;color:var(--muted)}
 .chip{
-  display:inline-block;font-size:16px;font-weight:700;border-radius:99px;padding:2px 8px;white-space:nowrap;
+  display:inline-block;font-size:28px;font-weight:700;border-radius:99px;padding:3px 10px;white-space:nowrap;
 }
 .chip.green{background:var(--green-soft);color:var(--green)}
 .chip.amber{background:var(--amber-soft);color:var(--amber)}
 .chip.blue{background:var(--sky);color:var(--blue-deep)}
 tfoot td{
-  padding:9px 16px;background:var(--milk);border-top:1px solid var(--sky-line);
-  font-size:13.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;
+  padding:9px 0;background:var(--milk);border-top:1px solid var(--sky-line);
+  font-size:24px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;
 }
-tfoot td.kg{font-family:'Bricolage Grotesque',sans-serif;font-size:16px;color:var(--blue-ink);text-transform:none;letter-spacing:0}
+tfoot td.kg{font-family:'Bricolage Grotesque',sans-serif;font-size:32px;color:var(--blue-ink);text-transform:none;letter-spacing:0}
 
 /* Reveal */
 .reveal{opacity:0;transform:translateY(8px);animation:rise .5s ease forwards}
@@ -205,10 +207,9 @@ tfoot td.kg{font-family:'Bricolage Grotesque',sans-serif;font-size:16px;color:va
       </div>
       <div>
         <h1>Bangalore Main Dairy</h1>
-        <p>Plant flow · Milk logistics</p>
+        <p>Plant flow → Stage 1 · Weigh Bridge</p>
       </div>
     </div>
-    <span class="crumb">Plant flow → <b>Stage 1 · Weigh Bridge</b></span>
     <div class="range-group">
       <div class="range-pills" role="tablist" aria-label="Date range">
         <button class="pill" role="tab" aria-selected="false" data-filter="yesterday">Yesterday</button>
@@ -234,7 +235,6 @@ tfoot td.kg{font-family:'Bricolage Grotesque',sans-serif;font-size:16px;color:va
   <div class="hero-inner">
     <div class="hero-head">
       <h2>Weigh Bridge · Truck Entry</h2>
-      <span class="sub">Product-wise receipts at the gate, categorized by source</span>
     </div>
     <div class="hero-date-row"><span class="hero-date" id="hero-date"></span></div>
       <div class="kpis">
@@ -243,7 +243,7 @@ tfoot td.kg{font-family:'Bricolage Grotesque',sans-serif;font-size:16px;color:va
         <div>
           <div class="tag">Total milk received</div>
           <div class="value num"><span id="kpi-net">—</span><small>Kg</small></div>
-          <div class="meta">Net weight at weigh bridge</div>
+          <div class="meta"></div>
         </div>
       </div>
       <div class="kpi reveal" style="animation-delay:.08s">
@@ -258,8 +258,8 @@ tfoot td.kg{font-family:'Bricolage Grotesque',sans-serif;font-size:16px;color:va
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 4h7l1 4.5a6.5 6.5 0 1 1-9 0Z"/></svg></span>
         <div>
           <div class="tag">Milk quality · Avg</div>
-          <div class="value num" id="kpi-quality">—<small>% Fat</small> · —<small>% SNF</small></div>
-          <div class="meta">Across all milk trucks</div>
+          <div class="value num" id="kpi-quality">—<small>% Fat</small> &nbsp;&nbsp; —<small>% SNF</small></div>
+          <div class="meta"></div>
         </div>
       </div>
     </div>
@@ -339,7 +339,7 @@ function renderSection(product, rows, catIndex){
       : '';
     return `<tr>
       <td><span class="src">${src}</span></td>
-      <td class="r">${srows.length} trucks</td>
+      <td class="r kg">${srows.length} <small>trucks</small></td>
       <td class="r kg">${formatIN(Math.round(sNet))}<small>Kg</small></td>
       ${fatSnfCells}
       <td class="r"><span class="chip ${srows.filter(r=>r.IsCompleted).length===srows.length?'green':'amber'}">${srows.filter(r=>r.IsCompleted).length}/${srows.length}</span></td>
@@ -350,9 +350,8 @@ function renderSection(product, rows, catIndex){
   <div class="section-head reveal">
     <span class="cat-tag">Category ${catIndex}</span>
     <h3>${product}</h3>
-    <span class="hint">${rows.length} trucks · Source-wise</span>
+    <b style="font-size:26px;font-weight:700">${formatIN(Math.round(totalNet))} Kg total</b>
     <span class="rule"></span>
-    <span class="tot num">${formatIN(Math.round(totalNet))}<small> Kg total</small></span>
   </div>
   <div class="tblcard reveal">
     <table>
@@ -369,7 +368,7 @@ function renderSection(product, rows, catIndex){
       <tfoot>
         <tr>
           <td>Total</td>
-          <td class="r kg">${rows.length}</td>
+          <td class="r kg" style="padding-right:20px">${rows.length}</td>
           <td class="r kg">${formatIN(Math.round(totalNet))}<small>Kg</small></td>
           ${fatSnfFooter}
           <td class="r kg">${rows.filter(r=>r.IsCompleted).length}/${rows.length}</td>
@@ -400,7 +399,7 @@ async function loadAll(){
   document.getElementById('kpi-net').textContent = formatIN(Math.round(totalNet));
   document.getElementById('kpi-trucks').textContent = trucks;
   document.getElementById('kpi-trucks-meta').innerHTML = `<b>${completed}</b> completed · ${trucks-completed} pending`;
-  document.getElementById('kpi-quality').innerHTML = `${avgFat}<small>% Fat</small> · ${avgSNF}<small>% SNF</small>`;
+  document.getElementById('kpi-quality').innerHTML = `${avgFat}<small>% Fat</small> &nbsp;&nbsp; ${avgSNF}<small>% SNF</small>`;
 
   // Group by ProductCode dynamically
   const byProduct = {};
@@ -410,7 +409,9 @@ async function loadAll(){
     byProduct[p].push(r);
   });
 
+  const CAT_ORDER = p => /^PAST MILK$/i.test(p) ? 2 : /^SKIM MILK POWDER$/i.test(p) ? 3 : /^CREAM$/i.test(p) ? 4 : 1;
   main.innerHTML = Object.entries(byProduct)
+    .sort(([a],[b]) => CAT_ORDER(a) - CAT_ORDER(b))
     .map(([product, rows], i) => renderSection(product, rows, i+1))
     .join('');
 }
