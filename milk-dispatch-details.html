@@ -240,7 +240,6 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
     </div>
     <a class="btn" id="back-btn" href="bangalore-dairy-dashboard.html">← Back to plant flow</a>
     <button class="btn" onclick="downloadPDF()">📥 PDF</button>
-    <button class="btn primary">Logout</button>
   </div>
 </header>
 
@@ -442,6 +441,51 @@ async function loadDispatchKpis(){
   const wb  = Object.values(byDairy).filter(x=>!isPD(x.name.toUpperCase()) && !isNMP(x.name.toUpperCase()));
   const toEntry = x => ({ name:x.name, kg:Math.round(x.kg), trucks:x.trucks, fat:x.n>0&&x.fat>0?parseFloat((x.fat/x.n).toFixed(2)):null, snf:x.n>0&&x.snf>0?parseFloat((x.snf/x.n).toFixed(2)):null, source:'BAMUL' });
   const el = document.getElementById('sec-wb'); if(el){ el.innerHTML=''; renderSection(wb.map(toEntry), 'sec-wb', 'tot-wb', 'No weigh bridge dispatches for this range.'); }
+}
+
+/* Merge only the "Dispatch Line-N" rows into a single entry; any other row
+   (e.g. "CST To Product Dairy", which is a cream transfer) is left untouched.
+   Quantities and trucks are summed; Fat/SNF are quantity-weighted averages
+   (the correct way to combine two streams — a plain mean would misreport
+   when the lines carry very different volumes). Rows with no Fat/SNF are
+   skipped in the weighting so they don't drag the average down. */
+function combineLines(rows, label){
+  const isLine = r => /dispatch\s*line/i.test(r.LineName || '');
+  const lines  = rows.filter(isLine);
+  const others = rows.filter(r => !isLine(r));
+
+  const toEntry = r => ({
+    name: r.LineName,
+    kg: Math.round(n2(r.TotalQty)),
+    trucks: parseInt(r.Entries,10) || 0,
+    fat: n2(r.AvgFat) || null,
+    snf: n2(r.AvgSNF) || null,
+    source: 'Batch_Log'
+  });
+
+  const out = [];
+  if(lines.length){
+    let kg = 0, trucks = 0, fatQty = 0, fatSum = 0, snfQty = 0, snfSum = 0;
+    lines.forEach(r=>{
+      const q = n2(r.TotalQty);
+      kg += q;
+      trucks += (parseInt(r.Entries,10) || 0);
+      const f = n2(r.AvgFat), s = n2(r.AvgSNF);
+      if(f > 0 && q > 0){ fatSum += f * q; fatQty += q; }
+      if(s > 0 && q > 0){ snfSum += s * q; snfQty += q; }
+    });
+    out.push({
+      name: label,
+      kg: Math.round(kg),
+      trucks: trucks,
+      fat: fatQty > 0 ? parseFloat((fatSum/fatQty).toFixed(2)) : null,
+      snf: snfQty > 0 ? parseFloat((snfSum/snfQty).toFixed(2)) : null,
+      source: 'Batch_Log'
+    });
+  }
+  // keep non-dispatch-line rows as their own cards
+  others.forEach(r => out.push(toEntry(r)));
+  return out;
 }
 
 /* Merge only the "Dispatch Line-N" rows into a single entry; any other row

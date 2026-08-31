@@ -369,7 +369,7 @@ app.get('/api/bangalore/milk-procurement-summary', async (req, res) => {
 });
 
 // ── AI Production ── BAMUL.dbo.AI_SalesEntry + AI_Variants ──────────────────
-// entry_date is a date-only column; milk = all current variants, curd = none yet
+// entry_date is a date-only column; milk = non-curd variants, curd = variants named 'Curd%'
 app.get('/api/bangalore/ai-production', async (req, res) => {
     try {
         const p = pool(res); if (!p) return;
@@ -383,10 +383,12 @@ app.get('/api/bangalore/ai-production', async (req, res) => {
         else whereClause = `entry_date >= DATEFROMPARTS(YEAR(${NOW}),MONTH(${NOW}),1) AND entry_date <= CAST(${NOW} AS DATE)`;
         const r = await p.request().query(`
             SELECT
-                SUM(e.total_litres) AS milkKg,
-                SUM(e.produced_ai_with_correction) AS milkPkts,
-                0 AS curdKg, 0 AS curdPkts
+                SUM(CASE WHEN v.name LIKE 'Curd%' THEN 0 ELSE e.total_litres END) AS milkKg,
+                SUM(CASE WHEN v.name LIKE 'Curd%' THEN 0 ELSE e.produced_ai_with_correction END) AS milkPkts,
+                SUM(CASE WHEN v.name LIKE 'Curd%' THEN e.total_litres ELSE 0 END) AS curdKg,
+                SUM(CASE WHEN v.name LIKE 'Curd%' THEN e.produced_ai_with_correction ELSE 0 END) AS curdPkts
             FROM BAMUL.dbo.AI_SalesEntry e
+            JOIN BAMUL.dbo.AI_Variants v ON e.variant_id = v.id
             WHERE ${whereClause}
         `);
         const row = r.recordset[0];
