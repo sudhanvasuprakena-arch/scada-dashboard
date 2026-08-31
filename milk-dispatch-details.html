@@ -97,7 +97,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 .hero-head .sub{font-size:16px;color:rgba(255,255,255,.78);font-weight:500}
 .hero-date-row{display:flex;justify-content:flex-end;margin-bottom:10px}
 .hero-date{font-size:17px;color:#fff;font-weight:700;letter-spacing:.4px}
-.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.kpis{display:grid;grid-template-columns:1fr;gap:12px}
 .kpi{
   background:rgba(255,255,255,.97);border-radius:var(--radius);
   padding:14px 18px;box-shadow:0 8px 22px -12px rgba(6,22,68,.45);
@@ -260,44 +260,21 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
           <div class="meta"></div>
         </div>
       </div>
-      <div class="kpi reveal" style="animation-delay:.08s">
-        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
-        <div>
-          <div class="tag">Total trucks dispatched</div>
-          <div class="value num" id="truckCount">—</div>
-          <div class="meta" id="kpi-completed">Completed &amp; in progress</div>
-        </div>
-      </div>
-      <div class="kpi reveal" style="animation-delay:.16s">
-        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 4h7l1 4.5a6.5 6.5 0 1 1-9 0Z"/></svg></span>
-        <div>
-          <div class="tag">Overall quality · Avg</div>
-          <div class="value num" id="kpi-quality">—<small>% Fat</small> · —<small>% SNF</small></div>
-          <div class="meta"></div>
-        </div>
-      </div>
     </div>
   </div>
 </section>
 
 <!-- ===== sections ===== -->
 <main class="main">
-  <div class="section-head reveal">
-    <span class="cat-tag">Category 1</span>
-    <h3>Milk Dispatched via Weigh Bridge</h3>
-  </div>
-  <div class="section-total reveal"><span class="tot num" id="tot-wb">—<small> Kg</small></span></div>
-  <div class="tanks" id="sec-wb"></div>
-
   <div class="section-head reveal" style="margin-top:26px">
-    <span class="cat-tag">Category 2</span>
+    <span class="cat-tag">Category 1</span>
     <h3>Milk Dispatched to Product Dairy</h3>
   </div>
   <div class="section-total reveal"><span class="tot num" id="tot-pd">—<small> Kg</small></span></div>
   <div class="tanks" id="sec-pd"></div>
 
   <div class="section-head reveal" style="margin-top:26px">
-    <span class="cat-tag">Category 3</span>
+    <span class="cat-tag">Category 2</span>
     <h3>Milk Dispatched to NMP (Nandini Milk Products)</h3>
   </div>
   <div class="section-total reveal"><span class="tot num" id="tot-nmp">—<small> Kg</small></span></div>
@@ -335,7 +312,13 @@ document.querySelectorAll('[data-count]').forEach(el=>{
 
 function renderSection(list, wrapId, totId, emptyMsg){
   const wrap = document.getElementById(wrapId);
+  if(!wrap) return {kg:0, trucks:0};
+  wrap.innerHTML = '';
   let totalKg = 0, trucks = 0;
+  // Reset total display
+  const totEl = document.getElementById(totId);
+  if(totEl){ totEl.innerHTML = '—<small> Kg</small>'; totEl.dataset.kg = 0; }
+  document.getElementById('kpi-net').textContent = '—';
   if (!list.length) {
     wrap.insertAdjacentHTML('beforeend', `
       <div class="empty-state reveal">
@@ -361,7 +344,6 @@ function renderSection(list, wrapId, totId, emptyMsg){
           <span class="tank-badge num">${i+1}</span>
           <div>
             <h3>${d.name}</h3>
-            <div class="sub">From ${d.source || 'RMST / PMST'}</div>
           </div>
         </div>
         <div class="qty">
@@ -381,17 +363,17 @@ function renderSection(list, wrapId, totId, emptyMsg){
       </section>`);
   });
   document.getElementById(totId).innerHTML = formatIN(totalKg) + '<small> Kg</small>';
+  document.getElementById(totId).dataset.kg = totalKg;
+  // Update grand total KPI from cat1 + cat2 only
+  const pdKg = parseFloat(document.getElementById('tot-pd')?.dataset.kg||0) || 0;
+  const nmpKg = parseFloat(document.getElementById('tot-nmp')?.dataset.kg||0) || 0;
+  document.getElementById('kpi-net').textContent = formatIN(pdKg + nmpKg);
   return {kg:totalKg, trucks};
 }
 
-const r1 = renderSection(dispatchData.viaWeighBridge, 'sec-wb', 'tot-wb',
-  'Destination cards appear here automatically as trucks are dispatched through the weigh bridge.');
-const r2 = renderSection(dispatchData.productDairy, 'sec-pd', 'tot-pd',
-  'Transfers to Product Dairy appear here from daily dispatch data.');
-const r3 = renderSection(dispatchData.nmp, 'sec-nmp', 'tot-nmp',
-  'Transfers to NMP appear here from daily dispatch data.');
-const totalTrucks = r1.trucks + r2.trucks + r3.trucks;
-document.getElementById('truckCount').textContent = totalTrucks || '—';
+const r2 = {kg:0,trucks:0};
+const r3 = {kg:0,trucks:0};
+const totalTrucks = 0;
 
 /* ============================================================
  * Live top-KPIs from the milk-dispatch-truck endpoint.
@@ -437,10 +419,7 @@ async function loadDispatchKpis(){
   const fat = hasFat ? (d.reduce((s,r)=>s+n2(r.Fat_First),0)/d.length).toFixed(2) : '—';
   const snf = hasSNF ? (d.reduce((s,r)=>s+n2(r.SNF_First),0)/d.length).toFixed(2) : '—';
 
-  document.getElementById('kpi-net').textContent = formatIN(Math.round(net));
-  document.getElementById('truckCount').textContent = d.length;
-  document.getElementById('kpi-completed').innerHTML = `<b>${completed}</b> of ${d.length} completed`;
-  document.getElementById('kpi-quality').innerHTML = `${fat}<small>% Fat</small> · ${snf}<small>% SNF</small>`;
+  // kpi-net is set by renderSection (sum of pd + nmp only)
 
   // Populate WB and PD sections — filter to milk ProductCodes only
   const MILK_PRODUCTS = ['RAW MILK','PAST MILK','SKIM MILK','HOMOGENISED MILK','TONED MILK','STANDARDISED MILK'];
@@ -462,8 +441,7 @@ async function loadDispatchKpis(){
   const isNMP = k => k === 'NMP';
   const wb  = Object.values(byDairy).filter(x=>!isPD(x.name.toUpperCase()) && !isNMP(x.name.toUpperCase()));
   const toEntry = x => ({ name:x.name, kg:Math.round(x.kg), trucks:x.trucks, fat:x.n>0&&x.fat>0?parseFloat((x.fat/x.n).toFixed(2)):null, snf:x.n>0&&x.snf>0?parseFloat((x.snf/x.n).toFixed(2)):null, source:'BAMUL' });
-  const el = document.getElementById('sec-wb'); if(el) el.innerHTML='';
-  renderSection(wb.map(toEntry), 'sec-wb', 'tot-wb', 'No weigh bridge dispatches for this range.');
+  const el = document.getElementById('sec-wb'); if(el){ el.innerHTML=''; renderSection(wb.map(toEntry), 'sec-wb', 'tot-wb', 'No weigh bridge dispatches for this range.'); }
 }
 
 /* Merge only the "Dispatch Line-N" rows into a single entry; any other row
@@ -520,7 +498,8 @@ async function loadProductDairy(){
   }catch(e){}
   const el = document.getElementById('sec-pd'); if(el) el.innerHTML='';
   if(!d || !d.length){ renderSection([], 'sec-pd', 'tot-pd', 'No product dairy transfers for this range.'); return; }
-  renderSection(combineLines(d, 'PMST to Production Dairy'), 'sec-pd', 'tot-pd', 'No product dairy transfers for this range.');
+  const filtered = d.filter(r => !/CST/i.test(r.LineName||''));
+  renderSection(combineLines(filtered, 'To Production Dairy'), 'sec-pd', 'tot-pd', 'No product dairy transfers for this range.');
 }
 
 async function loadNMP(){
@@ -532,7 +511,7 @@ async function loadNMP(){
   }catch(e){}
   const el = document.getElementById('sec-nmp'); if(el) el.innerHTML='';
   if(!d || !d.length){ renderSection([], 'sec-nmp', 'tot-nmp', 'No NMP transfers for this range.'); return; }
-  renderSection(combineLines(d, 'PMST to NMP'), 'sec-nmp', 'tot-nmp', 'No NMP transfers for this range.');
+  renderSection(combineLines(d, 'To NMP'), 'sec-nmp', 'tot-nmp', 'No NMP transfers for this range.');
 }
 function heroDateLabel(){
   const f = getActiveFilter();
