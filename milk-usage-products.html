@@ -63,13 +63,30 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 }
 .live-dot::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-.range-pills{display:flex;gap:4px;background:var(--sky);padding:3px;border-radius:10px;margin-left:auto}
+.range-group{position:relative;margin-left:auto}
+.range-pills{display:flex;gap:4px;background:var(--sky);padding:3px;border-radius:10px;flex-wrap:nowrap;}
 .pill{
   font:inherit;font-size:16px;font-weight:600;color:var(--muted);
-  border:none;background:transparent;border-radius:7px;padding:5px 12px;cursor:pointer;transition:.15s;
+  border:none;background:transparent;border-radius:7px;padding:5px 12px;cursor:pointer;transition:.15s;white-space:nowrap;
 }
 .pill:hover{color:var(--blue-deep)}
 .pill.active{background:#fff;color:var(--blue-deep);box-shadow:0 1px 4px rgba(11,27,63,.12)}
+/* Custom date-range popover */
+.custom-range{
+  position:absolute;top:calc(100% + 6px);right:0;z-index:60;
+  display:flex;align-items:flex-end;gap:8px;
+  background:var(--card);padding:12px;border:1px solid var(--sky-line);
+  border-radius:12px;box-shadow:0 12px 30px -10px rgba(11,27,63,.28);
+}
+.custom-range[hidden]{display:none}
+.cr-field{display:flex;flex-direction:column;gap:4px}
+.cr-field label{font-size:15px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.date-input{
+  font:inherit;font-size:16px;color:var(--blue-ink);
+  padding:7px 9px;border:1px solid var(--sky-line);border-radius:8px;background:var(--card);
+}
+.date-input:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+.custom-range .btn{align-self:stretch}
 .btn{
   font:inherit;font-size:16px;font-weight:600;cursor:pointer;border-radius:9px;
   padding:7px 13px;border:1px solid var(--sky-line);background:var(--card);color:var(--blue-ink);
@@ -183,11 +200,20 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
       </div>
     </div>
     <span class="live-dot">Live</span>
-    <div class="range-pills" role="tablist" aria-label="Date range">
-      <button class="pill" role="tab" aria-selected="false" data-filter="yesterday">Yesterday</button>
-      <button class="pill" role="tab" aria-selected="false" data-filter="today">Today</button>
-      <button class="pill active" role="tab" aria-selected="true" data-filter="month">This month</button>
-      <button class="pill" role="tab" aria-selected="false" data-filter="week">This week</button>
+    <div class="range-group">
+      <div class="range-pills" role="tablist" aria-label="Date range">
+        <button class="pill" role="tab" aria-selected="false" data-filter="yesterday">Yesterday</button>
+        <button class="pill" role="tab" aria-selected="false" data-filter="week">This week</button>
+        <button class="pill active" role="tab" aria-selected="true" data-filter="month">This month</button>
+        <button class="pill" role="tab" aria-selected="false" data-custom data-filter="custom">Custom</button>
+      </div>
+      <div class="custom-range" id="customRange" hidden>
+        <div class="cr-field"><label for="startDate">From date</label><input type="date" id="startDate" class="date-input"></div>
+        <div class="cr-field"><label for="startTime">From time</label><input type="time" id="startTime" class="date-input" value="04:45"></div>
+        <div class="cr-field"><label for="endDate">To date</label><input type="date" id="endDate" class="date-input"></div>
+        <div class="cr-field"><label for="endTime">To time</label><input type="time" id="endTime" class="date-input" value="04:44"></div>
+        <button class="btn primary" id="applyRange" type="button">Apply</button>
+      </div>
     </div>
     <a class="btn" href="./predairy/index.html">Procurement view</a>
     <a class="btn" id="back-btn" href="./bangalore-dairy-dashboard.html">Plant flow →</a>
@@ -224,8 +250,18 @@ const products = [
 ];
 
 function getActiveFilter(){
-  const a = document.querySelector('.pill.active');
-  return a ? (a.dataset.filter||'month') : 'month';
+  const active = document.querySelector('.pill.active');
+  if(!active) return 'month';
+  const f = active.dataset.filter;
+  if(f === 'custom'){
+    const sd = document.getElementById('startDate').value;
+    const ed = document.getElementById('endDate').value;
+    if(!sd || !ed) return 'month';
+    const st = document.getElementById('startTime').value || '00:00';
+    const et = document.getElementById('endTime').value || '23:59';
+    return `custom&start=${sd}&end=${ed}&startTime=${st}:00&endTime=${et}:00`;
+  }
+  return f || 'month';
 }
 
 async function loadSun(){
@@ -310,14 +346,44 @@ loadSun();
 build();
 window.addEventListener('resize', build);
 
+const customRange = document.getElementById('customRange');
 document.querySelectorAll('.pill').forEach(p=>{
   p.addEventListener('click',()=>{
     document.querySelectorAll('.pill').forEach(x=>{x.classList.remove('active');x.setAttribute('aria-selected','false')});
     p.classList.add('active'); p.setAttribute('aria-selected','true');
+    if(p.hasAttribute('data-custom')){
+      customRange.hidden = !customRange.hidden;   // toggle the picker, wait for Apply
+    } else {
+      customRange.hidden = true;
+      loadSun();
+    }
+  });
+});
+
+const applyBtn = document.getElementById('applyRange');
+if(applyBtn){
+  applyBtn.addEventListener('click',()=>{
+    const sd = document.getElementById('startDate').value;
+    const ed = document.getElementById('endDate').value;
+    if(!sd || !ed){ alert('Please pick both a start and end date.'); return; }
+    const today = new Date().toISOString().split('T')[0];
+    if(sd > today){ alert('From date cannot be in the future.'); return; }
+    if(ed > today){ alert('To date cannot be in the future.'); return; }
+    if(sd > ed){ alert('From date cannot be greater than To date.'); return; }
+    customRange.hidden = true;
     loadSun();
   });
+}
+
+// Close the popover when clicking outside of it
+document.addEventListener('click',(ev)=>{
+  if(customRange.hidden) return;
+  if(!customRange.contains(ev.target) && !ev.target.closest('[data-custom]')){
+    customRange.hidden = true;
+  }
 });
 </script>
 <script>(function(){function upd(){var b=document.getElementById("back-btn");if(!b)return;var h=b.getAttribute("href").split("?")[0];b.setAttribute("href",h+"?filter="+getActiveFilter());}document.querySelectorAll(".pill").forEach(function(p){p.addEventListener("click",upd);});var ab=document.getElementById("applyRange");if(ab)ab.addEventListener("click",upd);upd();})();</script>
+<script>(function(){var t=new Date();var mn=new Date(t);mn.setMonth(mn.getMonth()-3);var fmt=d=>d.toISOString().split("T")[0];["startDate","endDate"].forEach(function(id){var el=document.getElementById(id);if(el){el.min=fmt(mn);el.max=fmt(t);}});})();/*dateLimit*/</script>
 </body>
 </html>
