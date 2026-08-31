@@ -409,7 +409,7 @@ document.addEventListener('click',ev=>{
 </script>
 <script>function downloadPDF(){const opt={margin:0.3,filename:document.title+'.pdf',image:{type:'png'},html2canvas:{scale:3,useCORS:true,backgroundColor:'#ffffff',logging:false},jsPDF:{unit:'in',format:'a4',orientation:'landscape'}};html2pdf().set(opt).from(document.body).save();}
 </script>
-<script>(function(){var t=new Date();var mn=new Date(t);mn.setMonth(mn.getMonth()-4);var fmt=d=>d.toISOString().split("T")[0];["startDate","endDate"].forEach(function(id){var el=document.getElementById(id);if(el){el.min=fmt(mn);el.max=fmt(t);}});})();/*dateLimit*/</script>
+<script>(function(){var t=new Date();var mn=new Date(t);mn.setMonth(mn.getMonth()-3);var fmt=d=>d.toISOString().split("T")[0];["startDate","endDate"].forEach(function(id){var el=document.getElementById(id);if(el){el.min=fmt(mn);el.max=fmt(t);}});})();/*dateLimit*/</script>
 <script>(function(){function upd(){var b=document.getElementById("back-btn");if(!b)return;var h=b.getAttribute("href").split("?")[0];b.setAttribute("href",h+"?filter="+getActiveFilter());}document.querySelectorAll(".pill").forEach(function(p){p.addEventListener("click",upd);});var ab=document.getElementById("applyRange");if(ab)ab.addEventListener("click",upd);upd();})();</script>
 </body>
 </html>
