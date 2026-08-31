@@ -111,7 +111,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 .sun .v{
   font-family:'Bricolage Grotesque',sans-serif;
   font-size:clamp(28px,3vw,42px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin-top:3px;
-  text-shadow:0 2px 8px rgba(6,22,68,.35);
+  text-shadow:0 2px 8px rgba(6,22,68,.35);white-space:nowrap;
 }
 .sun .v small{font-size:.48em;font-weight:700;opacity:.9;margin-left:2px}
 .sun .sub{font-size:13px;font-weight:600;opacity:.85;margin-top:3px}
@@ -234,6 +234,7 @@ async function loadSun(){
     const json = await res.json();
     if(json.success){
       document.getElementById('sunVal').innerHTML = formatIN(Math.round(n2(json.totalReceived)))+'<small>Kg</small>';
+      build(); // value changed → re-measure so the blue circle grows to fit
     }
   }catch(e){}
 }
@@ -253,7 +254,14 @@ function build(){
   svg.setAttribute('width', W); svg.setAttribute('height', H);
   svg.innerHTML = '';
 
-  const sunR = Math.min(W,H)*0.17*0.7;
+  /* Blue centre circle: base size is the design minimum. If the inner text
+     (e.g. a big number like 2,60,77,315 Kg) is wider than the circle, grow
+     the diameter to fit the content's diagonal + padding. */
+  const baseSunR = Math.min(W,H)*0.17*0.7;
+  sun.style.width = sun.style.height = (baseSunR*2)+'px';
+  sun.style.left = '-9999px'; sun.style.top = '-9999px';
+  const sunNeeded = Math.hypot(sun.scrollWidth, sun.scrollHeight)/2 + 12;
+  const sunR = Math.max(baseSunR, sunNeeded);
   const cx = sunR + 70 + W*0.20, cy = H/2;
   sun.style.width = sun.style.height = (sunR*2)+'px';
   sun.style.left = cx+'px'; sun.style.top = cy+'px';
