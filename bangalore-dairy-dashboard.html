@@ -775,9 +775,13 @@ async function loadDispatch(){
   clearNone('#disp-total');
   setFoot('disp-foot', `<span class="chip green">${completed}/${d.length} trucks · ${pct}%</span>`);
   // Product Dairy from Batch_Log D3 IN (25,40)
+  // Exclude "CST To Product Dairy" (D1=11) — that is a cream transfer, not a
+  // milk dispatch to the product dairy. This matches the dispatch details page.
   const prod = await fetchData('product-dispatch');
   if(prod && prod.length){
-    const prodQty = prod.reduce((s,r)=>s+num(r.TotalQty),0);
+    const prodQty = prod
+      .filter(r=>!/CST/i.test(r.LineName||''))
+      .reduce((s,r)=>s+num(r.TotalQty),0);
     setHTML('disp-product', `${formatIN(Math.round(prodQty))}<small>Kg</small>`);
     clearNone('#disp-product');
   }
