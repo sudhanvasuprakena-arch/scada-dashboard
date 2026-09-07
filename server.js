@@ -390,7 +390,7 @@ const PORT = process.env.PORT || 3000;
 
 // ── UNION_054 MySQL connection ─────────────────────────────────────────────────
 const mysql2 = require('mysql2/promise');
-const mysqlCfg = { host:'127.0.0.1', port:3306, user:'bamul', password:'Bamul@local1', database:'UNION_054' };
+const mysqlCfg = { host:'127.0.0.1', port:3306, user:'shibashish', password:'ShibStrongPass#2026', database:'UNION_054' };
 
 function getMonthRanges(n=3){
   const ranges=[], now=new Date();
@@ -409,13 +409,12 @@ function getLast90(){
 
 let procurementCache = null;
 let procurementCacheTime = 0;
+let procurementCacheBuilding = false;
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
-app.get('/api/bangalore/union054/procurement', async (req, res) => {
-  // serve from cache if fresh
-  if(procurementCache && (Date.now()-procurementCacheTime) < CACHE_TTL){
-    return res.json(procurementCache);
-  }
+async function buildProcurementCache() {
+  if(procurementCacheBuilding) return;
+  procurementCacheBuilding = true;
   let c;
   try {
     c = await mysql2.createConnection(mysqlCfg);
@@ -568,13 +567,28 @@ app.get('/api/bangalore/union054/procurement', async (req, res) => {
     }};
     procurementCache = payload;
     procurementCacheTime = Date.now();
-    res.json(payload);
+    procurementCacheBuilding = false;
+    console.log('Procurement cache refreshed at', new Date().toISOString());
   } catch(err) {
-    res.status(500).json({success:false,error:err.message});
+    procurementCacheBuilding = false;
+    console.error('Cache build error:', err.message);
   } finally {
     if(c) await c.end();
   }
+}
+
+app.get('/api/bangalore/union054/procurement', async (req, res) => {
+  // if cache is stale, trigger background refresh but still serve stale data
+  if(procurementCache && (Date.now()-procurementCacheTime) >= CACHE_TTL) {
+    buildProcurementCache(); // background refresh
+  }
+  // serve from cache if available
+  if(procurementCache) return res.json(procurementCache);
+  // no cache yet — wait for first build
+  await buildProcurementCache();
+  res.json(procurementCache);
 });
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Bangalore Dairy API running on port ${PORT}`);
   // warm procurement cache on startup
