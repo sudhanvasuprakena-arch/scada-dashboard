@@ -379,7 +379,12 @@ app.get('/api/bangalore/ai-production', async (req, res) => {
         if (filter === 'yesterday') whereClause = `entry_date = CAST(DATEADD(DAY,-1,${NOW}) AS DATE)`;
         else if (filter === 'today') whereClause = `entry_date = CAST(${NOW} AS DATE)`;
         else if (filter === 'week')  whereClause = `entry_date >= CAST(DATEADD(DAY,1-DATEPART(WEEKDAY,${NOW}),${NOW}) AS DATE) AND entry_date <= CAST(${NOW} AS DATE)`;
-        else if (filter === 'custom' && start && end) whereClause = `entry_date >= '${start}' AND entry_date <= '${end}'`;
+        // Custom range uses a 04:45→04:44 dairy-day window: "start .. end" means
+        // dairy-days from start up to (end - 1 day), because the end date is only
+        // the 04:44 morning boundary. entry_date is date-only, so map accordingly:
+        // curd/AI entry_date should span [start, end) — i.e. exclude the end date,
+        // matching the single-dairy-day behaviour of the SCADA stages.
+        else if (filter === 'custom' && start && end) whereClause = `entry_date >= '${start}' AND entry_date < '${end}'`;
         else whereClause = `entry_date >= DATEFROMPARTS(YEAR(${NOW}),MONTH(${NOW}),1) AND entry_date <= CAST(${NOW} AS DATE)`;
         const r = await p.request().query(`
             SELECT
