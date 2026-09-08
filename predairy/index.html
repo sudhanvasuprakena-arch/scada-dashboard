@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1920">
+<title>MPCS Milk Procurement Overview · BAMUL</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+html{font-size:175%}
+:root{--navy:#0d2b4e;--green:#1a9e55;--red:#d64545;--amber:#d9860b;--bg:#f2f5f9;--card:#fff;--ink:#1c2b3a;--muted:#68788c;--line:#e3e9f0;--acc:#2f7fd0}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
+body{background:var(--bg);color:var(--ink)}
+.topbar{background:linear-gradient(100deg,#0d2b4e,#16457c);color:#fff;padding:0 30px;display:flex;align-items:center;gap:26px;position:sticky;top:0;z-index:20;box-shadow:0 2px 10px rgba(13,43,78,.25)}
+.brand{display:flex;align-items:center;gap:10px;padding:13px 0;font-weight:700;font-size:17px}
+.brand .ic{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center}
+.topnav{display:flex;gap:2px}
+.topnav a{color:rgba(255,255,255,.72);text-decoration:none;font-size:13.5px;font-weight:600;padding:18px 15px;border-bottom:3px solid transparent;transition:.15s}
+.topnav a.active{color:#fff;border-bottom-color:#7db4e8}
+.pbadge{margin-left:auto;font-size:12px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);padding:6px 14px;border-radius:20px}
+main{max-width:1440px;margin:0 auto;padding:24px 30px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 24px;box-shadow:0 1px 3px rgba(13,43,78,.06)}
+.up{color:var(--green)}.dn{color:var(--red)}.nt{color:var(--muted)}
+
+/* page header row */
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px}
+.ph h2{font-size:22px;font-weight:800;color:var(--navy)}
+.ph-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rangechip{font-size:12px;font-weight:700;color:var(--navy);background:#e8f1fb;border:1px solid #c9ddf2;border-radius:20px;padding:6px 14px}
+.seg{display:inline-flex;background:#e6ecf3;border-radius:10px;padding:3px;gap:2px}
+.seg button{border:none;background:transparent;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;transition:.15s}
+.seg button.active{background:var(--navy);color:#fff;box-shadow:0 2px 6px rgba(13,43,78,.3)}
+.dinp{padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-size:12px;font-family:inherit;color:var(--ink)}
+.mini{font-size:11px;color:var(--muted)}
+
+/* KPI row — 3 equal cards side by side */
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-bottom:18px;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(13,43,78,.06)}
+.kpi{padding:18px 24px;background:var(--card);border-right:1px solid var(--line)}
+.kpi:last-child{border-right:none}
+.kpi .lbl{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.kpi .val{font-size:24px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.kpi .dl{font-size:10px;font-weight:600}
+
+/* tables */
+.tables{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:18px}
+h3.ct{font-size:13px;font-weight:700;margin-bottom:3px}
+p.cs{font-size:10.5px;color:var(--muted);margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th{background:#f7f9fc;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;padding:9px 12px;text-align:right;border-bottom:2px solid var(--line);white-space:nowrap}
+th.l,td.l{text-align:left}
+td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f4f8fd}
+.chartbox{position:relative;height:340px}
+footer{font-size:10px;color:var(--muted);text-align:center;padding:20px}
+#loading-overlay{position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:9999}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><div class="ic">🥛</div>BAMUL</div>
+  <nav class="topnav">
+    <a href="union-summary.html">Union Summary</a>
+    <a href="index.html" class="active">Overview</a>
+    <a href="procurement.html">Procurement &amp; Quality</a>
+    <a href="digital.html">Digital Transformation</a>
+    <a href="farmers.html">Farmer Engagement</a>
+  </nav>
+  <div class="pbadge">Reporting period: <b id="reportingPeriod">—</b></div>
+</div>
+
+<main>
+  <div class="ph">
+    <h2>MPCS Milk Procurement Overview</h2>
+    <div class="ph-right">
+      <span class="rangechip" id="rangeChip"></span>
+      <div class="seg" id="segBasis">
+        <button data-b="daily">Daily</button>
+        <button data-b="weekly">Weekly</button>
+        <button data-b="monthly" class="active">Monthly</button>
+        <button data-b="custom">Custom</button>
+      </div>
+      <span id="customInputs" style="display:none;gap:6px;align-items:center">
+        <input type="date" id="dFrom" class="dinp">
+        <span class="mini">to</span>
+        <input type="date" id="dTo" class="dinp">
+      </span>
+    </div>
+  </div>
+
+  <div class="kpis" id="kpiRow"></div>
+
+  <div class="tables">
+    <div class="card" style="margin-bottom:0">
+      <h3 class="ct" style="color:var(--green)">▲ Increased Procurement — Top 10 MPCS</h3>
+      <p class="cs" id="csPos"></p>
+      <div style="overflow-x:auto"><table id="tblPos"></table></div>
+    </div>
+    <div class="card">
+      <h3 class="ct" style="color:var(--red)">▼ Decreased Procurement — Top 10 MPCS</h3>
+      <p class="cs" id="csNeg"></p>
+      <div style="overflow-x:auto"><table id="tblNeg"></table></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="ct" id="ctTrend">Procurement Trend</h3>
+    <p class="cs" id="csTrend"></p>
+    <div class="chartbox"><canvas id="chTrend"></canvas></div>
+  </div>
+</main>
+
+<footer>BAMUL — Bangalore Urban, Rural &amp; Ramanagara District Co-operative Milk Union Ltd. · Source: MPCS MIS · Figures in litres</footer>
+
+<div id="loading-overlay"><div style="text-align:center"><div style="width:40px;height:40px;border:4px solid #e2e8f0;border-top-color:#2f7fd0;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px"></div><div style="color:#64748b;font-size:14px">Loading...</div></div></div>
+
+<script>
+(async function(){
+  try{
+    const r=await fetch('/papi/bangalore/union054/procurement');
+    const j=await r.json();
+    if(!j.success) throw new Error(j.error);
+    window.DD=j.data;
+  }catch(e){
+    document.getElementById('loading-overlay').innerHTML='<div style="color:#d64545;padding:40px;text-align:center"><b>Failed to load data</b><br><small>'+e.message+'</small></div>';
+    return;
+  }
+  document.getElementById('loading-overlay').style.display='none';
+  initPage();
+})();
+</script>
+
+<script>
+function initPage(){
+const D=window.DD;
+const PL=D.periods.map(p=>p.label);
+const PD=D.periods.map(p=>p.days);
+const W=D.wire;
+const DAYS=W.dates.length;
+const U=D.union;
+if(window.Chart){Chart.defaults.font.family="'Segoe UI',system-ui,sans-serif";Chart.defaults.color='#68788c';}
+
+const fmt=n=>n>=1e7?(n/1e7).toFixed(2)+' Cr':n>=1e5?(n/1e5).toFixed(2)+' L':Math.round(n).toLocaleString('en-IN');
+const fmtL=n=>n.toLocaleString('en-IN',{maximumFractionDigits:0});
+const sum=a=>a.reduce((s,x)=>s+x,0);
+const fmtD=iso=>{const d=new Date(iso+'T00:00:00');return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+d.getFullYear();};
+const fmtDs=iso=>{const d=new Date(iso+'T00:00:00');return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];};
+
+const minDate=W.dates[0],maxDate=W.dates[DAYS-1];
+document.getElementById('dFrom').min=minDate;document.getElementById('dFrom').max=maxDate;
+document.getElementById('dTo').min=minDate;document.getElementById('dTo').max=maxDate;
+document.getElementById('reportingPeriod').textContent=PL[2];
+
+let basis='monthly',from=W.dates[Math.max(0,DAYS-14)],to=maxDate;
+
+function range(){
+  if(basis==='daily'){let i=DAYS-1;while(i>0&&W.dailyAll[i]===0)i--;return{s:i,e:i+1};}
+  if(basis==='weekly'){const w=W.weekly[W.weekly.length-1];return{s:w.s,e:w.e};}
+  if(basis==='monthly')return{s:W.monthStarts[2],e:DAYS};
+  let s=W.dates.indexOf(from),e=W.dates.indexOf(to)+1;
+  if(s<0)s=0;if(e<=0)e=DAYS;if(e<=s){const t=s;s=e-1;e=t+1;}
+  return{s,e};
+}
+function rangeLabel(r){
+  const a=W.dates[r.s],b=W.dates[r.e-1],n=r.e-r.s;
+  return(a===b?fmtD(a):fmtDs(a)+' – '+fmtD(b))+' · '+n+(n===1?' day':' days');
+}
+
+function setChrome(){
+  document.getElementById('customInputs').style.display=basis==='custom'?'flex':'none';
+  document.getElementById('dFrom').value=from;document.getElementById('dTo').value=to;
+  document.getElementById('rangeChip').textContent=rangeLabel(range());
+}
+
+function delta(cur,prv,prevLabel){
+  if(!prv)return'<span class="nt">—</span>';
+  const d=100*(cur-prv)/prv,cls=d>=0?'up':'dn';
+  return`<span class="${cls}">${d>=0?'▲':'▼'} ${Math.abs(d).toFixed(1)}% vs ${prevLabel}</span>`;
+}
+
+function renderKPIs(){
+  const r=range(),n=r.e-r.s;
+  const v=basis==='monthly'?U.purchase[2]:sum(W.dailyAll.slice(r.s,r.e));
+  const p=basis==='monthly'?U.purchase[1]:(r.s-n>=0?sum(W.dailyAll.slice(r.s-n,r.s)):null);
+  const fat=basis==='monthly'?U.avgFat[2]:sum(W.fatAll.slice(r.s,r.e))/n;
+  const snf=sum(W.snfAll.slice(r.s,r.e))/n;
+  const perDay=v/n;
+  const prevLabel=basis==='monthly'?PL[1]:'prev period';
+  document.getElementById('kpiRow').innerHTML=[
+    {l:'Milk Purchase',v:fmt(perDay)+' Ltr/day',d:delta(v,p,prevLabel)},
+    {l:'Average Fat',v:fat.toFixed(2)+' %',d:'<span class="nt">day value</span>'},
+    {l:'Average SNF',v:snf.toFixed(2)+' %',d:'<span class="nt">day value</span>'},
+  ].map(k=>`<div class="kpi"><div class="lbl">${k.l}</div><div class="val">${k.v}</div><div class="dl">${k.d}</div></div>`).join('');
+}
+
+function renderTables(){
+  const r=range(),n=r.e-r.s;
+  const per=basis==='daily'?'day':basis==='weekly'?'week':'period';
+  const mpcs=D.mpcs||[];
+  const rows=mpcs.map(m=>{
+    const d=m.chg[basis]!=null?m.chg[basis]:m.chg['daily']||0;
+    const cur=m.qty*n/28;
+    return{name:m.name,taluk:m.taluk,cur,prv:cur/(1+d/100),d};
+  });
+  const pos=rows.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,5);
+  const neg=rows.filter(x=>x.d<0).sort((a,b)=>a.d-b.d).slice(0,5);
+  const rl=rangeLabel(r);
+  document.getElementById('csPos').textContent=`Societies with highest procurement growth vs previous ${per} (${rl})`;
+  document.getElementById('csNeg').textContent=`Societies with steepest procurement decline vs previous ${per} (${rl})`;
+  const mk=(list,up)=>`<thead><tr><th class="l">#</th><th class="l">MPCS</th><th class="l">Taluk</th><th>This ${per} (Ltr)</th><th>Prev ${per} (Ltr)</th><th>Change</th></tr></thead><tbody>`+
+    list.map((x,i)=>`<tr><td class="l">${i+1}</td><td class="l"><b>${x.name}</b></td><td class="l">${x.taluk}</td><td>${fmtL(x.cur)}</td><td>${fmtL(x.prv)}</td><td><b><span class="${up?'up':'dn'}">${up?'▲':'▼'} ${Math.abs(x.d).toFixed(1)}%</span></b></td></tr>`).join('')+'</tbody>';
+  document.getElementById('tblPos').innerHTML=mk(pos,true);
+  document.getElementById('tblNeg').innerHTML=mk(neg,false);
+}
+
+let trendChart;
+function renderTrend(){
+  if(trendChart)trendChart.destroy();
+  const ms=W.monthStarts[2];
+  const labels=W.dates.slice(ms).map(fmtDs);
+  const vals=W.dailyAll.slice(ms);
+  document.getElementById('ctTrend').textContent='Procurement Trend';
+  document.getElementById('csTrend').textContent='Day-wise milk purchase, '+PL[2];
+  trendChart=new Chart(document.getElementById('chTrend'),{
+    type:'line',
+    data:{labels,datasets:[{data:vals,borderColor:'#2f7fd0',backgroundColor:'rgba(47,127,208,.08)',fill:true,tension:.4,pointRadius:vals.map((v,i)=>i===vals.length-1?5:0),pointBackgroundColor:'#d9860b',borderWidth:2}]},
+    options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)+' Ltr'}}},scales:{y:{ticks:{callback:v=>fmt(v)},grid:{color:'#e3e9f0'}},x:{grid:{display:false}}}}
+  });
+}
+
+function renderAll(){setChrome();renderKPIs();renderTables();renderTrend();}
+
+document.getElementById('segBasis').addEventListener('click',e=>{
+  if(e.target.tagName!=='BUTTON')return;
+  basis=e.target.dataset.b;
+  document.querySelectorAll('#segBasis button').forEach(b=>b.classList.toggle('active',b===e.target));
+  renderAll();
+});
+document.getElementById('dFrom').addEventListener('change',e=>{from=e.target.value;renderAll();});
+document.getElementById('dTo').addEventListener('change',e=>{to=e.target.value;renderAll();});
+renderAll();
+}
+</script>
+</body>
+</html>
