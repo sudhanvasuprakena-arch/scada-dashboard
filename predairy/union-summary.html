@@ -233,7 +233,11 @@ function render(){
   const _ss=document.getElementById('smpSum'); if(_ss) _ss.style.display = basis==='monthly'?'none':'';
 
   const share = basis==='monthly' ? 1 : sum(W.dailyAll.slice(r.s,r.e))/U.purchase[2];
-  let html=`<thead><tr><th class="l">Particulars</th><th>Selected period</th>${PL.map(p=>`<th>${p}</th>`).join('')}<th>Change (${PL[2]} vs ${PL[1]})</th></tr></thead><tbody>`;
+  // The latest period (index 2) is the current, still-in-progress month, so comparing
+  // it against a full month shows a misleading ~-80% drop. Compare the two most recent
+  // COMPLETE months instead (index 1 vs 0), giving a real month-over-month change.
+  const cmpNew = 1, cmpOld = 0;
+  let html=`<thead><tr><th class="l">Particulars</th><th>Selected period</th>${PL.map(p=>`<th>${p}</th>`).join('')}<th>Change (${PL[cmpNew]} vs ${PL[cmpOld]})</th></tr></thead><tbody>`;
   const isNA = x => x===null || x===undefined;   // e.g. Sample Milk (no OCI source)
   SUMROWS.forEach(row=>{
     const v=U[row.k];
@@ -249,7 +253,7 @@ function render(){
     if(row.cum){ selVal = row.k==='farmerApp' ? W.farmerAppCum[r.e-1] : W.secAppCum[r.e-1]; selTxt=fmtL(selVal); }
     else if(row.avg){ selVal = basis==='monthly'? v[2] : sum(W.fatAll.slice(r.s,r.e))/n; selTxt=selVal.toFixed(2); }
     else { selVal = v[2]*share; selTxt=fmtL(selVal); }
-    const ch = pct(v[2]-v[1], v[1]);
+    const ch = pct(v[cmpNew]-v[cmpOld], v[cmpOld]);
     html+=`<tr><td class="l"><b>${row.l}</b></td>
     <td data-v="${selVal}"><b>${selTxt}</b></td>
     ${v.map(x=>`<td data-v="${x}">${isNA(x)?'<span class="nt">N/A</span>':(row.avg? x.toFixed(2) : fmtL(x))}</td>`).join('')}
