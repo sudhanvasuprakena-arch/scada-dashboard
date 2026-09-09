@@ -152,7 +152,7 @@ document.getElementById('reportingPeriod').textContent=PL[2];
 let basis='monthly',from=W.dates[Math.max(0,DAYS-14)],to=maxDate;
 
 function range(){
-  if(basis==='daily'){let i=DAYS-1;while(i>0&&W.dailyAll[i]===0)i--;return{s:i,e:i+1};}
+  if(basis==='daily'){let i=DAYS-1;while(i>0&&W.dailyAll[i]===0)i--;i=Math.max(0,i-1);return{s:i,e:i+1};}
   if(basis==='weekly'){const w=W.weekly[W.weekly.length-1];return{s:w.s,e:w.e};}
   if(basis==='monthly')return{s:W.monthStarts[2],e:DAYS};
   let s=W.dates.indexOf(from),e=W.dates.indexOf(to)+1;
