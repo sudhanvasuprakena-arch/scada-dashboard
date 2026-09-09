@@ -164,8 +164,10 @@ const chg = a => pct(last(a)-prev(a), prev(a));
 function delta(cur,prv,invert=false,suffix){
   if(!prv) return '<span class="nt">—</span>';
   suffix = suffix ?? ('% vs '+PL[PRV]);
-  const d=100*(cur-prv)/prv, cls=(d>=0)!==invert?'up':'dn';
-  return `<span class="${cls}">${d>=0?'▲':'▼'} ${Math.abs(d).toFixed(1)}${suffix}</span>`;
+  const d=100*(cur-prv)/prv;
+  if(Math.abs(d)<0.05) return `<span class="nt">— 0.0${suffix}</span>`;
+  const cls=(d>0)!==invert?'up':'dn';
+  return `<span class="${cls}">${d>0?'▲':'▼'} ${Math.abs(d).toFixed(1)}${suffix}</span>`;
 }
 function makeSortable(tbl){
   tbl.querySelectorAll('th').forEach((th,i)=>{th.addEventListener('click',()=>{
@@ -243,7 +245,12 @@ function render(){
   // it against a full month shows a misleading ~-80% drop. Compare the two most recent
   // COMPLETE months instead (index 1 vs 0), giving a real month-over-month change.
   const cmpNew = 1, cmpOld = 0;
-  let html=`<thead><tr><th class="l">Particulars</th><th>Selected period</th>${PL.map(p=>`<th>${p}</th>`).join('')}<th>Change (${PL[cmpNew]} vs ${PL[cmpOld]})</th></tr></thead><tbody>`;
+  // Change column is a complete month-over-month comparison (Aug vs Jul). It is only
+  // meaningful for the Monthly view; for Yesterday/Weekly/Custom we show "—" because
+  // per-period per-row change is not available from the monthly aggregation source.
+  const showChange = basis==='monthly';
+  const chgHeader = showChange ? `Change (${PL[cmpNew]} vs ${PL[cmpOld]})` : 'Change (monthly only)';
+  let html=`<thead><tr><th class="l">Particulars</th><th>Selected period</th>${PL.map(p=>`<th>${p}</th>`).join('')}<th>${chgHeader}</th></tr></thead><tbody>`;
   const isNA = x => x===null || x===undefined;   // e.g. Sample Milk (no OCI source)
   SUMROWS.forEach(row=>{
     const v=U[row.k];
@@ -263,7 +270,7 @@ function render(){
     html+=`<tr><td class="l"><b>${row.l}</b></td>
     <td data-v="${selVal}"><b>${selTxt}</b></td>
     ${v.map(x=>`<td data-v="${x}">${isNA(x)?'<span class="nt">N/A</span>':(row.avg? x.toFixed(2) : fmtL(x))}</td>`).join('')}
-    <td data-v="${ch}"><span class="${ch>=0?'up':'dn'}">${ch>=0?'▲':'▼'} ${Math.abs(ch).toFixed(1)}%</span></td></tr>`;
+    <td data-v="${ch}">${!showChange?'<span class="nt">—</span>':(Math.abs(ch)<0.05?'<span class="nt">— 0.0%</span>':`<span class="${ch>0?'up':'dn'}">${ch>0?'▲':'▼'} ${Math.abs(ch).toFixed(1)}%</span>`)}</td></tr>`;
   });
   const tbl=document.getElementById('tblUnion');
   tbl.innerHTML=html+'</tbody>'; makeSortable(tbl);
