@@ -69,7 +69,9 @@ body{background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
 .pbadge{margin-left:auto;font-size:.75rem;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);padding:.375rem .875rem;border-radius:var(--r-pill)}
 
 /* ── page shell ──────────────────────────────────────────────────────────── */
-main{width:100%;max-width:87rem;margin:0 auto;padding:1.25rem 1.875rem 2.5rem;display:flex;flex-direction:column;gap:1rem}
+/* Full-width, no centered max-width cap — matches union-summary.html so the
+   content uses the whole screen instead of sitting in a narrow column. */
+main{width:100%;max-width:100%;margin:0;padding:1.25rem 1.875rem 2.5rem;display:flex;flex-direction:column;gap:1rem}
 
 /* ── filter bar (design: title left, chip + segmented control right) ─────── */
 /* Row 1: title on the left, range chip + segmented control on the right.
