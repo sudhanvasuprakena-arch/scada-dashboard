@@ -187,7 +187,7 @@ footer{font-size:.71875rem;color:var(--muted);text-align:center;padding:1.25rem}
     <div class="fbright">
       <span class="rangechip" id="rangeChip">—</span>
       <div class="seg" id="segBasis" role="group" aria-label="Reporting period">
-        <button type="button" data-b="daily" class="active">Daily</button>
+        <button type="button" data-b="daily" class="active">Yesterday</button>
         <button type="button" data-b="weekly">Weekly</button>
         <button type="button" data-b="monthly">Monthly</button>
         <button type="button" data-b="custom">Custom</button>
@@ -267,13 +267,23 @@ function getDateRange(b) {
   b = b || basis;
   const today = new Date();
   if (b === 'daily') {
-    const t = fmtDate(today);
+    // "Yesterday" — today's collection is still arriving, so the last full day
+    // is yesterday. Matches union-summary.html.
+    const y = new Date(today); y.setDate(today.getDate() - 1);
+    const t = fmtDate(y);
     return { asOf:t, from:t, to:t, label:fmtLabel(t)+' · 1 day', key:'daily_'+t };
   }
   if (b === 'weekly') {
-    const from = new Date(today); from.setDate(today.getDate()-6);
-    const f = fmtDate(from), t = fmtDate(today);
-    return { asOf:t, from:f, to:t, label:fmtLabel(f)+' – '+fmtLabel(t)+' · 7 days', key:'weekly_'+f+'_'+t };
+    // Calendar week to date: Monday of the current week -> today. Not a rolling
+    // 7 days. On a Monday the range is just that one day. Matches union-summary.
+    const mon = new Date(today);
+    const dow = today.getDay() === 0 ? 7 : today.getDay();  // Mon=1 .. Sun=7
+    mon.setDate(today.getDate() - dow + 1);
+    const f = fmtDate(mon), t = fmtDate(today);
+    const n = Math.round((new Date(t+'T00:00:00') - new Date(f+'T00:00:00'))/86400000) + 1;
+    return { asOf:t, from:f, to:t,
+             label:(f === t ? fmtLabel(t) : fmtLabel(f)+' – '+fmtLabel(t))+' · '+n+(n===1?' day':' days'),
+             key:'weekly_'+f+'_'+t };
   }
   if (b === 'monthly') {
     const t = fmtDate(today);
