@@ -519,10 +519,11 @@ async function buildProcurementCache() {
     last90.forEach((d,i)=>{ if(d.slice(8)==='01') monthStarts.push(i); });
     monthStarts.forEach((s,i)=>{ monthDays.push((monthStarts[i+1]||last90.length)-s); });
 
-    // Top MPCS
+    // Top MPCS with month-over-month change
     const cur = months[2];
+    const prv = months[1];
     const [mpcsRows] = await c.query(`
-      SELECT s.sub_district_name AS taluk, d.dcs_name AS name,
+      SELECT s.sub_district_name AS taluk, d.dcs_name AS name, d.dcs_code,
         SUM(a.quantity) AS qty,
         SUM(a.kg_fat)*100/NULLIF(SUM(a.quantity),0) AS avgFat,
         SUM(a.quantity)/? AS perDay
@@ -533,6 +534,14 @@ async function buildProcurementCache() {
       GROUP BY a.dcs_code,d.dcs_name,s.sub_district_name
       ORDER BY qty DESC LIMIT 40
     `, [cur.days, cur.start, cur.end]);
+    const [mpcsPrvRows] = await c.query(`
+      SELECT a.dcs_code, SUM(a.quantity) AS qty
+      FROM tbl_aggregation_data a
+      WHERE a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
+      GROUP BY a.dcs_code
+    `, [prv.start, prv.end]);
+    const mpcsPrvMap = {};
+    mpcsPrvRows.forEach(r => { mpcsPrvMap[r.dcs_code] = parseFloat(r.qty)||0; });
 
     // App counts — type 1 = Farmer app, type 3 = Secretary app (verified against OCI)
     const [appR] = await c.query(`
@@ -608,7 +617,12 @@ async function buildProcurementCache() {
       union, taluks,
       weightBuckets:[{label:'Grand Total',counts:[taluks.length,taluks.length,taluks.length]}],
       fatBuckets:   [{label:'Grand Total',counts:[taluks.length,taluks.length,taluks.length]}],
-      mpcs: mpcsRows.map(r=>({taluk:r.taluk,name:r.name,qty:parseFloat(r.qty)||0,avgFat:parseFloat(r.avgFat)||0,perDay:parseFloat(r.perDay)||0,chg:{daily:0,weekly:0,monthly:0,custom:0}})),
+      mpcs: mpcsRows.map(r=>{
+        const curQty=parseFloat(r.qty)||0;
+        const prvQty=mpcsPrvMap[r.dcs_code]||0;
+        const chgMoM=prvQty?(curQty-prvQty)/prvQty*100:0;
+        return {taluk:r.taluk,name:r.name,qty:curQty,avgFat:parseFloat(r.avgFat)||0,perDay:parseFloat(r.perDay)||0,chg:{daily:chgMoM,weekly:chgMoM,monthly:chgMoM,custom:chgMoM}};
+      }),
       wire:{ dates:last90, dailyAll:wireQty, fatAll:wireFat, snfAll:wireSnf,
         autoAll:wireQty.map(()=>90), weekly, monthStarts, monthDays,
         talukDaily,
