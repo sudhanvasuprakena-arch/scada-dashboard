@@ -654,6 +654,389 @@ app.get('/api/bangalore/union054/procurement', async (req, res) => {
   res.json(procurementCache);
 });
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// PreDairy dashboards — Digital Transformation + Farmer Engagement
+// Serves predairy/digital.html and predairy/farmers.html.
+// Reuses the UNION_054 credentials above (mysqlCfg); adds a small pool.
+//
+// Query design: tbl_milk_collection is large and partitioned by
+// YEAR/MONTH(collection_date). Comparisons use a half-open datetime range so
+// partition pruning and the collection_date index both apply; DATE() wrappers
+// would disable both. The fact table is aggregated one day at a time and
+// dcs_code -> taluk is mapped in JS (tbl_dcs is only ~2,300 rows), because
+// joining tbl_dcs into the fact query is far slower. One query per calendar
+// day, cached: a past day is immutable (24h TTL); today refreshes every 5 min.
+// ═══════════════════════════════════════════════════════════════════════════════
+const pdPool = mysql2.createPool({
+  ...mysqlCfg,
+  waitForConnections: true,
+  connectionLimit: parseInt(process.env.PROC_POOL_SIZE || '8', 10),
+  connectTimeout: 20000,
+  dateStrings: true,
+  decimalNumbers: true,
+});
+const PD_QUERY_TIMEOUT_MS = parseInt(process.env.PROC_QUERY_TIMEOUT_MS || '180000', 10);
+const PD_POOL_SIZE = parseInt(process.env.PROC_POOL_SIZE || '8', 10);
+
+async function pdQ(sql, params = []) {
+  const [rows] = await pdPool.query({ sql, values: params, timeout: PD_QUERY_TIMEOUT_MS });
+  return rows;
+}
+
+// ── tiny TTL cache ─────────────────────────────────────────────────────────────
+const PD_CACHE_TTL = 5 * 60 * 1000;         // live data
+const PD_CLOSED_TTL = 24 * 60 * 60 * 1000;  // completed periods
+const PD_MAX_DAYS = 400;
+const pdCache = new Map();       // key -> { at, value }
+const pdDayCache = new Map();    // 'YYYY-MM-DD' -> { at, value }
+const pdInflight = new Map();    // key -> Promise
+
+function pdCacheGet(store, key, ttl) {
+  const hit = store.get(key);
+  if (hit && Date.now() - hit.at < ttl) return hit.value;
+  return undefined;
+}
+function pdCacheSet(store, key, value) { store.set(key, { at: Date.now(), value }); }
+function pdOnce(key, fn) {
+  if (pdInflight.has(key)) return pdInflight.get(key);
+  const p = fn().finally(() => pdInflight.delete(key));
+  pdInflight.set(key, p);
+  return p;
+}
+
+// ── date helpers (UTC, no TZ drift) ─────────────────────────────────────────────
+const pdPad = n => String(n).padStart(2, '0');
+const pdIso = d => `${d.getUTCFullYear()}-${pdPad(d.getUTCMonth() + 1)}-${pdPad(d.getUTCDate())}`;
+const pdParseDay = s => new Date(`${String(s).slice(0, 10)}T00:00:00Z`);
+const pdTodayISO = () => pdIso(new Date());
+function pdAddDays(isoStr, n) { const d = pdParseDay(isoStr); d.setUTCDate(d.getUTCDate() + n); return pdIso(d); }
+function pdDayList(fromDate, toDate) {
+  let f = pdParseDay(fromDate), t = pdParseDay(toDate);
+  if (t < f) { const tmp = f; f = t; t = tmp; }
+  const span = Math.min(Math.round((t - f) / 86400000) + 1, PD_MAX_DAYS);
+  const out = [];
+  for (let i = 0; i < span; i++) out.push(pdAddDays(pdIso(f), i));
+  return out;
+}
+
+// ── SQL: one pass over a day's partition, grouped by society ─────────────────────
+const PD_DAY_SQL = `
+SELECT
+  dcs_code,
+  SUM(quantity)                                              AS qty,
+  SUM(CASE WHEN is_quantity_auto=1 THEN quantity ELSE 0 END)  AS auto_qty,
+  COUNT(*)                                                    AS entries,
+  SUM(CASE WHEN is_quantity_auto=1 THEN 1 ELSE 0 END)         AS auto_w_cnt,
+  SUM(CASE WHEN is_quantity_auto=0 THEN 1 ELSE 0 END)         AS man_w_cnt,
+  SUM(CASE WHEN is_quality_auto=1  THEN 1 ELSE 0 END)         AS auto_f_cnt,
+  SUM(CASE WHEN is_quality_auto=0  THEN 1 ELSE 0 END)         AS man_f_cnt
+FROM tbl_milk_collection
+WHERE collection_date >= ? AND collection_date < ? AND is_delete=0
+GROUP BY dcs_code`;
+
+const PD_TALUKS = {
+  'Anekal': '05545', 'Bangalore East': '05544', 'Bangalore North': '05542',
+  'Bangalore South': '05543', 'Channapatna': '05607', 'Devanahalli': '05603',
+  'Dod Ballapur': '05602', 'Hosakote': '05604', 'Kanakapura': '05608',
+  'Magadi': '05605', 'Nelamangala': '05601', 'Ramanagara': '05606',
+};
+const PD_CODE_TO_TALUK = Object.fromEntries(Object.entries(PD_TALUKS).map(([k, v]) => [v, k]));
+
+async function pdDcsTalukMap() {
+  const hit = pdCacheGet(pdCache, 'dcsmap', 60 * 60 * 1000);
+  if (hit) return hit;
+  return pdOnce('dcsmap', async () => {
+    const rows = await pdQ('SELECT dcs_code, sub_district_code FROM tbl_dcs WHERE is_active=1 AND is_delete=0');
+    const m = new Map();
+    for (const r of rows) {
+      const t = PD_CODE_TO_TALUK[String(r.sub_district_code)];
+      if (t) m.set(r.dcs_code, t);
+    }
+    pdCacheSet(pdCache, 'dcsmap', m);
+    return m;
+  });
+}
+
+async function pdFetchDay(day) {
+  const ttl = day < pdTodayISO() ? PD_CLOSED_TTL : PD_CACHE_TTL;
+  const hit = pdCacheGet(pdDayCache, day, ttl);
+  if (hit) return hit;
+  return pdOnce(`day:${day}`, async () => {
+    const again = pdCacheGet(pdDayCache, day, ttl);
+    if (again) return again;
+    const rows = await pdQ(PD_DAY_SQL, [`${day} 00:00:00`, `${pdAddDays(day, 1)} 00:00:00`]);
+    const out = new Map();
+    for (const r of rows) {
+      if (!r.dcs_code) continue;
+      out.set(r.dcs_code, {
+        qty: Number(r.qty) || 0, autoQty: Number(r.auto_qty) || 0,
+        entries: Number(r.entries) || 0, autoW: Number(r.auto_w_cnt) || 0,
+        manW: Number(r.man_w_cnt) || 0, autoF: Number(r.auto_f_cnt) || 0,
+        manF: Number(r.man_f_cnt) || 0,
+      });
+    }
+    pdCacheSet(pdDayCache, day, out);
+    if (pdDayCache.size > PD_MAX_DAYS) {
+      const oldest = [...pdDayCache.entries()].sort((a, b) => a[1].at - b[1].at).slice(0, 50);
+      for (const [k] of oldest) pdDayCache.delete(k);
+    }
+    return out;
+  });
+}
+
+async function pdFetchRange(fromDate, toDate) {
+  const days = pdDayList(fromDate, toDate);
+  const todo = days.filter(d => !pdDayCache.has(d));
+  for (let i = 0; i < todo.length; i += PD_POOL_SIZE) {
+    await Promise.all(todo.slice(i, i + PD_POOL_SIZE).map(pdFetchDay));
+  }
+  const out = [];
+  for (const d of days) out.push([d, await pdFetchDay(d)]);
+  return out;
+}
+
+// ── aggregation ──────────────────────────────────────────────────────────────
+const pdPct = (num, den) => (den ? Math.round((num / den) * 1000) / 10 : 0);
+function pdAccumulate(perDay, dmap) {
+  const totals = new Map();
+  for (const [, rows] of perDay) {
+    for (const [dcs, v] of rows) {
+      const taluk = dmap.get(dcs);
+      if (!taluk) continue;
+      if (!totals.has(taluk)) totals.set(taluk, new Map());
+      const bucket = totals.get(taluk);
+      const acc = bucket.get(dcs);
+      if (!acc) bucket.set(dcs, { ...v });
+      else {
+        acc.qty += v.qty; acc.autoQty += v.autoQty; acc.entries += v.entries;
+        acc.autoW += v.autoW; acc.manW += v.manW; acc.autoF += v.autoF; acc.manF += v.manF;
+      }
+    }
+  }
+  return totals;
+}
+function pdSocietyFlags(rows) {
+  let fow = 0, fmw = 0, fof = 0, fmf = 0;
+  for (const v of rows.values()) {
+    if (v.entries <= 0) continue;
+    if (v.manW === 0) fow++;
+    if (v.autoW === 0) fmw++;
+    if (v.manF === 0) fof++;
+    if (v.autoF === 0) fmf++;
+  }
+  return { fow, fmw, fof, fmf };
+}
+function pdSumField(rows, f) { let s = 0; for (const v of rows.values()) s += v[f]; return s; }
+
+// ── distribution buckets ─────────────────────────────────────────────────────
+const PD_BUCKET_ORDER = ['100%', '91-99%', '81-90%', '71-80%', '61-70%', '51-60%',
+                         '41-50%', '31-40%', '21-30%', '11-20%', '1-10%', '0%'];
+function pdBucketOf(p) {
+  if (p >= 100) return '100%';
+  if (p <= 0) return '0%';
+  if (p >= 91) return '91-99%';
+  if (p >= 81) return '81-90%';
+  if (p >= 71) return '71-80%';
+  if (p >= 61) return '61-70%';
+  if (p >= 51) return '51-60%';
+  if (p >= 41) return '41-50%';
+  if (p >= 31) return '31-40%';
+  if (p >= 21) return '21-30%';
+  if (p >= 11) return '11-20%';
+  return '1-10%';
+}
+function pdBucketsFor(perDay, dmap) {
+  const totals = pdAccumulate(perDay, dmap);
+  const all = new Map();
+  for (const rows of totals.values()) for (const [k, v] of rows) all.set(k, v);
+  const wb = {}, fb = {};
+  for (const b of PD_BUCKET_ORDER) { wb[b] = 0; fb[b] = 0; }
+  for (const v of all.values()) {
+    if (v.entries <= 0) continue;
+    wb[pdBucketOf(v.qty ? (v.autoQty / v.qty) * 100 : 0)]++;
+    fb[pdBucketOf((v.autoF / v.entries) * 100)]++;
+  }
+  return { wb, fb };
+}
+const PD_MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function pdSpanLabel(d0, d1) {
+  const a = pdParseDay(d0), b = pdParseDay(d1);
+  const am = a.getUTCMonth(), bm = b.getUTCMonth();
+  if (d0 === d1) return `${a.getUTCDate()} ${PD_MON[am]}`;
+  if (am === bm && a.getUTCFullYear() === b.getUTCFullYear())
+    return `${a.getUTCDate()}\u2013${b.getUTCDate()} ${PD_MON[am]}`;
+  return `${a.getUTCDate()} ${PD_MON[am]} \u2013 ${b.getUTCDate()} ${PD_MON[bm]}`;
+}
+const PD_BUCKET_SAMPLE_DAYS = 7;
+function pdBucketPeriods(fromDate, toDate) {
+  const f = pdParseDay(fromDate), t = pdParseDay(toDate);
+  const monthWindow = offset => {
+    const anchor = new Date(Date.UTC(f.getUTCFullYear(), f.getUTCMonth() - offset, 1));
+    const last = new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth() + 1, 0));
+    const startMs = Math.max(anchor.getTime(), last.getTime() - (PD_BUCKET_SAMPLE_DAYS - 1) * 86400000);
+    return [`${PD_MON[anchor.getUTCMonth()]} ${String(anchor.getUTCFullYear()).slice(2)}`,
+            pdIso(new Date(startMs)), pdIso(last)];
+  };
+  const span = Math.round((t - f) / 86400000) + 1;
+  const curLabel = span <= 31 ? pdSpanLabel(fromDate, toDate) : `${PD_MON[f.getUTCMonth()]} ${f.getUTCFullYear()}`;
+  return [monthWindow(2), monthWindow(1), [curLabel, fromDate, toDate]];
+}
+
+// ── endpoint builders ────────────────────────────────────────────────────────
+async function pdDigitalAll(fromDate, toDate) {
+  let withoutAmcu = pdCacheGet(pdCache, 'without_amcu', 60 * 60 * 1000);
+  if (withoutAmcu === undefined) {
+    const rows = await pdQ(
+      `SELECT COUNT(*) AS cnt FROM tbl_dcs d
+       WHERE d.is_active=1 AND d.is_delete=0
+         AND NOT EXISTS (SELECT 1 FROM tbl_identity_collection_point i
+                         WHERE i.dcs_code=d.dcs_code AND i.is_active=1 AND i.is_delete=0)`);
+    withoutAmcu = Number(rows[0]?.cnt) || 0;
+    pdCacheSet(pdCache, 'without_amcu', withoutAmcu);
+  }
+  const dmap = await pdDcsTalukMap();
+  const perDay = await pdFetchRange(fromDate, toDate);
+  const totals = pdAccumulate(perDay, dmap);
+
+  const taluks = Object.keys(PD_TALUKS).sort().map(name => {
+    const rows = totals.get(name) || new Map();
+    const qty = pdSumField(rows, 'qty'), autoQty = pdSumField(rows, 'autoQty'), entries = pdSumField(rows, 'entries');
+    const { fow, fmw, fof, fmf } = pdSocietyFlags(rows);
+    return {
+      taluk: name, auto_weight_pct: pdPct(autoQty, qty), auto_fat_pct: pdPct(pdSumField(rows, 'autoF'), entries),
+      total_dcs: rows.size, manual_weight_entries: pdSumField(rows, 'manW'), total_entries: entries,
+      fully_online_weight: fow, fully_manual_weight: fmw, fully_online_fat: fof, fully_manual_fat: fmf,
+    };
+  });
+
+  const all = new Map();
+  for (const rows of totals.values()) for (const [k, v] of rows) all.set(k, v);
+  const uQty = pdSumField(all, 'qty'), uEntries = pdSumField(all, 'entries');
+  const union = {
+    auto_weight_pct: pdPct(pdSumField(all, 'autoQty'), uQty),
+    auto_fat_pct: pdPct(pdSumField(all, 'autoF'), uEntries),
+    total_dcs: all.size, manual_weight_entries: pdSumField(all, 'manW'), total_entries: uEntries,
+    fully_online_weight: taluks.reduce((s, t) => s + t.fully_online_weight, 0),
+    fully_manual_weight: taluks.reduce((s, t) => s + t.fully_manual_weight, 0),
+    fully_online_fat: taluks.reduce((s, t) => s + t.fully_online_fat, 0),
+    fully_manual_fat: taluks.reduce((s, t) => s + t.fully_manual_fat, 0),
+    without_amcu: withoutAmcu, from_date: fromDate, to_date: toDate,
+  };
+  return { union, taluks };
+}
+
+async function pdDigitalSeries(fromDate, toDate) {
+  const dmap = await pdDcsTalukMap();
+  const perDay = await pdFetchRange(fromDate, toDate);
+  const dates = [], autoWPct = [], autoFPct = [], totalQty = [], autoQty = [], fullOnW = [], fullManW = [];
+  for (const [day, rowsAll] of perDay) {
+    const rows = new Map();
+    for (const [k, v] of rowsAll) if (dmap.has(k)) rows.set(k, v);
+    const qty = pdSumField(rows, 'qty'), ent = pdSumField(rows, 'entries'), aq = pdSumField(rows, 'autoQty');
+    const { fow, fmw } = pdSocietyFlags(rows);
+    dates.push(day); autoWPct.push(pdPct(aq, qty)); autoFPct.push(pdPct(pdSumField(rows, 'autoF'), ent));
+    totalQty.push(Math.round(qty)); autoQty.push(Math.round(aq)); fullOnW.push(fow); fullManW.push(fmw);
+  }
+  const snapshots = [];
+  for (const [label, pFrom, pTo] of pdBucketPeriods(fromDate, toDate)) {
+    const pDays = await pdFetchRange(pFrom, pTo);
+    const { wb, fb } = pdBucketsFor(pDays, dmap);
+    snapshots.push({ label, from_date: pFrom, to_date: pTo,
+      weight_buckets: PD_BUCKET_ORDER.map(b => wb[b]), fat_buckets: PD_BUCKET_ORDER.map(b => fb[b]) });
+  }
+  const { wb, fb } = pdBucketsFor(perDay, dmap);
+  return {
+    bucket_snapshots: snapshots, bucket_periods: snapshots.map(s => s.label),
+    dates, auto_weight_pct: autoWPct, auto_fat_pct: autoFPct, total_qty: totalQty, auto_qty: autoQty,
+    fully_online_weight: fullOnW, fully_manual_weight: fullManW,
+    bucket_labels: PD_BUCKET_ORDER, weight_buckets: PD_BUCKET_ORDER.map(b => wb[b]), fat_buckets: PD_BUCKET_ORDER.map(b => fb[b]),
+  };
+}
+
+const pdBillTtl = toDate => (toDate < pdTodayISO() ? PD_CLOSED_TTL : PD_CACHE_TTL);
+
+async function pdFarmersAll(fromDate, toDate) {
+  const toExcl = pdAddDays(toDate, 1);
+  const cached = async (key, ttl, fn) => {
+    const hit = pdCacheGet(pdCache, key, ttl);
+    if (hit !== undefined) return hit;
+    return pdOnce(key, async () => { const v = await fn(); pdCacheSet(pdCache, key, v); return v; });
+  };
+  const ttl = pdBillTtl(toDate);
+  const [app, pour, topQty, topFat] = await Promise.all([
+    cached(`app_${toDate}`, PD_CACHE_TTL, async () => (await pdQ(
+      `SELECT SUM(CASE WHEN type=1 THEN 1 ELSE 0 END) AS farmer_app_users,
+              SUM(CASE WHEN type=3 THEN 1 ELSE 0 END) AS secretary_app_users
+       FROM tbl_app_activation
+       WHERE is_active=1 AND is_delete=0 AND orignating_timestamp < ?`, [toExcl]))[0] || {}),
+    cached(`pour_${fromDate}_${toDate}`, ttl, async () => (await pdQ(
+      `SELECT COUNT(*) AS pourings_recorded, ROUND(SUM(milk_qty),0) AS total_qty_ltrs, ROUND(AVG(avg_fat),2) AS avg_fat
+       FROM tbl_farmer_bill WHERE created_at >= ? AND created_at < ? AND milk_qty > 0`, [fromDate, toExcl]))[0] || {}),
+    // Aggregate bills first, then join the small dimension tables to only the
+    // top candidates — far cheaper than joining every member to every bill.
+    cached(`topqty_${fromDate}_${toDate}`, ttl, () => pdQ(
+      `SELECT m.member_name, d.dcs_name, s.sub_district_name AS taluk, t.total_qty, t.avg_fat, t.qty_per_cycle
+       FROM (SELECT member_code, dcs_code, ROUND(SUM(milk_qty),1) AS total_qty, ROUND(AVG(avg_fat),2) AS avg_fat,
+                    ROUND(SUM(milk_qty)/COUNT(DISTINCT dcs_payment_code),1) AS qty_per_cycle
+             FROM tbl_farmer_bill WHERE created_at >= ? AND created_at < ?
+             GROUP BY member_code, dcs_code ORDER BY total_qty DESC LIMIT 40) t
+       JOIN tbl_member m ON m.member_code=t.member_code AND m.is_delete=0
+       JOIN tbl_dcs d ON d.dcs_code=t.dcs_code
+       JOIN tbl_sub_districts s ON s.sub_district_code=d.sub_district_code
+       ORDER BY t.total_qty DESC LIMIT 10`, [fromDate, toExcl])),
+    cached(`topfat_${fromDate}_${toDate}`, ttl, () => pdQ(
+      `SELECT m.member_name, d.dcs_name, s.sub_district_name AS taluk, t.avg_fat, t.total_qty
+       FROM (SELECT member_code, dcs_code, ROUND(AVG(avg_fat),2) AS avg_fat, ROUND(SUM(milk_qty),1) AS total_qty
+             FROM tbl_farmer_bill WHERE created_at >= ? AND created_at < ? AND milk_qty > 50
+             GROUP BY member_code, dcs_code ORDER BY avg_fat DESC LIMIT 40) t
+       JOIN tbl_member m ON m.member_code=t.member_code AND m.is_delete=0
+       JOIN tbl_dcs d ON d.dcs_code=t.dcs_code
+       JOIN tbl_sub_districts s ON s.sub_district_code=d.sub_district_code
+       ORDER BY t.avg_fat DESC LIMIT 10`, [fromDate, toExcl])),
+  ]);
+  const num = v => Number(v) || 0;
+  return {
+    kpis: {
+      as_of: toDate, from_date: fromDate, to_date: toDate,
+      farmer_app_users: num(app.farmer_app_users), secretary_app_users: num(app.secretary_app_users),
+      pourings_recorded: num(pour.pourings_recorded), total_qty_ltrs: num(pour.total_qty_ltrs), avg_fat: num(pour.avg_fat),
+    },
+    top_quantity_pourers: topQty || [], top_fat_pourers: topFat || [],
+  };
+}
+
+// ── PreDairy routes ──────────────────────────────────────────────────────────
+const pdRange = req => {
+  const t = pdTodayISO();
+  return { from: String(req.query.from_date || t).slice(0, 10), to: String(req.query.to_date || t).slice(0, 10) };
+};
+const pdFail = (res, e) => { console.error('[predairy]', e && e.message ? e.message : e); res.status(500).json({ error: String((e && e.message) || e) }); };
+
+app.get('/api/digital/all', async (req, res) => {
+  const { from, to } = pdRange(req);
+  try { res.json(await pdDigitalAll(from, to)); } catch (e) { pdFail(res, e); }
+});
+app.get('/api/digital/series', async (req, res) => {
+  const { from, to } = pdRange(req);
+  try { res.json(await pdDigitalSeries(from, to)); } catch (e) { pdFail(res, e); }
+});
+app.get('/api/digital/bundle', async (req, res) => {
+  const { from, to } = pdRange(req);
+  try {
+    const base = await pdDigitalAll(from, to);
+    base.series = await pdDigitalSeries(from, to);
+    res.json(base);
+  } catch (e) { pdFail(res, e); }
+});
+app.get('/api/farmers/all', async (req, res) => {
+  const { from, to } = pdRange(req);
+  try { res.json(await pdFarmersAll(from, to)); } catch (e) { pdFail(res, e); }
+});
+app.get('/api/farmers/kpis', async (req, res) => {
+  const { from, to } = pdRange(req);
+  try { res.json((await pdFarmersAll(from, to)).kpis); } catch (e) { pdFail(res, e); }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Bangalore Dairy API running on port ${PORT}`);
   // warm procurement cache on startup
