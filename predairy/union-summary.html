@@ -133,9 +133,9 @@ footer{font-size:11.5px;color:var(--muted);text-align:center;padding:20px}
     <button data-b="custom">Custom</button>
   </div>
   <span id="customInputs" style="display:none">
-    <input type="date" id="dFrom" class="dinp" min="2025-12-01" max="2026-02-28">
+    <input type="date" id="dFrom" class="dinp">
     <span class="mini">to</span>
-    <input type="date" id="dTo" class="dinp" min="2025-12-01" max="2026-02-28">
+    <input type="date" id="dTo" class="dinp">
   </span>
   <span class="rangechip" id="rangeChip"></span>
 </div>
@@ -196,11 +196,17 @@ const fmtDs = iso => { const d=new Date(iso+'T00:00:00');
   return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]; };
 const sum = a => a.reduce((s,x)=>s+x,0);
 
-let basis='monthly', from='2026-02-15', to='2026-02-28';
+let basis='monthly', from='', to='';  // custom range defaults set from live data in applyData()
 
 function range(){
   if(basis==='daily') return {s:Math.max(0,DAYS-2),e:DAYS-1};  // "Yesterday" = last full day (today's data is partial)
-  if(basis==='weekly'){ const w=W.weekly[W.weekly.length-1]; return {s:w.s,e:w.e}; }
+  if(basis==='weekly'){
+    // "This week" = Monday of the current week → today (grows through the week).
+    const lastIdx = DAYS-1;                    // today (last day in the wire series)
+    const dow = new Date(W.dates[lastIdx]+'T00:00:00').getDay(); // 0=Sun..6=Sat
+    const backToMon = (dow+6)%7;               // days since Monday
+    return {s:Math.max(0,lastIdx-backToMon), e:DAYS};
+  }
   if(basis==='monthly') return {s:W.monthStarts[2],e:DAYS};
   let s=W.dates.indexOf(from), e=W.dates.indexOf(to)+1;
   if(s<0)s=0; if(e<=0)e=DAYS; if(e<=s){const t=s;s=e-1;e=t+1;}
@@ -282,6 +288,13 @@ function applyData(dd){
   U = D.union;
   W = D.wire;
   DAYS = W.dates.length;
+  // Custom-range pickers: constrain to the real data window and default to last 7 days
+  const first = W.dates[0], lastD = W.dates[DAYS-1];
+  const df=document.getElementById('dFrom'), dt=document.getElementById('dTo');
+  if(df){ df.min=first; df.max=lastD; }
+  if(dt){ dt.min=first; dt.max=lastD; }
+  if(!from || from<first || from>lastD) from = W.dates[Math.max(0,DAYS-7)];
+  if(!to   || to<first   || to>lastD)   to   = lastD;
 }
 (async function boot(){
   render(); // paint immediately with fallback so the page is never blank
