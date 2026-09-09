@@ -196,18 +196,43 @@ function renderTables(){
   const r=range(),n=r.e-r.s;
   const per=basis==='daily'?'day':basis==='weekly'?'week':'period';
   const mpcs=D.mpcs||[];
+
+  // compute taluk-level current and previous quantities for the selected range
+  const talukCur={}, talukPrv={};
+  if(W.talukDaily){
+    Object.keys(W.talukDaily).forEach(t=>{
+      const arr=W.talukDaily[t];
+      talukCur[t]=arr.slice(r.s,r.e).reduce((a,b)=>a+b,0);
+      const ps=r.s-n, pe=r.s;
+      talukPrv[t]=ps>=0?arr.slice(ps,pe).reduce((a,b)=>a+b,0):0;
+    });
+  }
+
   const rows=mpcs.map(m=>{
-    const d=m.chg[basis]!=null?m.chg[basis]:m.chg['daily']||0;
-    const cur=m.qty*n/28;
-    return{name:m.name,taluk:m.taluk,cur,prv:cur/(1+d/100),d};
-  });
+    if(basis==='monthly'){
+      // use real API monthly chg
+      const d=m.chg&&m.chg.monthly!=null?m.chg.monthly:0;
+      const cur=m.qty;
+      const prv=d!==0?cur/(1+d/100):null;
+      return{name:m.name,taluk:m.taluk,cur,prv,d};
+    }
+    // for daily/weekly/custom: scale MPCS by its share of taluk monthly, apply to taluk wire
+    const talukMonthly=D.taluks.find(t=>t.name===m.taluk);
+    const talukMonthQty=talukMonthly?talukMonthly.purchase[2]:0;
+    const mpcsShare=talukMonthQty?m.qty/talukMonthQty:0;
+    const tc=talukCur[m.taluk]||0, tp=talukPrv[m.taluk]||0;
+    const cur=tc*mpcsShare;
+    const prv=tp*mpcsShare;
+    const d=prv?((cur-prv)/prv)*100:0;
+    return{name:m.name,taluk:m.taluk,cur,prv:prv||null,d};
+  }).filter(x=>Math.abs(x.d)>0.1);
   const pos=rows.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,5);
   const neg=rows.filter(x=>x.d<0).sort((a,b)=>a.d-b.d).slice(0,5);
   const rl=rangeLabel(r);
   document.getElementById('csPos').textContent=`Societies with highest procurement growth vs previous ${per} (${rl})`;
   document.getElementById('csNeg').textContent=`Societies with steepest procurement decline vs previous ${per} (${rl})`;
   const mk=(list,up)=>`<thead><tr><th class="l">#</th><th class="l">MPCS</th><th class="l">Taluk</th><th>This ${per} (Ltr)</th><th>Prev ${per} (Ltr)</th><th>Change</th></tr></thead><tbody>`+
-    list.map((x,i)=>`<tr><td class="l">${i+1}</td><td class="l"><b>${x.name}</b></td><td class="l">${x.taluk}</td><td>${fmtL(x.cur)}</td><td>${fmtL(x.prv)}</td><td><b><span class="${up?'up':'dn'}">${up?'▲':'▼'} ${Math.abs(x.d).toFixed(1)}%</span></b></td></tr>`).join('')+'</tbody>';
+    list.map((x,i)=>`<tr><td class="l">${i+1}</td><td class="l"><b>${x.name}</b></td><td class="l">${x.taluk}</td><td>${fmtL(x.cur)}</td><td>${x.prv!=null?fmtL(x.prv):'—'}</td><td><b><span class="${up?'up':'dn'}">${up?'▲':'▼'} ${Math.abs(x.d).toFixed(1)}%</span></b></td></tr>`).join('')+'</tbody>';
   document.getElementById('tblPos').innerHTML=mk(pos,true);
   document.getElementById('tblNeg').innerHTML=mk(neg,false);
 }
