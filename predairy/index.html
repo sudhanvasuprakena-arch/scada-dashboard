@@ -199,23 +199,30 @@ function renderTables(){
   // compute taluk-level current and previous quantities for the selected range
   const talukCur={}, talukPrv={};
   if(W.talukDaily){
+    // for monthly basis use the two most recent complete months from monthStarts
+    let rs,re,ps,pe;
+    if(basis==='monthly' && W.monthStarts && W.monthStarts.length>=2){
+      rs=W.monthStarts[W.monthStarts.length-1]; re=DAYS;
+      ps=W.monthStarts[W.monthStarts.length-2]; pe=rs;
+    } else {
+      rs=r.s; re=r.e; ps=r.s-n; pe=r.s;
+    }
     Object.keys(W.talukDaily).forEach(t=>{
       const arr=W.talukDaily[t];
-      talukCur[t]=arr.slice(r.s,r.e).reduce((a,b)=>a+b,0);
-      const ps=r.s-n, pe=r.s;
+      talukCur[t]=arr.slice(rs,re).reduce((a,b)=>a+b,0);
       talukPrv[t]=ps>=0?arr.slice(ps,pe).reduce((a,b)=>a+b,0):0;
     });
   }
 
   const rows=mpcs.map(m=>{
-    if(basis==='monthly'){
-      // use real API monthly chg
-      const d=m.chg&&m.chg.monthly!=null?m.chg.monthly:0;
+    if(basis==='monthly' && m.chg && m.chg.monthly!==0){
+      // use real API monthly chg if available
+      const d=m.chg.monthly;
       const cur=m.qty;
-      const prv=d!==0?cur/(1+d/100):null;
+      const prv=cur/(1+d/100);
       return{name:m.name,taluk:m.taluk,cur,prv,d};
     }
-    // for daily/weekly/custom: scale MPCS by its share of taluk monthly, apply to taluk wire
+    // for all other cases (or monthly with chg=0): use talukDaily wire
     const talukMonthly=D.taluks.find(t=>t.name===m.taluk);
     const talukMonthQty=talukMonthly?talukMonthly.purchase[2]:0;
     const mpcsShare=talukMonthQty?m.qty/talukMonthQty:0;
