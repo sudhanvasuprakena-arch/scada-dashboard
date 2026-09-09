@@ -39,4 +39,17 @@ jobs:
               fi
             done
 
+            # Pre-dairy API (union054 + digital + farmers) runs as its own systemd
+            # service from /opt/procurement-api, a separate dir from this repo. The
+            # steps above only touch static HTML, so the API code must be copied over
+            # and the service restarted for API changes to take effect. Restart only
+            # when the file actually changed, to avoid needless service bounces.
+            API_SRC="$REPO/procurement-api/server.js"
+            API_DST=/opt/procurement-api/server.js
+            if [ -f "$API_SRC" ] && ! sudo cmp -s "$API_SRC" "$API_DST"; then
+              sudo cp "$API_SRC" "$API_DST"
+              sudo systemctl restart procurement-api.service
+              echo "$(date --iso-8601=seconds) | procurement-api updated + restarted" | sudo tee -a /home/opc/deploy.log
+            fi
+
             echo "$(date --iso-8601=seconds) | Deployed + verified from GitHub Actions" | sudo tee -a /home/opc/deploy.log
