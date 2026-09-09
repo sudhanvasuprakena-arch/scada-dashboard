@@ -16,7 +16,7 @@ body{background:var(--bg);color:var(--ink)}
 .topnav a{color:rgba(255,255,255,.72);text-decoration:none;font-size:13.5px;font-weight:600;padding:18px 15px;border-bottom:3px solid transparent;transition:.15s}
 .topnav a.active{color:#fff;border-bottom-color:#7db4e8}
 .pbadge{margin-left:auto;font-size:12px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);padding:6px 14px;border-radius:20px}
-main{max-width:1440px;margin:0 auto;padding:24px 30px 60px}
+main{max-width:100%;margin:0;padding:24px 0 60px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 24px;box-shadow:0 1px 3px rgba(13,43,78,.06)}
 .up{color:var(--green)}.dn{color:var(--red)}.nt{color:var(--muted)}
 
@@ -252,14 +252,25 @@ function renderTables(){
 let trendChart;
 function renderTrend(){
   if(trendChart)trendChart.destroy();
-  const ms=W.monthStarts[2];
-  const labels=W.dates.slice(ms).map(fmtDs);
-  const vals=W.dailyAll.slice(ms);
+  const r=range();
+  let labels, vals, subtitle;
+  if(basis==='monthly'){
+    // show full 90-day wire for monthly view
+    labels=W.dates.map(fmtDs);
+    vals=W.dailyAll;
+    subtitle='Day-wise milk purchase, last 90 days';
+  } else {
+    // show selected range with some context (extend back to show prev period too)
+    const ext=Math.max(0,r.s-(r.e-r.s));
+    labels=W.dates.slice(ext,r.e).map(fmtDs);
+    vals=W.dailyAll.slice(ext,r.e);
+    subtitle='Day-wise milk purchase, '+rangeLabel(r);
+  }
   document.getElementById('ctTrend').textContent='Procurement Trend';
-  document.getElementById('csTrend').textContent='Day-wise milk purchase, '+PL[2];
+  document.getElementById('csTrend').textContent=subtitle;
   trendChart=new Chart(document.getElementById('chTrend'),{
     type:'line',
-    data:{labels,datasets:[{data:vals,borderColor:'#2f7fd0',backgroundColor:'rgba(47,127,208,.08)',fill:true,tension:.4,pointRadius:vals.map((v,i)=>i===vals.length-1?5:0),pointBackgroundColor:'#d9860b',borderWidth:2}]},
+    data:{labels,datasets:[{data:vals,borderColor:'#2f7fd0',backgroundColor:'rgba(47,127,208,.08)',fill:true,tension:.4,pointRadius:vals.map((_,i)=>i===vals.length-1?5:0),pointBackgroundColor:'#d9860b',borderWidth:2}]},
     options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)+' Ltr'}}},scales:{y:{ticks:{callback:v=>fmt(v)},grid:{color:'#e3e9f0'}},x:{grid:{display:false}}}}
   });
 }
