@@ -26,10 +26,15 @@ jobs:
 
             sudo cp "$REPO"/*.html "$WEB"/
 
-            for f in "$REPO"/*.html; do
-              name=$(basename "$f")
-              if ! sudo cmp -s "$f" "$WEB/$name"; then
-                echo "DEPLOY VERIFICATION FAILED: $name does not match repo"
+            # Pre-dairy pages live in a subfolder; the root glob above does not
+            # recurse, so copy them explicitly.
+            sudo mkdir -p "$WEB"/predairy
+            sudo cp "$REPO"/predairy/*.html "$WEB"/predairy/
+
+            for f in "$REPO"/*.html "$REPO"/predairy/*.html; do
+              rel=${f#"$REPO"/}
+              if ! sudo cmp -s "$f" "$WEB/$rel"; then
+                echo "DEPLOY VERIFICATION FAILED: $rel does not match repo"
                 exit 1
               fi
             done
