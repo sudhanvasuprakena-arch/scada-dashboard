@@ -198,14 +198,16 @@ function renderTables(){
 
   // compute taluk-level current and previous quantities for the selected range
   const talukCur={}, talukPrv={};
+  let curN_days=n, prvN_days=n;
   if(W.talukDaily){
-    // for monthly basis use the two most recent complete months from monthStarts
     let rs,re,ps,pe;
     if(basis==='monthly' && W.monthStarts && W.monthStarts.length>=2){
       rs=W.monthStarts[W.monthStarts.length-1]; re=DAYS;
       ps=W.monthStarts[W.monthStarts.length-2]; pe=rs;
+      curN_days=re-rs; prvN_days=pe-ps;
     } else {
       rs=r.s; re=r.e; ps=r.s-n; pe=r.s;
+      curN_days=n; prvN_days=n;
     }
     Object.keys(W.talukDaily).forEach(t=>{
       const arr=W.talukDaily[t];
@@ -227,9 +229,13 @@ function renderTables(){
     const talukMonthQty=talukMonthly?talukMonthly.purchase[2]:0;
     const mpcsShare=talukMonthQty?m.qty/talukMonthQty:0;
     const tc=talukCur[m.taluk]||0, tp=talukPrv[m.taluk]||0;
-    const cur=tc*mpcsShare;
-    const prv=tp*mpcsShare;
-    const d=prv?((cur-prv)/prv)*100:0;
+    const curN=curN_days||1, prvN=prvN_days||1;
+    // compare per-day averages to avoid partial-month distortion
+    const curAvg=(tc/curN)*mpcsShare;
+    const prvAvg=(tp/prvN)*mpcsShare;
+    const cur=curAvg*curN;
+    const prv=prvAvg*curN; // scale prev to same number of days for fair comparison
+    const d=prvAvg?((curAvg-prvAvg)/prvAvg)*100:0;
     return{name:m.name,taluk:m.taluk,cur,prv:prv||null,d};
   }).filter(x=>Math.abs(x.d)>0.1);
   const pos=rows.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,5);
