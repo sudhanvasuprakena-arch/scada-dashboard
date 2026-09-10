@@ -232,6 +232,45 @@ const SUMROWS = [
  {l:'Secretary App Download',              k:'secretaryApp', cum:true},
 ];
 
+// Build the comparison columns for the current basis.
+// Monthly  → the 3 API months (Jul/Aug/Sept), values straight from U[k].
+// Yesterday→ the last 3 complete days.
+// Weekly   → the last 3 complete weeks.
+// Custom   → falls back to monthly columns (range drives the "Selected period" only).
+// Each column carries a day-index window [s,e) into the wire series so daily-backed
+// rows (purchase, fat, snf, and anything that scales with purchase) can be computed
+// for real. Rows without a daily source (localSale, sampleMilk, app counts) show N/A
+// in the day/week columns.
+function periodColumns(){
+  if(basis==='weekly'){
+    // last 3 COMPLETE weeks (Mon–Sun). Exclude the current partial week.
+    const lastIdx=DAYS-1;
+    const dow=new Date(W.dates[lastIdx]+'T00:00:00').getDay();   // 0=Sun..6=Sat
+    const backToMon=(dow+6)%7;
+    const curMonStart=Math.max(0,lastIdx-backToMon);             // this week's Monday
+    const cols=[];
+    for(let k=3;k>=1;k--){
+      const s=curMonStart-7*k, e=s+7;
+      if(s<0) continue;
+      cols.push({s,e,label:'Wk '+fmtDs(W.dates[s])});
+    }
+    return {cols,daily:true};
+  }
+  if(basis==='daily'){
+    // last 3 COMPLETE days (exclude today's partial day).
+    const lastFull=DAYS-2;
+    const cols=[];
+    for(let k=2;k>=0;k--){
+      const i=lastFull-k;
+      if(i<0) continue;
+      cols.push({s:i,e:i+1,label:fmtDs(W.dates[i])});
+    }
+    return {cols,daily:true};
+  }
+  // monthly / custom → API month columns; not backed by day windows.
+  return {cols:PL.map((label,i)=>({monthIdx:i,label})),daily:false};
+}
+
 function render(){
   const r=range(), n=r.e-r.s;
   const _ci=document.getElementById('customInputs'); if(_ci) _ci.style.display = basis==='custom'?'':'none';
@@ -241,37 +280,76 @@ function render(){
   const _ss=document.getElementById('smpSum'); if(_ss) _ss.style.display = basis==='monthly'?'none':'';
 
   const share = basis==='monthly' ? 1 : sum(W.dailyAll.slice(r.s,r.e))/U.purchase[2];
-  // The latest period (index 2) is the current, still-in-progress month, so comparing
-  // it against a full month shows a misleading ~-80% drop. Compare the two most recent
-  // COMPLETE months instead (index 1 vs 0), giving a real month-over-month change.
-  const cmpNew = 1, cmpOld = 0;
-  // The Change column is a complete month-over-month comparison (Aug vs Jul) and is
-  // only meaningful in the Monthly view; on Yesterday/Weekly/Custom the whole column
-  // (header + cells) is hidden, since per-period per-row change isn't available from
-  // the monthly aggregation source.
-  const showChange = basis==='monthly';
-  const chgTh = showChange ? `<th>Change (${PL[cmpNew]} vs ${PL[cmpOld]})</th>` : '';
-  let html=`<thead><tr><th class="l">Particulars</th><th>Selected period</th>${PL.map(p=>`<th>${p}</th>`).join('')}${chgTh}</tr></thead><tbody>`;
+  const { cols, daily } = periodColumns();
+  // Change = most recent period vs the one before it. For monthly we compare the two
+  // COMPLETE months (Aug vs Jul, indices 1 vs 0) to avoid the partial-current-month
+  // distortion; for day/week we compare the last two columns shown.
+  const cmpNew = daily ? cols.length-1 : 1;
+  const cmpOld = daily ? cols.length-2 : 0;
+  const showChange = cols.length>=2;
+  const chgLbl = (cols[cmpNew]&&cols[cmpOld]) ? `${cols[cmpNew].label} vs ${cols[cmpOld].label}` : 'Change';
+  const chgTh = showChange ? `<th>Change (${chgLbl})</th>` : '';
+  let html=`<thead><tr><th class="l">Particulars</th><th>Selected period</th>${cols.map(c=>`<th>${c.label}</th>`).join('')}${chgTh}</tr></thead><tbody>`;
   const isNA = x => x===null || x===undefined;   // e.g. Sample Milk (no OCI source)
+
+  // Per-row value for a given column. Daily-backed rows scale the monthly figure by
+  // the column window's share of purchase; fat/snf use their own daily averages.
+  // Rows without a daily source return null (→ N/A) in day/week columns.
+  const DAILY_OK = new Set(['purchase','measurements','autoWeightQty','manualWeightQty','netPurchase']);
+  function colVal(row, c){
+    const v=U[row.k];
+    if(!daily){ return v ? v[c.monthIdx] : null; }         // monthly/custom → API month value
+    if(row.avg){ // fat → real daily average over the window
+      const w=W.fatAll.slice(c.s,c.e).filter(x=>x>0);
+      return w.length? sum(w)/w.length : null;
+    }
+    if(row.cum){ // app downloads are cumulative → show the value as of the column's last day
+      const arr = row.k==='farmerApp' ? W.farmerAppCum : W.secAppCum;
+      return arr ? arr[c.e-1] : null;
+    }
+    if(DAILY_OK.has(row.k)){
+      // scale the current-month total by this window's share of the month's purchase
+      const winQty=sum(W.dailyAll.slice(c.s,c.e));
+      const monthQty=U.purchase[2]||0;
+      const monthVal=(U[row.k]?U[row.k][2]:0)||0;
+      return monthQty? monthVal*(winQty/monthQty) : null;
+    }
+    return null; // localSale, sampleMilk → no daily source
+  }
+
   SUMROWS.forEach(row=>{
     const v=U[row.k];
-    // Metric with no data source (all null) → show N/A across the row
+    // Metric with no data source at all (all null across months) → N/A whole row
     if(Array.isArray(v) && v.every(isNA)){
       html+=`<tr><td class="l"><b>${row.l}</b></td>`
         + `<td class="nt">N/A</td>`
-        + v.map(()=>`<td class="nt">N/A</td>`).join('')
+        + cols.map(()=>`<td class="nt">N/A</td>`).join('')
         + (showChange?`<td class="nt">—</td>`:'') + `</tr>`;
       return;
     }
+    // Selected-period value (unchanged behaviour)
     let selVal, selTxt;
     if(row.cum){ selVal = row.k==='farmerApp' ? W.farmerAppCum[r.e-1] : W.secAppCum[r.e-1]; selTxt=fmtL(selVal); }
     else if(row.avg){ selVal = basis==='monthly'? v[2] : sum(W.fatAll.slice(r.s,r.e))/n; selTxt=selVal.toFixed(2); }
     else { selVal = v[2]*share; selTxt=fmtL(selVal); }
-    const ch = pct(v[cmpNew]-v[cmpOld], v[cmpOld]);
-    const chgTd = showChange ? `<td data-v="${ch}">${Math.abs(ch)<0.05?'<span class="nt">— 0.0%</span>':`<span class="${ch>0?'up':'dn'}">${ch>0?'▲':'▼'} ${Math.abs(ch).toFixed(1)}%</span>`}</td>` : '';
+
+    // Per-column cells
+    const colVals = cols.map(c=>colVal(row,c));
+    const cellsHtml = colVals.map(x=>`<td data-v="${x??''}">${isNA(x)?'<span class="nt">N/A</span>':(row.avg? x.toFixed(2) : fmtL(x))}</td>`).join('');
+
+    // Change between the two comparison columns
+    let chgTd='';
+    if(showChange){
+      const a=colVals[cmpNew], b=colVals[cmpOld];
+      if(isNA(a) || isNA(b) || !b){ chgTd = `<td class="nt">—</td>`; }
+      else {
+        const ch=pct(a-b,b);
+        chgTd = `<td data-v="${ch}">${Math.abs(ch)<0.05?'<span class="nt">— 0.0%</span>':`<span class="${ch>0?'up':'dn'}">${ch>0?'▲':'▼'} ${Math.abs(ch).toFixed(1)}%</span>`}</td>`;
+      }
+    }
     html+=`<tr><td class="l"><b>${row.l}</b></td>
     <td data-v="${selVal}"><b>${selTxt}</b></td>
-    ${v.map(x=>`<td data-v="${x}">${isNA(x)?'<span class="nt">N/A</span>':(row.avg? x.toFixed(2) : fmtL(x))}</td>`).join('')}
+    ${cellsHtml}
     ${chgTd}</tr>`;
   });
   const tbl=document.getElementById('tblUnion');
