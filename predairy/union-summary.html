@@ -255,9 +255,9 @@ function periodColumns(){
     for(let k=3;k>=1;k--){
       const s=curMonStart-7*k, e=s+7;
       if(s<0) continue;
-      // Label spans the week's start to the next week's start (e.g. "17–24 Aug",
-      // "31 Aug – 6 Sep"), matching the 7-day boundaries.
-      const a=W.dates[s], b=W.dates[Math.min(e,DAYS-1)];
+      // Label spans the 7 actual days covered: start day to the last day of the
+      // window (e.g. "17–23 Aug", "31 Aug – 6 Sep"). Fully derived from the dates.
+      const a=W.dates[s], b=W.dates[Math.min(e-1,DAYS-1)];
       const label = dmon(a)===dmon(b)
         ? `${dnum(a)}–${dnum(b)} ${dmon(b)}`
         : `${dnum(a)} ${dmon(a)} – ${dnum(b)} ${dmon(b)}`;
