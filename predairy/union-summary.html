@@ -192,6 +192,13 @@ const totMPCS = bucket(D.weightBuckets,/Grand/).counts;
 
 let W = D.wire;
 let DAYS = W.dates.length;
+// Index of the last day that actually has data. Today (and any trailing empty
+// days) has zero purchase because it hasn't synced yet, so period windows must
+// end here — not at DAYS — otherwise the empty day drags averages/totals down.
+function lastDataIdx(){
+  for(let i=DAYS-1;i>=0;i--){ if((W.dailyAll[i]||0)>0) return i; }
+  return DAYS-1;
+}
 const fmtD = iso => { const d=new Date(iso+'T00:00:00');
   return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+d.getFullYear(); };
 const fmtDs = iso => { const d=new Date(iso+'T00:00:00');
@@ -201,15 +208,16 @@ const sum = a => a.reduce((s,x)=>s+x,0);
 let basis='monthly', from='', to='';  // custom range defaults set from live data in applyData()
 
 function range(){
-  if(basis==='daily') return {s:Math.max(0,DAYS-2),e:DAYS-1};  // "Yesterday" = last full day (today's data is partial)
+  const last = lastDataIdx();                  // last day WITH data (excludes empty today)
+  const END = last+1;                          // half-open end at the last data day
+  if(basis==='daily') return {s:Math.max(0,last),e:END};  // "Yesterday" = last day with data
   if(basis==='weekly'){
-    // "This week" = Monday of the current week → today (grows through the week).
-    const lastIdx = DAYS-1;                    // today (last day in the wire series)
-    const dow = new Date(W.dates[lastIdx]+'T00:00:00').getDay(); // 0=Sun..6=Sat
+    // "This week" = Monday of the current week → last day with data (grows through the week).
+    const dow = new Date(W.dates[last]+'T00:00:00').getDay(); // 0=Sun..6=Sat
     const backToMon = (dow+6)%7;               // days since Monday
-    return {s:Math.max(0,lastIdx-backToMon), e:DAYS};
+    return {s:Math.max(0,last-backToMon), e:END};
   }
-  if(basis==='monthly') return {s:W.monthStarts[2],e:DAYS};
+  if(basis==='monthly') return {s:W.monthStarts[2],e:END};
   let s=W.dates.indexOf(from), e=W.dates.indexOf(to)+1;
   if(s<0)s=0; if(e<=0)e=DAYS; if(e<=s){const t=s;s=e-1;e=t+1;}
   return {s,e};
