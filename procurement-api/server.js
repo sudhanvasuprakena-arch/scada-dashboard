@@ -758,12 +758,18 @@ async function pdDcsTalukMap() {
 }
 
 async function pdFetchDay(day) {
-  const ttl = day < pdTodayISO() ? PD_CLOSED_TTL : PD_CACHE_TTL;
-  const hit = pdCacheGet(pdDayCache, day, ttl);
-  if (hit) return hit;
+  // A past day is normally immutable (24h TTL). But an EMPTY result is treated
+  // as short-lived even for a past date: a day that rolls from "today" to
+  // "past" before its collection has fully landed would otherwise be frozen
+  // empty for 24h. Empty days re-check every PD_CACHE_TTL so they self-heal
+  // once the data arrives.
+  const ttlFor = value =>
+    (day < pdTodayISO() && value && value.size > 0) ? PD_CLOSED_TTL : PD_CACHE_TTL;
+  const hitEntry = pdDayCache.get(day);
+  if (hitEntry && Date.now() - hitEntry.at < ttlFor(hitEntry.value)) return hitEntry.value;
   return pdOnce(`day:${day}`, async () => {
-    const again = pdCacheGet(pdDayCache, day, ttl);
-    if (again) return again;
+    const again = pdDayCache.get(day);
+    if (again && Date.now() - again.at < ttlFor(again.value)) return again.value;
     const rows = await pdQ(PD_DAY_SQL, [`${day} 00:00:00`, `${pdAddDays(day, 1)} 00:00:00`]);
     const out = new Map();
     for (const r of rows) {
@@ -955,11 +961,31 @@ async function pdDigitalSeries(fromDate, toDate) {
 
 const pdBillTtl = toDate => (toDate < pdTodayISO() ? PD_CLOSED_TTL : PD_CACHE_TTL);
 
+// True when a cached farmers result carries no real rows — an aggregate whose
+// pourings/qty are all zero/null, or an empty top-10 list. Used so a completed
+// day cached while its data hadn't landed yet isn't frozen for 24h.
+function pdEmptyResult(v) {
+  if (v == null) return true;
+  if (Array.isArray(v)) return v.length === 0;
+  if (typeof v === 'object') {
+    const n = Number(v.pourings_recorded);
+    if (!Number.isNaN(n)) return n === 0;               // pourings aggregate
+    if ('farmer_app_users' in v) return false;          // app counts: 0 is valid
+  }
+  return false;
+}
+
 async function pdFarmersAll(fromDate, toDate) {
   const toExcl = pdAddDays(toDate, 1);
-  const cached = async (key, ttl, fn) => {
-    const hit = pdCacheGet(pdCache, key, ttl);
-    if (hit !== undefined) return hit;
+  // Value-aware TTL: a past day with real data is held 24h, but an EMPTY
+  // completed day re-checks every PD_CACHE_TTL so it self-heals once the bills
+  // arrive — same guard as the digital day cache.
+  const cached = async (key, longTtl, fn) => {
+    const entry = pdCache.get(key);
+    if (entry) {
+      const ttl = pdEmptyResult(entry.value) ? PD_CACHE_TTL : longTtl;
+      if (Date.now() - entry.at < ttl) return entry.value;
+    }
     return pdOnce(key, async () => { const v = await fn(); pdCacheSet(pdCache, key, v); return v; });
   };
   const ttl = pdBillTtl(toDate);
