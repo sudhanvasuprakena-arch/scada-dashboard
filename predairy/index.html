@@ -153,7 +153,18 @@ let basis='monthly',from=W.dates[Math.max(0,DAYS-14)],to=maxDate;
 
 function range(){
   if(basis==='daily'){let i=DAYS-1;while(i>0&&W.dailyAll[i]===0)i--;i=Math.max(0,i-1);return{s:i,e:i+1};}
-  if(basis==='weekly'){const w=W.weekly[W.weekly.length-1];return{s:w.s,e:w.e};}
+  if(basis==='weekly'){
+    // find last non-zero day
+    let last=DAYS-1; while(last>0&&W.dailyAll[last]===0)last--;
+    // find Monday of that week
+    const lastDate=new Date(W.dates[last]+'T00:00:00');
+    const dow=lastDate.getDay(); // 0=Sun,1=Mon...
+    const daysFromMon=dow===0?6:dow-1;
+    const monDate=new Date(lastDate); monDate.setDate(monDate.getDate()-daysFromMon);
+    const monStr=monDate.toISOString().split('T')[0];
+    let s=W.dates.indexOf(monStr); if(s<0)s=Math.max(0,last-6);
+    return{s,e:last+1};
+  }
   if(basis==='monthly')return{s:W.monthStarts[2],e:DAYS};
   let s=W.dates.indexOf(from),e=W.dates.indexOf(to)+1;
   if(s<0)s=0;if(e<=0)e=DAYS;if(e<=s){const t=s;s=e-1;e=t+1;}
