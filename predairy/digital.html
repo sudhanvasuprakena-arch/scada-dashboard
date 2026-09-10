@@ -277,21 +277,31 @@ function getDateRange(b) {
     const t = fmtDate(y);
     return { from:t, to:t, label:fmtLabel(t)+' · 1 day', key:'daily_'+t };
   }
+  // Ranges end at YESTERDAY, never today: today's collection is still arriving,
+  // so including it adds an empty trailing point to the charts and a false
+  // "0" day. Yesterday is the last complete day.
+  const yday = new Date(today); yday.setDate(today.getDate() - 1);
   if (b === 'weekly') {
-    // Calendar week to date: Monday of the current week -> today. Not a rolling
-    // 7 days. On a Monday the range is just that one day. Matches union-summary.
+    // Calendar week to date: Monday of the current week -> yesterday. Not a
+    // rolling 7 days. On a Monday the range is just Monday (once yesterday
+    // reaches it); if yesterday is before this Monday (i.e. today IS Monday),
+    // fall back to that single day.
     const mon = new Date(today);
     const dow = today.getDay() === 0 ? 7 : today.getDay();  // Mon=1 .. Sun=7
     mon.setDate(today.getDate() - dow + 1);
-    const f = fmtDate(mon), t = fmtDate(today);
+    const end = yday < mon ? new Date(mon) : yday;   // don't go before Monday
+    const f = fmtDate(mon), t = fmtDate(end);
     const n = Math.round((new Date(t+'T00:00:00') - new Date(f+'T00:00:00'))/86400000) + 1;
     return { from:f, to:t,
              label:(f === t ? fmtLabel(t) : fmtLabel(f)+' – '+fmtLabel(t))+' · '+n+(n===1?' day':' days'),
              key:'weekly_'+f+'_'+t };
   }
   if (b === 'monthly') {
-    const t = fmtDate(today);
-    const from = `${today.getFullYear()}-${pad(today.getMonth()+1)}-01`;
+    // 1st of the current month -> yesterday. If today is the 1st, yesterday is
+    // last month, so clamp the start to this month's 1st and end at yesterday.
+    const first = new Date(today.getFullYear(), today.getMonth(), 1);
+    const end = yday < first ? new Date(first) : yday;
+    const from = fmtDate(first), t = fmtDate(end);
     return { from, to:t, label:today.toLocaleDateString('en-IN',{month:'long',year:'numeric'}), key:'monthly_'+from+'_'+t };
   }
   const f = fromCustom || fmtDate(today), t = toCustom || fmtDate(today);
