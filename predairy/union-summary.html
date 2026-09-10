@@ -249,10 +249,19 @@ function periodColumns(){
     const backToMon=(dow+6)%7;
     const curMonStart=Math.max(0,lastIdx-backToMon);             // this week's Monday
     const cols=[];
+    const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const dnum=iso=>new Date(iso+'T00:00:00').getDate();
+    const dmon=iso=>MON[new Date(iso+'T00:00:00').getMonth()];
     for(let k=3;k>=1;k--){
       const s=curMonStart-7*k, e=s+7;
       if(s<0) continue;
-      cols.push({s,e,label:'Wk '+fmtDs(W.dates[s])});
+      // Label spans the week's start to the next week's start (e.g. "17–24 Aug",
+      // "31 Aug – 6 Sep"), matching the 7-day boundaries.
+      const a=W.dates[s], b=W.dates[Math.min(e,DAYS-1)];
+      const label = dmon(a)===dmon(b)
+        ? `${dnum(a)}–${dnum(b)} ${dmon(b)}`
+        : `${dnum(a)} ${dmon(a)} – ${dnum(b)} ${dmon(b)}`;
+      cols.push({s,e,label});
     }
     return {cols,daily:true};
   }
