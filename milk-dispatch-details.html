@@ -294,7 +294,9 @@ const dispatchData = {
   nmp: [],
 };
 
-function formatIN(n){ return n.toLocaleString('en-IN'); }
+// Kg values are whole numbers on screen — round before formatting so totals
+// (which sum un-rounded section quantities) don't show a stray .88 tail.
+function formatIN(n){ return Math.round(Number(n) || 0).toLocaleString('en-IN'); }
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 document.querySelectorAll('[data-count]').forEach(el=>{
   const target = parseInt(el.dataset.count,10);
