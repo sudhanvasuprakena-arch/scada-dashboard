@@ -470,19 +470,28 @@ function renderMixChart(live) {
     document.getElementById('csMix').textContent = 'Auto vs manual weighed quantity by week';
   }
   if (cMix) cMix.destroy();
-  // Overlaid bars sharing one x-slot and one zero baseline (x.stacked keeps
-  // them in the same column; y is NOT stacked so both rise from zero).
-  //   - Auto (green) is listed first -> drawn behind -> full-width tall bar.
-  //   - Manual (grey) is listed second -> drawn in front -> narrower bar
-  //     (barPercentage 0.45) so the smaller value stays visible as an inset
-  //     against the green, instead of being hidden behind an equal-width bar.
+  const pctMode = (n === 1);   // single-day branch shows % share
+  // Overlaid bars, both rising from zero on the SAME x-slot (x.stacked groups
+  // them into one column; y is NOT stacked so neither is lifted). Auto (green)
+  // is drawn first -> sits behind at full height. Manual (grey) is drawn second
+  // -> sits in front, covering the bottom of the green up to its own (smaller)
+  // value. Result: grey shows at the bottom, green shows above it, both from
+  // the same baseline. Same width so the front grey overlays the green.
   cMix = new Chart(document.getElementById('chMix'), { type:'bar', data:{ labels, datasets:[
-    { label:'Auto Weight',   data:autoData, backgroundColor:C.teal, borderRadius:4, categoryPercentage:0.8, barPercentage:1.0 },
-    { label:'Manual Weight', data:manData,  backgroundColor:C.grey, borderRadius:4, categoryPercentage:0.8, barPercentage:0.45 }
+    // Auto (green) full width behind. order:2 = drawn first / underneath.
+    { label:'Auto Weight',   data:autoData, backgroundColor:C.teal, borderRadius:4, categoryPercentage:0.8, barPercentage:1.0, order:2 },
+    // Manual (grey) in front, SAME width as green. order:1 = drawn on top so
+    // it stays visible over the green instead of being masked behind it.
+    { label:'Manual Weight', data:manData,  backgroundColor:C.grey, borderRadius:4, categoryPercentage:0.8, barPercentage:1.0, order:1 }
   ]}, options:{ maintainAspectRatio:false,
     plugins:{ legend:{ position:'bottom' },
-    tooltip:{ callbacks:{ label: c => `${c.dataset.label}: ${fmtN(c.raw)} Ltr` } } },
-    scales:{ x:{ stacked:true, ticks:{ maxTicksLimit:14 } }, y:{ beginAtZero:true, ticks:{ callback: v => fmtN(v) } } } } });
+      tooltip:{ callbacks:{ label: c => `${c.dataset.label}: ${fmtN(c.raw)}${pctMode ? ' %' : ' Ltr'}` } } },
+    scales:{
+      x:{ stacked:true, ticks:{ maxTicksLimit:14 } },
+      y:{ stacked:false, beginAtZero:true,
+          max: pctMode ? 100 : undefined,
+          ticks:{ callback: v => fmtN(v) } }
+    } } });
 }
 
 function renderExtremeChart(live) {
