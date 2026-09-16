@@ -614,7 +614,7 @@ const BASE_URL = '';
 const params = new URLSearchParams(window.location.search);
 const dairy  = params.get('dairy') || 'bengaluru';
 
-function formatIN(n){ return Number(n).toLocaleString('en-IN'); }
+function formatIN(n){ return Math.round(Number(n) || 0).toLocaleString('en-IN'); }
 function num(v){ return parseFloat(v || 0); }
 function int(v){ return parseInt(v || 0, 10); }
 
