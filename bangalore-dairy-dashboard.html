@@ -657,8 +657,18 @@ async function loadSummary(){
   let milkIn = 0, milkOut = 0, trucks = 0, dispatched = 0;
   const din = await fetchData('truck-entry');
   if(din){ milkIn = din.reduce((s,r)=>{ const n=num(r.NetWeight); return s+(n>0?n:Math.max(0,num(r.GrossWeight)-num(r.TareWeight))); },0); trucks = din.length; }
-  const dout = await fetchData('milk-dispatch-truck');
-  if(dout){ milkOut = dout.reduce((s,r)=>s+num(r.NetWeight),0); dispatched = dout.length; }
+  // Milk dispatched must match the milk-dispatch-details page: it is the sum of
+  // Product Dairy + NMP transfers (Batch_Log), NOT the milk-dispatch-truck feed.
+  // Qty = SUM(TotalQty), trucks = SUM(Entries) across both categories.
+  const [pd, nmp] = await Promise.all([
+    fetchData('product-dispatch'),
+    fetchData('nmp-dispatch'),
+  ]);
+  for(const rows of [pd, nmp]){
+    if(!rows) continue;
+    milkOut    += rows.reduce((s,r)=>s+num(r.TotalQty),0);
+    dispatched += rows.reduce((s,r)=>s+(parseInt(r.Entries,10)||0),0);
+  }
   const used = milkIn - milkOut;
 
   setText('sum-in',  milkIn  > 0 ? formatIN(milkIn)  : '0');
