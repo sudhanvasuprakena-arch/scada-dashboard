@@ -470,12 +470,19 @@ function renderMixChart(live) {
     document.getElementById('csMix').textContent = 'Auto vs manual weighed quantity by week';
   }
   if (cMix) cMix.destroy();
+  // Overlaid bars on a shared baseline (both from zero, same x position, NOT
+  // stacked). The larger value (Auto) is drawn first so it sits as the tall
+  // bar in the back; the smaller value (Manual) is drawn second so it sits in
+  // front and stays visible. categoryPercentage/barPercentage keep them on the
+  // same slot so they overlap rather than sitting side by side.
   cMix = new Chart(document.getElementById('chMix'), { type:'bar', data:{ labels, datasets:[
-    { label:'Auto Weight', data:autoData, backgroundColor:C.teal, borderRadius:4 },
-    { label:'Manual Weight', data:manData, backgroundColor:C.grey, borderRadius:4 }
-  ]}, options:{ maintainAspectRatio:false, plugins:{ legend:{ position:'bottom' },
+    { label:'Auto Weight',   data:autoData, backgroundColor:C.teal, borderRadius:4 },
+    { label:'Manual Weight', data:manData,  backgroundColor:C.grey, borderRadius:4 }
+  ]}, options:{ maintainAspectRatio:false,
+    datasets:{ bar:{ categoryPercentage:0.8, barPercentage:1.0 } },
+    plugins:{ legend:{ position:'bottom' },
     tooltip:{ callbacks:{ label: c => `${c.dataset.label}: ${fmtN(c.raw)} Ltr` } } },
-    scales:{ x:{ stacked:true, ticks:{ maxTicksLimit:14 } }, y:{ stacked:true, ticks:{ callback: v => fmtN(v) } } } } });
+    scales:{ x:{ stacked:true, ticks:{ maxTicksLimit:14 } }, y:{ beginAtZero:true, ticks:{ callback: v => fmtN(v) } } } } });
 }
 
 function renderExtremeChart(live) {
