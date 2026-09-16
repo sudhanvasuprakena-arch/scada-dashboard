@@ -361,12 +361,12 @@ function renderSection(list, wrapId, totId, emptyMsg){
         <span class="chip green">Dispatched</span>
       </section>`);
   });
-  document.getElementById(totId).innerHTML = formatIN(totalKg) + '<small> Kg</small>';
+  document.getElementById(totId).innerHTML = formatIN(Math.round(totalKg)) + '<small> Kg</small>';
   document.getElementById(totId).dataset.kg = totalKg;
   // Update grand total KPI from cat1 + cat2 only
   const pdKg = parseFloat(document.getElementById('tot-pd')?.dataset.kg||0) || 0;
   const nmpKg = parseFloat(document.getElementById('tot-nmp')?.dataset.kg||0) || 0;
-  document.getElementById('kpi-net').textContent = formatIN(pdKg + nmpKg);
+  document.getElementById('kpi-net').textContent = formatIN(Math.round(pdKg + nmpKg));
   return {kg:totalKg, trucks};
 }
 
