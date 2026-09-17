@@ -784,30 +784,26 @@ async function loadDispatch(){
   setHTML('disp-total', `${formatIN(net)}<small>Kg</small>`);
   clearNone('#disp-total');
   setFoot('disp-foot', `<span class="chip green">${completed}/${d.length} trucks · ${pct}%</span>`);
-  // Product Dairy from Batch_Log D3 IN (25,40) — includes all lines (CST + Dispatch Lines)
+  // Product Dairy from Batch_Log D3 IN (25,40) — includes all lines (CST + Dispatch Lines).
+  // Always set the tile (default 0 when the period has no data) so it never retains a
+  // stale value from a previously selected period.
   const prod = await fetchData('product-dispatch');
-  if(prod && prod.length){
-    const prodQty = prod.reduce((s,r)=>s+num(r.TotalQty),0);
-    setHTML('disp-product', `${formatIN(Math.round(prodQty))}<small>Kg</small>`);
-    clearNone('#disp-product');
-  }
+  const prodQty = (prod||[]).reduce((s,r)=>s+num(r.TotalQty),0);
+  setHTML('disp-product', `${formatIN(Math.round(prodQty))}<small>Kg</small>`);
+  clearNone('#disp-product');
   // NMP from Batch_Log
   const nmp = await fetchData('nmp-dispatch');
-  if(nmp && nmp.length){
-    const nmpQty = nmp.reduce((s,r)=>s+num(r.TotalQty),0);
-    setHTML('disp-nmp', `${formatIN(Math.round(nmpQty))}<small>Kg</small>`);
-    clearNone('#disp-nmp');
-  }
+  const nmpQty = (nmp||[]).reduce((s,r)=>s+num(r.TotalQty),0);
+  setHTML('disp-nmp', `${formatIN(Math.round(nmpQty))}<small>Kg</small>`);
+  clearNone('#disp-nmp');
   // Other unions from MilkDispatch (excluding NMP, milk products only)
   const others = await fetchData('milk-dispatch');
-  if(others && others.length){
-    const milkProducts = ['RAW MILK','PAST MILK','SKIM MILK','HOMOGENISED MILK'];
-    const otherQty = others
-      .filter(r=>milkProducts.includes((r.ProductCode||'').toUpperCase()) && !(r.DairyCode||'').toUpperCase().includes('NMP'))
-      .reduce((s,r)=>s+num(r.TotalQty),0);
-    setHTML('disp-other', `${formatIN(Math.round(otherQty))}<small>Kg</small>`);
-    clearNone('#disp-other');
-  }
+  const milkProducts = ['RAW MILK','PAST MILK','SKIM MILK','HOMOGENISED MILK'];
+  const otherQty = (others||[])
+    .filter(r=>milkProducts.includes((r.ProductCode||'').toUpperCase()) && !(r.DairyCode||'').toUpperCase().includes('NMP'))
+    .reduce((s,r)=>s+num(r.TotalQty),0);
+  setHTML('disp-other', `${formatIN(Math.round(otherQty))}<small>Kg</small>`);
+  clearNone('#disp-other');
 }
 
 /* ---------- Stage 6 · AI Production ---------- */
