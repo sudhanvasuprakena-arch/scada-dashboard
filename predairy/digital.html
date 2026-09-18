@@ -121,6 +121,10 @@ td.l{text-align:left}
 tbody tr:hover td{background-color:#f4f8fd}
 tr.tot td{font-weight:700;background-color:var(--tot-bg);color:var(--navy)}
 tr.tot:hover td{background-color:var(--tot-bg)}
+/* Taluk table: keep every data cell plain black — no red/green status colours
+   on the Manual Wt / Manual Fat (or any other) column. */
+#tblOnline tbody td{color:#000}
+#tblOnline tbody td .up,#tblOnline tbody td .dn{color:#000}
 .tmsg{text-align:center;color:var(--muted);padding:1.25rem;white-space:normal}
 #tblOnline col:nth-child(1){width:19%}
 #tblOnline col:nth-child(n+2){width:11.57%}
@@ -252,7 +256,7 @@ footer{font-size:.71875rem;color:var(--muted);text-align:center;padding:1.25rem}
 <footer>BAMUL — Bangalore Urban, Rural &amp; Ramanagara District Co-operative Milk Union Ltd. · Source: UNION_054 Live DB · Figures in litres unless stated</footer>
 
 <script>
-const API = '/papi';
+const API = 'https://bangalore-dairy.duckdns.org/papi';
 const clientCache = {};
 let basis = 'daily', fromCustom = '', toCustom = '', lastCustomFrom = '', lastCustomTo = '';
 let liveLoading = false;
@@ -359,16 +363,19 @@ function kpiCards(items) {
   ).join('');
 }
 
-/** Absolute change, e.g. "▲ from 27 in prev period". `good` says which
-    direction is an improvement, so falling manual counts read as green. */
+/** Absolute change, e.g. "▲ from 27 in prev period". Colour follows the arrow
+    direction only — rising is green (▲/up), falling is red (▼/dn) — to match
+    the farmers page convention. (`good` is kept for call-site compatibility
+    but no longer affects the colour.) */
 function deltaFrom(cur, prev, good) {
   if (prev == null) return '&nbsp;';
   if (cur === prev) return '<span class="nt">no change</span>';
   const rising = cur > prev;
-  const cls = (rising === good) ? 'up' : 'dn';
+  const cls = rising ? 'up' : 'dn';
   return `<span class="${cls}">${rising?'▲':'▼'} from ${fmtI(prev)} in prev period</span>`;
 }
-/** Percentage-point change, for the auto-weighed share. */
+/** Percentage-point change, for the auto-weighed share.
+    Rising is green (▲/up), falling is red (▼/dn). */
 function deltaPts(cur, prev) {
   if (prev == null) return '&nbsp;';
   const d = cur - prev;
@@ -377,28 +384,32 @@ function deltaPts(cur, prev) {
   return `<span class="${cls}">${d>0?'▲':'▼'} ${Math.abs(d).toFixed(1)} pts vs prev period</span>`;
 }
 
-function renderData(live, range, prev) {
+function renderData(live, range, prev, prevLoading) {
   const u = live.union;
   const p = prev ? prev.union : null;
   document.getElementById('rangeChip').textContent = range.label;
   document.getElementById('pbadgeTxt').textContent = range.label;
 
+  // While the previous-period comparison is still being fetched, show a
+  // "comparing…" placeholder in the delta slot instead of the fallback text,
+  // so the value doesn't visibly swap once the second request lands.
+  const spin = '<span class="nt">comparing…</span>';
   document.getElementById('kpiRow').innerHTML = kpiCards([
     { l:'Auto-Weighed Share', v:u.auto_weight_pct.toFixed(1)+' %',
       d: p ? deltaPts(u.auto_weight_pct, p.auto_weight_pct)
-           : `${u.auto_fat_pct.toFixed(1)}% fat auto` },
+           : (prevLoading ? spin : `${u.auto_fat_pct.toFixed(1)}% fat auto`) },
     { l:'MPCS 100% Online Weight', v:fmtI(u.fully_online_weight),
       d: p ? deltaFrom(u.fully_online_weight, p.fully_online_weight, true)
-           : 'all weighings via AMCU' },
+           : (prevLoading ? spin : 'all weighings via AMCU') },
     { l:'MPCS 100% Manual Weight', v:fmtI(u.fully_manual_weight), red:true,
       d: p ? deltaFrom(u.fully_manual_weight, p.fully_manual_weight, false)
-           : 'zero AMCU weight entries' },
+           : (prevLoading ? spin : 'zero AMCU weight entries') },
     { l:'MPCS 100% Online Fat', v:fmtI(u.fully_online_fat),
       d: p ? deltaFrom(u.fully_online_fat, p.fully_online_fat, true)
-           : 'all fat tests via machine' },
+           : (prevLoading ? spin : 'all fat tests via machine') },
     { l:'MPCS 100% Manual Fat', v:fmtI(u.fully_manual_fat), red:true,
       d: p ? deltaFrom(u.fully_manual_fat, p.fully_manual_fat, false)
-           : 'zero auto fat entries' },
+           : (prevLoading ? spin : 'zero auto fat entries') },
     { l:'Societies Without AMCU', v:fmtI(u.without_amcu), red:true,
       d:'awaiting AMCU installation' },
   ]);
@@ -416,9 +427,9 @@ function renderData(live, range, prev) {
   let rows = '';
   live.taluks.forEach(t => {
     rows += `<tr><td class="l"><b>${t.taluk}</b></td><td>${t.fully_online_weight}</td>`
-      + `<td class="${t.fully_manual_weight>0?'dn':''}">${t.fully_manual_weight}</td>`
+      + `<td>${t.fully_manual_weight}</td>`
       + `<td>${t.fully_online_fat}</td>`
-      + `<td class="${t.fully_manual_fat>0?'dn':''}">${t.fully_manual_fat}</td>`
+      + `<td>${t.fully_manual_fat}</td>`
       + `<td>${fmtN(t.manual_weight_entries)}</td>`
       + `<td>${t.auto_weight_pct.toFixed(1)}%</td><td>${t.auto_fat_pct.toFixed(1)}%</td></tr>`;
   });
@@ -602,9 +613,10 @@ async function fetchLive() {
   const prevR = previousRange(range);
 
   if (clientCache[range.key]) {
-    renderData(clientCache[range.key], range, clientCache[prevR.key] || null);
+    const prevMissing = !clientCache[prevR.key];
+    renderData(clientCache[range.key], range, clientCache[prevR.key] || null, prevMissing);
     if (!clientCache[range.key].series) fetchSeriesAndRerender(range);
-    if (!clientCache[prevR.key]) loadPrevAndRerender(range, prevR);
+    if (prevMissing) loadPrevAndRerender(range, prevR);
     return;
   }
   if (liveLoading) return;
@@ -612,9 +624,10 @@ async function fetchLive() {
   showLoading(range);
   try {
     const data = await fetchFromAPI(range);
-    renderData(data, range, clientCache[prevR.key] || null);
+    const prevMissing = !clientCache[prevR.key];
+    renderData(data, range, clientCache[prevR.key] || null, prevMissing);
     fetchSeriesAndRerender(range);
-    if (!clientCache[prevR.key]) loadPrevAndRerender(range, prevR);
+    if (prevMissing) loadPrevAndRerender(range, prevR);
   } catch(e) {
     showEmpty('<b>Server not reachable</b> — start it with: <code>cd server &amp;&amp; python server.py</code>');
   } finally {
@@ -639,6 +652,40 @@ async function prefetch() {
 }
 
 /* ── filter bar wiring ───────────────────────────────────────────────────── */
+/* Selectable custom-range window. To match union-summary.html EXACTLY, the
+   bounds come from the same /union054/procurement wire (its daily `dates`
+   series drives union-summary's picker min/max). We fetch that window once and
+   cache it here; until it loads we fall back to a rolling ~90-day window. */
+let customWin = null; // { min:'YYYY-MM-DD', max:'YYYY-MM-DD' }
+async function loadCustomWindow() {
+  try {
+    const res = await fetch(`${API}/bangalore/union054/procurement`);
+    const json = await res.json();
+    const dates = json && json.success && json.data && json.data.wire && json.data.wire.dates;
+    if (Array.isArray(dates) && dates.length) {
+      customWin = { min: dates[0], max: dates[dates.length-1] };
+      if (basis === 'custom') constrainCustom();
+    }
+  } catch (e) { /* fall back to the 90-day window below */ }
+}
+
+/* Apply the window to the pickers. "From" spans [min, max]. "To" is bounded
+   below by the currently-selected "From" (days before From are greyed out)
+   and above by max. */
+function constrainCustom() {
+  let minStr, maxStr;
+  if (customWin) {
+    minStr = customWin.min; maxStr = customWin.max;
+  } else {
+    const today = new Date();
+    const min90 = new Date(today); min90.setDate(today.getDate()-90);
+    minStr = fmtDate(min90); maxStr = fmtDate(today);
+  }
+  const df = document.getElementById('dFrom'), dt = document.getElementById('dTo');
+  if (df) { df.min = minStr; df.max = maxStr; }
+  if (dt) { dt.min = fromCustom || minStr; dt.max = maxStr; }
+}
+
 document.getElementById('segBasis').addEventListener('click', e => {
   const btn = e.target.closest('button');
   if (!btn) return;
@@ -654,11 +701,15 @@ document.getElementById('segBasis').addEventListener('click', e => {
     }
     document.getElementById('dFrom').value = fromCustom;
     document.getElementById('dTo').value = toCustom;
+    constrainCustom();
   }
   fetchLive();
 });
 document.getElementById('dFrom').addEventListener('change', e => {
   fromCustom = e.target.value;
+  // If "to" is now before the new "from", snap it up to "from".
+  if (toCustom && toCustom < fromCustom) { toCustom = fromCustom; document.getElementById('dTo').value = toCustom; }
+  constrainCustom();
   if (fromCustom && toCustom) { lastCustomFrom = fromCustom; lastCustomTo = toCustom; fetchLive(); }
 });
 document.getElementById('dTo').addEventListener('change', e => {
@@ -667,6 +718,7 @@ document.getElementById('dTo').addEventListener('change', e => {
 });
 
 showEmpty();
+loadCustomWindow();
 fetchLive().then(() => prefetch());
 </script>
 </body>

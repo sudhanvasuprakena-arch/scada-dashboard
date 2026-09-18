@@ -252,7 +252,7 @@ footer{font-size:.71875rem;color:var(--muted);text-align:center;padding:1.25rem}
 <footer>BAMUL — Bangalore Urban, Rural &amp; Ramanagara District Co-operative Milk Union Ltd. · Source: UNION_054 Live DB</footer>
 
 <script>
-const API = '/papi';
+const API = 'https://bangalore-dairy.duckdns.org/papi';
 let basis = 'daily', fromCustom = '', toCustom = '', lastCustomFrom = '', lastCustomTo = '';
 let liveLoading = false;
 const clientCache = {};
@@ -344,22 +344,26 @@ function kpiCards(items) {
   ).join('');
 }
 
-function renderData(live, range, prev) {
+function renderData(live, range, prev, prevLoading) {
   const k = live.kpis;
   const pk = prev ? prev.kpis : null;
   document.getElementById('reportingPeriod').textContent = range.label;
   document.getElementById('rangeChip').textContent = range.label;
 
+  // While the previous-period comparison is still being fetched, show a
+  // "comparing…" placeholder in the delta slot instead of the fallback text,
+  // so the value doesn't visibly swap once the second request lands.
+  const spin = '<span class="nt">comparing…</span>';
   document.getElementById('kpiRow').innerHTML = kpiCards([
     { l:'Total Farmer App Users', v:fmtI(k.farmer_app_users),
       d: pk ? deltaAbs(k.farmer_app_users, pk.farmer_app_users, 'added in range')
-            : `as of ${fmtLabel(range.to)}` },
+            : (prevLoading ? spin : `as of ${fmtLabel(range.to)}`) },
     { l:'Secretary App Users', v:fmtI(k.secretary_app_users),
       d: pk ? deltaAbs(k.secretary_app_users, pk.secretary_app_users, 'added in range')
-            : `as of ${fmtLabel(range.to)}` },
+            : (prevLoading ? spin : `as of ${fmtLabel(range.to)}`) },
     { l:'Total Number of Pourers', v:fmtI(k.pourings_recorded),
       d: pk ? deltaPct(k.pourings_recorded, pk.pourings_recorded)
-            : `${fmtN(k.total_qty_ltrs)} ltrs · fat ${k.avg_fat}%` },
+            : (prevLoading ? spin : `${fmtN(k.total_qty_ltrs)} ltrs · fat ${k.avg_fat}%`) },
   ]);
 
   const span = daysBetween(range.from, range.to);
@@ -421,8 +425,9 @@ async function fetchLive() {
   const prevR = previousRange(range);
 
   if (clientCache[range.key]) {
-    renderData(clientCache[range.key], range, clientCache[prevR.key] || null);
-    if (!clientCache[prevR.key]) loadPrevAndRerender(range, prevR);
+    const prevMissing = !clientCache[prevR.key];
+    renderData(clientCache[range.key], range, clientCache[prevR.key] || null, prevMissing);
+    if (prevMissing) loadPrevAndRerender(range, prevR);
     return;
   }
   if (liveLoading) return;
@@ -431,8 +436,9 @@ async function fetchLive() {
   showLoading(range);
   try {
     const data = await fetchFromAPI(range);
-    renderData(data, range, clientCache[prevR.key] || null);
-    if (!clientCache[prevR.key]) loadPrevAndRerender(range, prevR);
+    const prevMissing = !clientCache[prevR.key];
+    renderData(data, range, clientCache[prevR.key] || null, prevMissing);
+    if (prevMissing) loadPrevAndRerender(range, prevR);
   } catch (e) {
     showEmpty('<b>Server not reachable</b> — start it with: <code>cd server &amp;&amp; python server.py</code>');
   } finally {
@@ -457,6 +463,40 @@ async function prefetch() {
 }
 
 /* ── filter bar wiring ───────────────────────────────────────────────────── */
+/* Selectable custom-range window. To match union-summary.html EXACTLY, the
+   bounds come from the same /union054/procurement wire (its daily `dates`
+   series drives union-summary's picker min/max). We fetch that window once and
+   cache it here; until it loads we fall back to a rolling ~90-day window. */
+let customWin = null; // { min:'YYYY-MM-DD', max:'YYYY-MM-DD' }
+async function loadCustomWindow() {
+  try {
+    const res = await fetch(`${API}/bangalore/union054/procurement`);
+    const json = await res.json();
+    const dates = json && json.success && json.data && json.data.wire && json.data.wire.dates;
+    if (Array.isArray(dates) && dates.length) {
+      customWin = { min: dates[0], max: dates[dates.length-1] };
+      if (basis === 'custom') constrainCustom();
+    }
+  } catch (e) { /* fall back to the 90-day window below */ }
+}
+
+/* Apply the window to the pickers. "From" spans [min, max]. "To" is bounded
+   below by the currently-selected "From" (days before From are greyed out)
+   and above by max. */
+function constrainCustom() {
+  let minStr, maxStr;
+  if (customWin) {
+    minStr = customWin.min; maxStr = customWin.max;
+  } else {
+    const today = new Date();
+    const min90 = new Date(today); min90.setDate(today.getDate()-90);
+    minStr = fmtDate(min90); maxStr = fmtDate(today);
+  }
+  const df = document.getElementById('dFrom'), dt = document.getElementById('dTo');
+  if (df) { df.min = minStr; df.max = maxStr; }
+  if (dt) { dt.min = fromCustom || minStr; dt.max = maxStr; }
+}
+
 document.getElementById('segBasis').addEventListener('click', e => {
   const btn = e.target.closest('button');
   if (!btn) return;
@@ -473,11 +513,15 @@ document.getElementById('segBasis').addEventListener('click', e => {
     }
     document.getElementById('dFrom').value = fromCustom;
     document.getElementById('dTo').value = toCustom;
+    constrainCustom();
   }
   fetchLive();
 });
 document.getElementById('dFrom').addEventListener('change', e => {
   fromCustom = e.target.value;
+  // If "to" is now before the new "from", snap it up to "from".
+  if (toCustom && toCustom < fromCustom) { toCustom = fromCustom; document.getElementById('dTo').value = toCustom; }
+  constrainCustom();
   if (fromCustom && toCustom) { lastCustomFrom = fromCustom; lastCustomTo = toCustom; fetchLive(); }
 });
 document.getElementById('dTo').addEventListener('change', e => {
@@ -486,6 +530,7 @@ document.getElementById('dTo').addEventListener('change', e => {
 });
 
 showEmpty();
+loadCustomWindow();
 fetchLive().then(() => prefetch());
 </script>
 </body>
