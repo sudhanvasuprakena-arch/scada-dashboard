@@ -78,6 +78,8 @@ footer{font-size:11.5px;color:var(--muted);text-align:center;padding:20px}
 
 .grid>*{min-width:0}
 .filterbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 18px;box-shadow:0 1px 3px rgba(13,43,78,.06)}
+.pagetitle{font-size:24px;font-weight:800;color:var(--navy);letter-spacing:-.4px;margin:0}
+.filterbar .rangechip{margin-left:auto}
 .flabel{font-size:13px;font-weight:700;color:var(--navy)}
 .seg{display:inline-flex;background:#e6ecf3;border-radius:10px;padding:3px}
 .seg button{border:none;background:transparent;padding:8px 18px;border-radius:8px;font-size:13.5px;font-weight:700;color:var(--muted);cursor:pointer;transition:.15s}
@@ -127,22 +129,20 @@ footer{font-size:11.5px;color:var(--muted);text-align:center;padding:20px}
   <div class="pbadge">Reporting period: <b>February 2026</b></div>
 </div>
 <main>
-<div class="pagehead"><h2>BAMUL Milk Procurement Summary</h2></div>
-
 <div class="filterbar">
-  <span class="flabel">View:</span>
+  <h2 class="pagetitle">BAMUL Milk Procurement Summary</h2>
+  <span class="rangechip" id="rangeChip"></span>
+  <span id="customInputs" style="display:none">
+    <input type="date" id="dFrom" class="dinp">
+    <span class="mini">to</span>
+    <input type="date" id="dTo" class="dinp">
+  </span>
   <div class="seg" id="segBasis">
     <button data-b="daily" class="active">Yesterday</button>
     <button data-b="weekly">Weekly</button>
     <button data-b="monthly">Monthly</button>
     <button data-b="custom">Custom</button>
   </div>
-  <span id="customInputs" style="display:none">
-    <input type="date" id="dFrom" class="dinp">
-    <span class="mini">to</span>
-    <input type="date" id="dTo" class="dinp">
-  </span>
-  <span class="rangechip" id="rangeChip"></span>
 </div>
 <div class="card">
   <h3 class="ct">Overall DCS Summary <span class="sample" id="smpSum">Sample</span></h3>
