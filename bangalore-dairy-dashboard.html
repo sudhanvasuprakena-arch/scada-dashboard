@@ -781,8 +781,6 @@ async function loadDispatch(){
   const net = d.reduce((s,r)=>{ const n=num(r.NetWeight); return s+(n>0?n:Math.max(0,num(r.GrossWeight)-num(r.TareWeight))); },0);
   const completed = d.filter(r=>r.IsCompleted).length;
   const pct = d.length ? ((completed/d.length)*100).toFixed(1) : 0;
-  setHTML('disp-total', `${formatIN(net)}<small>Kg</small>`);
-  clearNone('#disp-total');
   setFoot('disp-foot', `<span class="chip green">${completed}/${d.length} trucks · ${pct}%</span>`);
   // Product Dairy from Batch_Log D3 IN (25,40) — includes all lines (CST + Dispatch Lines).
   // Always set the tile (default 0 when the period has no data) so it never retains a
@@ -791,11 +789,13 @@ async function loadDispatch(){
   const prodQty = (prod||[]).reduce((s,r)=>s+num(r.TotalQty),0);
   setHTML('disp-product', `${formatIN(Math.round(prodQty))}<small>Kg</small>`);
   clearNone('#disp-product');
-  // NMP from Batch_Log
   const nmp = await fetchData('nmp-dispatch');
   const nmpQty = (nmp||[]).reduce((s,r)=>s+num(r.TotalQty),0);
   setHTML('disp-nmp', `${formatIN(Math.round(nmpQty))}<small>Kg</small>`);
   clearNone('#disp-nmp');
+  // disp-total = pd + nmp (matches details page kpi-net)
+  setHTML('disp-total', `${formatIN(Math.round(prodQty+nmpQty))}<small>Kg</small>`);
+  clearNone('#disp-total');
   // Other unions from MilkDispatch (excluding NMP, milk products only)
   const others = await fetchData('milk-dispatch');
   const milkProducts = ['RAW MILK','PAST MILK','SKIM MILK','HOMOGENISED MILK'];

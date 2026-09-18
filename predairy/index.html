@@ -265,10 +265,9 @@ function renderTrend(){
   const r=range();
   let labels, vals, subtitle;
   if(basis==='monthly'){
-    // show full 90-day wire for monthly view
-    labels=W.dates.map(fmtDs);
-    vals=W.dailyAll;
-    subtitle='Day-wise milk purchase, last 90 days';
+    labels=W.dates.slice(r.s,r.e).map(fmtDs);
+    vals=W.dailyAll.slice(r.s,r.e);
+    subtitle='Day-wise milk purchase, '+PL[2];
   } else {
     // show selected range with some context (extend back to show prev period too)
     const ext=Math.max(0,r.s-(r.e-r.s));
