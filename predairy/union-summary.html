@@ -274,18 +274,22 @@ function periodColumns(){
     return {cols,daily:true};
   }
   if(basis==='daily'){
-    // last 3 COMPLETE days (exclude today's partial day).
+    // The Selected-period column shows the last complete day (lastFull). To avoid
+    // repeating it, the comparison columns are the 3 days BEFORE it (e.g. 14,15,16
+    // when the selected day is 17) — mirroring how weekly shows prior complete weeks.
     const lastFull=DAYS-2;
     const cols=[];
-    for(let k=2;k>=0;k--){
+    for(let k=3;k>=1;k--){
       const i=lastFull-k;
       if(i<0) continue;
       cols.push({s:i,e:i+1,label:fmtDs(W.dates[i])});
     }
     return {cols,daily:true};
   }
-  // monthly / custom → API month columns; not backed by day windows.
-  return {cols:PL.map((label,i)=>({monthIdx:i,label})),daily:false};
+  // Monthly / custom → month columns. The Selected-period column already shows the
+  // current month (Sept), so only show the prior COMPLETE months (Jul, Aug) here to
+  // avoid duplicating the current month — same principle as weekly/daily.
+  return {cols:PL.slice(0,2).map((label,i)=>({monthIdx:i,label})),daily:false};
 }
 
 function render(){
