@@ -259,7 +259,7 @@ function renderScore(){
   document.getElementById('csScore').textContent=`All taluks for ${rangeLabel(range())}. Click column headers to sort.`;
   const tbl=document.getElementById('tblTaluk');
   let html=`<thead><tr><th class="l">Taluk</th><th>Purchase (Ltr)</th><th>Change %</th><th>Per-Day (Ltr)</th><th>Avg Fat %</th><th>Auto Weight %</th><th>Local Sale (Ltr)</th></tr></thead><tbody>`;
-  D.taluks.map(t=>({t,ap:pct(t.autoWeightQty[2],t.purchase[2]),ch:talukChg(t),v:t.purchase[2]*scale}))
+  D.taluks.map(t=>{const tv=basis==='monthly'?t.purchase[2]:(W.talukDaily&&W.talukDaily[t.name]?W.talukDaily[t.name].slice(r.s,r.e).reduce((a,b)=>a+b,0):t.purchase[2]);return{t,ap:pct(t.autoWeightQty[2],t.purchase[2]),ch:talukChg(t),v:tv};})
   .sort((a,b)=>b.v-a.v).forEach(x=>{
    const apCls=x.ap>=90?'pg':x.ap>=75?'pa':'pr';
    html+=`<tr><td class="l"><b>${x.t.name}</b></td>
@@ -270,7 +270,9 @@ function renderScore(){
    <td data-v="${x.ap}"><span class="bar"><i style="width:${Math.min(x.ap,100)}%;background:${x.ap>=90?C.green:x.ap>=75?C.amber:C.red}"></i></span><span class="pill ${apCls}">${x.ap.toFixed(1)}%</span></td>
    <td data-v="${x.t.localSale[2]*scale}">${fmtL(x.t.localSale[2]*scale)}</td></tr>`;});
   const uv = basis==='monthly'? U.purchase[2] : sum(W.dailyAll.slice(r.s,r.e));
-  html+=`<tr class="tot"><td class="l">Union Total</td><td>${fmtL(uv)}</td><td></td><td>${fmtL(uv/n)}</td><td>${U.avgFat[2].toFixed(2)}</td><td>${autoPct[2].toFixed(1)}%</td><td>${fmtL(uv*localR)}</td></tr></tbody>`;
+  const fat_u=basis==='monthly'?U.avgFat[2]:(n>0?sum(W.fatAll.slice(r.s,r.e))/n:U.avgFat[2]);
+  const auto_u=basis==='monthly'?autoPct[2]:(uv>0?pct(sum(W.autoAll.slice(r.s,r.e)),uv):autoPct[2]);
+  html+=`<tr class="tot"><td class="l">Union Total</td><td>${fmtL(uv)}</td><td></td><td>${fmtL(uv/n)}</td><td>${fat_u.toFixed(2)}</td><td>${auto_u.toFixed(1)}%</td><td>${fmtL(uv*localR)}</td></tr></tbody>`;
   tbl.innerHTML=html; makeSortable(tbl);
 }
 
