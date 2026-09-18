@@ -873,19 +873,81 @@ function pdSpanLabel(d0, d1) {
     return `${a.getUTCDate()}\u2013${b.getUTCDate()} ${PD_MON[am]}`;
   return `${a.getUTCDate()} ${PD_MON[am]} \u2013 ${b.getUTCDate()} ${PD_MON[bm]}`;
 }
-const PD_BUCKET_SAMPLE_DAYS = 7;
-function pdBucketPeriods(fromDate, toDate) {
-  const f = pdParseDay(fromDate), t = pdParseDay(toDate);
-  const monthWindow = offset => {
-    const anchor = new Date(Date.UTC(f.getUTCFullYear(), f.getUTCMonth() - offset, 1));
-    const last = new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth() + 1, 0));
-    const startMs = Math.max(anchor.getTime(), last.getTime() - (PD_BUCKET_SAMPLE_DAYS - 1) * 86400000);
-    return [`${PD_MON[anchor.getUTCMonth()]} ${String(anchor.getUTCFullYear()).slice(2)}`,
-            pdIso(new Date(startMs)), pdIso(last)];
+// Month-clipped Monday–Sunday week that CONTAINS date `d` (UTC Date).
+// A week never crosses a month boundary: the first week of a month starts on
+// the 1st (even mid-week) and the last week ends on the last day of the month.
+function pdWeekOf(d) {
+  const y = d.getUTCFullYear(), m = d.getUTCMonth();
+  const dow = d.getUTCDay() === 0 ? 7 : d.getUTCDay();   // Mon=1..Sun=7
+  let mon = new Date(Date.UTC(y, m, d.getUTCDate() - dow + 1));
+  let sun = new Date(Date.UTC(y, m, d.getUTCDate() - dow + 7));
+  const firstOfMonth = new Date(Date.UTC(y, m, 1));
+  const lastOfMonth  = new Date(Date.UTC(y, m + 1, 0));
+  if (mon < firstOfMonth) mon = firstOfMonth;
+  if (sun > lastOfMonth)  sun = lastOfMonth;
+  return { from: pdIso(mon), to: pdIso(sun) };
+}
+function pdPrevWeek(week) { return pdWeekOf(pdParseDay(pdAddDays(week.from, -1))); }
+
+// Build the 3 comparison windows for a basis: [oldest, middle, current].
+// Each entry is [label, fromISO, toISO].
+//   yesterday → 3 single days ending at `toDate`
+//   weekly    → this month-clipped week + the previous 2
+//   monthly   → this month (clipped to `toDate` if partial) + the previous 2
+//   custom    → the N-day span + the previous N days + the N days before that
+function pdComparePeriods(fromDate, toDate, basis) {
+  if (basis === 'yesterday' || fromDate === toDate) {
+    const out = [];
+    for (let k = 2; k >= 0; k--) { const d = pdAddDays(toDate, -k); out.push([pdSpanLabel(d, d), d, d]); }
+    return out;
+  }
+  if (basis === 'monthly') {
+    const f = pdParseDay(fromDate), out = [];
+    for (let k = 2; k >= 0; k--) {
+      const anchor = new Date(Date.UTC(f.getUTCFullYear(), f.getUTCMonth() - k, 1));
+      const last = new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth() + 1, 0));
+      const pFrom = pdIso(anchor);
+      const pTo = k === 0 ? toDate : pdIso(last);   // current month clips to toDate
+      const label = (k === 0 && toDate !== pdIso(last))
+        ? pdSpanLabel(pFrom, pTo)
+        : `${PD_MON[anchor.getUTCMonth()]} ${String(anchor.getUTCFullYear()).slice(2)}`;
+      out.push([label, pFrom, pTo]);
+    }
+    return out;
+  }
+  if (basis === 'weekly') {
+    const cur = { from: fromDate, to: toDate };
+    const w1 = pdPrevWeek(cur);
+    const w2 = pdPrevWeek(w1);
+    return [w2, w1, cur].map(w => [pdSpanLabel(w.from, w.to), w.from, w.to]);
+  }
+  // custom (default): N-day span vs previous N vs the N before that
+  const N = Math.round((pdParseDay(toDate) - pdParseDay(fromDate)) / 86400000) + 1;
+  const p1From = pdAddDays(fromDate, -N),     p1To = pdAddDays(fromDate, -1);
+  const p2From = pdAddDays(fromDate, -2 * N), p2To = pdAddDays(fromDate, -N - 1);
+  return [
+    [pdSpanLabel(p2From, p2To), p2From, p2To],
+    [pdSpanLabel(p1From, p1To), p1From, p1To],
+    [pdSpanLabel(fromDate, toDate), fromDate, toDate],
+  ];
+}
+
+// Per-period aggregate for the two time-series charts (Auto/Manual quantity and
+// fully-online/manual society counts). Reuses the same day cache + accumulate
+// path as the buckets, so no extra query types are issued.
+function pdPeriodTotals(perDay, dmap) {
+  const totals = pdAccumulate(perDay, dmap);
+  const all = new Map();
+  for (const rows of totals.values()) for (const [k, v] of rows) all.set(k, v);
+  const autoQty = pdSumField(all, 'autoQty');
+  const qty = pdSumField(all, 'qty');
+  const { fow, fmw } = pdSocietyFlags(all);
+  return {
+    auto_qty: Math.round(autoQty),
+    manual_qty: Math.round(qty - autoQty),
+    fully_online_weight: fow,
+    fully_manual_weight: fmw,
   };
-  const span = Math.round((t - f) / 86400000) + 1;
-  const curLabel = span <= 31 ? pdSpanLabel(fromDate, toDate) : `${PD_MON[f.getUTCMonth()]} ${f.getUTCFullYear()}`;
-  return [monthWindow(2), monthWindow(1), [curLabel, fromDate, toDate]];
 }
 
 // ── endpoint builders ────────────────────────────────────────────────────────
@@ -931,7 +993,7 @@ async function pdDigitalAll(fromDate, toDate) {
   return { union, taluks };
 }
 
-async function pdDigitalSeries(fromDate, toDate) {
+async function pdDigitalSeries(fromDate, toDate, basis) {
   const dmap = await pdDcsTalukMap();
   const perDay = await pdFetchRange(fromDate, toDate);
   const dates = [], autoWPct = [], autoFPct = [], totalQty = [], autoQty = [], fullOnW = [], fullManW = [];
@@ -943,12 +1005,18 @@ async function pdDigitalSeries(fromDate, toDate) {
     dates.push(day); autoWPct.push(pdPct(aq, qty)); autoFPct.push(pdPct(pdSumField(rows, 'autoF'), ent));
     totalQty.push(Math.round(qty)); autoQty.push(Math.round(aq)); fullOnW.push(fow); fullManW.push(fmw);
   }
+  // Three comparison windows (this period vs prev vs 2-prior). Each snapshot
+  // carries BOTH the distribution buckets (charts 3 & 4) and the per-period
+  // aggregates the time-series charts (1 & 2) render.
   const snapshots = [];
-  for (const [label, pFrom, pTo] of pdBucketPeriods(fromDate, toDate)) {
+  for (const [label, pFrom, pTo] of pdComparePeriods(fromDate, toDate, basis)) {
     const pDays = await pdFetchRange(pFrom, pTo);
     const { wb, fb } = pdBucketsFor(pDays, dmap);
+    const tot = pdPeriodTotals(pDays, dmap);
     snapshots.push({ label, from_date: pFrom, to_date: pTo,
-      weight_buckets: PD_BUCKET_ORDER.map(b => wb[b]), fat_buckets: PD_BUCKET_ORDER.map(b => fb[b]) });
+      weight_buckets: PD_BUCKET_ORDER.map(b => wb[b]), fat_buckets: PD_BUCKET_ORDER.map(b => fb[b]),
+      auto_qty: tot.auto_qty, manual_qty: tot.manual_qty,
+      fully_online_weight: tot.fully_online_weight, fully_manual_weight: tot.fully_manual_weight });
   }
   const { wb, fb } = pdBucketsFor(perDay, dmap);
   return {
@@ -1034,7 +1102,11 @@ async function pdFarmersAll(fromDate, toDate) {
 // ── PreDairy routes ──────────────────────────────────────────────────────────
 const pdRange = req => {
   const t = pdTodayISO();
-  return { from: String(req.query.from_date || t).slice(0, 10), to: String(req.query.to_date || t).slice(0, 10) };
+  return {
+    from: String(req.query.from_date || t).slice(0, 10),
+    to: String(req.query.to_date || t).slice(0, 10),
+    basis: String(req.query.basis || '').toLowerCase(),   // yesterday|weekly|monthly|custom
+  };
 };
 const pdFail = (res, e) => { console.error('[predairy]', e && e.message ? e.message : e); res.status(500).json({ error: String((e && e.message) || e) }); };
 
@@ -1043,14 +1115,14 @@ app.get('/api/digital/all', async (req, res) => {
   try { res.json(await pdDigitalAll(from, to)); } catch (e) { pdFail(res, e); }
 });
 app.get('/api/digital/series', async (req, res) => {
-  const { from, to } = pdRange(req);
-  try { res.json(await pdDigitalSeries(from, to)); } catch (e) { pdFail(res, e); }
+  const { from, to, basis } = pdRange(req);
+  try { res.json(await pdDigitalSeries(from, to, basis)); } catch (e) { pdFail(res, e); }
 });
 app.get('/api/digital/bundle', async (req, res) => {
-  const { from, to } = pdRange(req);
+  const { from, to, basis } = pdRange(req);
   try {
     const base = await pdDigitalAll(from, to);
-    base.series = await pdDigitalSeries(from, to);
+    base.series = await pdDigitalSeries(from, to, basis);
     res.json(base);
   } catch (e) { pdFail(res, e); }
 });
