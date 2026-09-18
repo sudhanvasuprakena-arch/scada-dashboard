@@ -359,20 +359,28 @@ function render(){
         + `<td class="sel nt">N/A</td></tr>`;
       return;
     }
-    // Selected-period value
-    let selVal, selTxt;
-    if(row.cum){ selVal = row.k==='farmerApp' ? W.farmerAppCum[r.e-1] : W.secAppCum[r.e-1]; selTxt=fmtL(selVal); }
-    else if(row.avg){ selVal = basis==='monthly'? v[2] : sum(W.fatAll.slice(r.s,r.e))/n; selTxt=selVal.toFixed(2); }
-    else { selVal = v[2]*share; selTxt=fmtL(selVal); }
-
     // Per-period columns
     const colVals = cols.map(c=>colVal(row,c));
     const cellsHtml = colVals.map(x=>`<td data-v="${x??''}">${isNA(x)?'<span class="nt">N/A</span>':(row.avg? x.toFixed(2) : fmtL(x))}</td>`).join('');
 
-    // Last column = selected value + change (merged)
+    // Selected-period value. Must follow the SAME data-availability rule as the
+    // columns: rows with no daily source (e.g. Local Sale) have no real sub-monthly
+    // figure, so on non-monthly views they show N/A instead of a fabricated scaled
+    // estimate. On Monthly, the real month total is shown.
+    let selVal=null, selTxt='N/A', selNA=true;
+    if(row.cum){ selVal = row.k==='farmerApp' ? W.farmerAppCum[r.e-1] : W.secAppCum[r.e-1]; selTxt=fmtL(selVal); selNA=false; }
+    else if(row.avg){ selVal = basis==='monthly'? v[2] : sum(W.fatAll.slice(r.s,r.e))/n; selTxt=selVal.toFixed(2); selNA=false; }
+    else if(basis==='monthly'){ selVal = v[2]; selTxt=fmtL(selVal); selNA=false; }
+    else if(DAILY_OK.has(row.k)){ selVal = v[2]*share; selTxt=fmtL(selVal); selNA=false; }
+    // else: no daily source on a sub-monthly view → N/A (selVal stays null)
+
+    // Last column = selected value + change (merged). No change shown when N/A.
+    const selInner = selNA
+      ? `<span class="nt">N/A</span>`
+      : `<b>${selTxt}</b>${changeHtml(colVals)}`;
     html+=`<tr><td class="l"><b>${row.l}</b></td>
     ${cellsHtml}
-    <td class="sel" data-v="${selVal}"><b>${selTxt}</b>${changeHtml(colVals)}</td></tr>`;
+    <td class="sel${selNA?' nt':''}" data-v="${selVal??''}">${selInner}</td></tr>`;
   });
   const tbl=document.getElementById('tblUnion');
   tbl.innerHTML=html+'</tbody>'; makeSortable(tbl);
