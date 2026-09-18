@@ -86,6 +86,9 @@ main{width:100%;max-width:100%;margin:0;padding:1.25rem 1.875rem 2.5rem;display:
 #customInputs.on{display:flex}
 .dinp{padding:.4375rem .625rem;border:1px solid var(--line);border-radius:var(--r-segbtn);font-size:.8125rem;font-family:inherit;color:var(--ink);flex-shrink:0}
 .mini{font-size:.75rem;color:var(--muted);flex-shrink:0}
+.dbtn{padding:.4375rem 1rem;border:none;border-radius:var(--r-segbtn);background:var(--navy);color:#fff;font-size:.8125rem;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0}
+.dbtn:hover{background:#16457c}
+.dbtn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
 /* ── KPI row (6 cards, equal width) ──────────────────────────────────────── */
 .kpis{display:flex;gap:1.25rem;align-items:stretch;flex-wrap:wrap}
@@ -189,6 +192,7 @@ footer{font-size:.71875rem;color:var(--muted);text-align:center;padding:1.25rem}
       <input type="date" id="dFrom" class="dinp" aria-label="From date">
       <span class="mini">to</span>
       <input type="date" id="dTo" class="dinp" aria-label="To date">
+      <button type="button" id="applyRange" class="dbtn">Apply</button>
     </span>
   </div>
 
@@ -315,13 +319,47 @@ function getDateRange(b) {
   return { from:f, to:t, basis:srvBasis, label:fmtLabel(f)+' – '+fmtLabel(t)+' · '+n+(n===1?' day':' days'), key:'custom_'+f+'_'+t };
 }
 
-/** The immediately preceding window of equal length, for the KPI deltas. */
+// Month-clipped Monday–Sunday week that CONTAINS the given ISO date. Mirrors
+// the server's pdWeekOf so the KPI "previous period" is exactly the chart's
+// previous-week bar (a week never crosses a month boundary).
+function weekOfISO(iso) {
+  const d = new Date(iso+'T00:00:00');
+  const y = d.getFullYear(), m = d.getMonth();
+  const dow = d.getDay() === 0 ? 7 : d.getDay();   // Mon=1..Sun=7
+  let mon = new Date(y, m, d.getDate() - dow + 1);
+  let sun = new Date(y, m, d.getDate() - dow + 7);
+  const firstOfMonth = new Date(y, m, 1);
+  const lastOfMonth  = new Date(y, m + 1, 0);
+  if (mon < firstOfMonth) mon = firstOfMonth;
+  if (sun > lastOfMonth)  sun = lastOfMonth;
+  return { from: fmtDate(mon), to: fmtDate(sun) };
+}
+
+/** The KPI comparison window — the SAME "previous period" the charts use:
+ *   yesterday → the day before
+ *   weekly    → the previous full (month-clipped) week
+ *   monthly   → the previous full calendar month
+ *   custom    → the immediately preceding window of equal length */
 function previousRange(range) {
+  const b = range.basis;
+  if (b === 'weekly') {
+    const dayBefore = new Date(range.from+'T00:00:00'); dayBefore.setDate(dayBefore.getDate()-1);
+    const w = weekOfISO(fmtDate(dayBefore));
+    return { from:w.from, to:w.to, basis:b, label:'prev', key:'prev_'+w.from+'_'+w.to };
+  }
+  if (b === 'monthly') {
+    const cur = new Date(range.from+'T00:00:00');
+    const pFrom = new Date(cur.getFullYear(), cur.getMonth()-1, 1);
+    const pTo = new Date(cur.getFullYear(), cur.getMonth(), 0);   // last day of prev month
+    const f = fmtDate(pFrom), t = fmtDate(pTo);
+    return { from:f, to:t, basis:b, label:'prev', key:'prev_'+f+'_'+t };
+  }
+  // yesterday / custom → equal-length window immediately before.
   const n = daysBetween(range.from, range.to);
   const pTo = new Date(range.from+'T00:00:00');  pTo.setDate(pTo.getDate()-1);
   const pFrom = new Date(pTo);                   pFrom.setDate(pTo.getDate()-(n-1));
   const f = fmtDate(pFrom), t = fmtDate(pTo);
-  return { from:f, to:t, label:'prev', key:'prev_'+f+'_'+t };
+  return { from:f, to:t, basis:b, label:'prev', key:'prev_'+f+'_'+t };
 }
 
 async function fetchFromAPI(range) {
@@ -660,6 +698,8 @@ document.getElementById('segBasis').addEventListener('click', e => {
   document.querySelectorAll('#segBasis button').forEach(b => b.classList.toggle('active', b === btn));
   document.getElementById('customInputs').classList.toggle('on', basis === 'custom');
   if (basis === 'custom') {
+    // Show the pickers and prefill; DON'T fetch yet — the user confirms with
+    // Apply. If a range was applied before, keep showing it.
     if (lastCustomFrom && lastCustomTo) {
       fromCustom = lastCustomFrom; toCustom = lastCustomTo;
     } else if (!fromCustom) {
@@ -669,19 +709,31 @@ document.getElementById('segBasis').addEventListener('click', e => {
     document.getElementById('dFrom').value = fromCustom;
     document.getElementById('dTo').value = toCustom;
     constrainCustom();
+    if (lastCustomFrom && lastCustomTo) fetchLive();   // re-show a previously applied range
+    return;
   }
   fetchLive();
 });
+// Custom pickers only update state + constrain; fetching waits for Apply.
 document.getElementById('dFrom').addEventListener('change', e => {
   fromCustom = e.target.value;
   // If "to" is now before the new "from", snap it up to "from".
   if (toCustom && toCustom < fromCustom) { toCustom = fromCustom; document.getElementById('dTo').value = toCustom; }
   constrainCustom();
-  if (fromCustom && toCustom) { lastCustomFrom = fromCustom; lastCustomTo = toCustom; fetchLive(); }
 });
 document.getElementById('dTo').addEventListener('change', e => {
   toCustom = e.target.value;
-  if (fromCustom && toCustom) { lastCustomFrom = fromCustom; lastCustomTo = toCustom; fetchLive(); }
+});
+document.getElementById('applyRange').addEventListener('click', () => {
+  const sd = document.getElementById('dFrom').value;
+  const ed = document.getElementById('dTo').value;
+  if (!sd || !ed) { alert('Please pick both a From and To date.'); return; }
+  const today = fmtDate(new Date());
+  if (ed > today) { alert('To date cannot be in the future.'); return; }
+  if (sd > ed)    { alert('From date cannot be after To date.'); return; }
+  fromCustom = sd; toCustom = ed;
+  lastCustomFrom = sd; lastCustomTo = ed;
+  fetchLive();
 });
 
 showEmpty();
