@@ -96,6 +96,9 @@ main{width:100%;max-width:100%;margin:0;padding:1.25rem 1.875rem 2.5rem;display:
 #customInputs.on{display:flex}
 .dinp{padding:.4375rem .625rem;border:1px solid var(--line);border-radius:var(--r-segbtn);font-size:.8125rem;font-family:inherit;color:var(--ink);flex-shrink:0}
 .mini{font-size:.75rem;color:var(--muted);flex-shrink:0}
+.dbtn{padding:.4375rem 1rem;border:none;border-radius:var(--r-segbtn);background:var(--navy);color:#fff;font-size:.8125rem;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0}
+.dbtn:hover{background:#16457c}
+.dbtn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
 /* ── KPI row ─────────────────────────────────────────────────────────────── */
 .kpis{display:flex;gap:1.25rem;align-items:stretch;flex-wrap:wrap}
@@ -202,6 +205,7 @@ footer{font-size:.71875rem;color:var(--muted);text-align:center;padding:1.25rem}
       <input type="date" id="dFrom" class="dinp" aria-label="From date">
       <span class="mini">to</span>
       <input type="date" id="dTo" class="dinp" aria-label="To date">
+      <button type="button" id="applyRange" class="dbtn">Apply</button>
     </span>
   </div>
 
@@ -252,7 +256,7 @@ footer{font-size:.71875rem;color:var(--muted);text-align:center;padding:1.25rem}
 <footer>BAMUL — Bangalore Urban, Rural &amp; Ramanagara District Co-operative Milk Union Ltd. · Source: UNION_054 Live DB</footer>
 
 <script>
-const API = '/papi';
+const API = 'https://bangalore-dairy.duckdns.org/papi';
 let basis = 'daily', fromCustom = '', toCustom = '', lastCustomFrom = '', lastCustomTo = '';
 let liveLoading = false;
 const clientCache = {};
@@ -268,13 +272,14 @@ const daysBetween = (a, b) =>
 
 function getDateRange(b) {
   b = b || basis;
+  const srvBasis = b === 'daily' ? 'yesterday' : b;   // basis name for the KPI delta logic
   const today = new Date();
   if (b === 'daily') {
     // "Yesterday" — today's collection is still arriving, so the last full day
     // is yesterday. Matches union-summary.html.
     const y = new Date(today); y.setDate(today.getDate() - 1);
     const t = fmtDate(y);
-    return { asOf:t, from:t, to:t, label:fmtLabel(t)+' · 1 day', key:'daily_'+t };
+    return { asOf:t, from:t, to:t, basis:srvBasis, label:fmtLabel(t)+' · 1 day', key:'daily_'+t };
   }
   // Ranges end at YESTERDAY, never today: today's collection is still arriving,
   // so including it adds an empty trailing point / false "0" day.
@@ -287,7 +292,7 @@ function getDateRange(b) {
     const end = yday < mon ? new Date(mon) : yday;   // don't go before Monday
     const f = fmtDate(mon), t = fmtDate(end);
     const n = Math.round((new Date(t+'T00:00:00') - new Date(f+'T00:00:00'))/86400000) + 1;
-    return { asOf:t, from:f, to:t,
+    return { asOf:t, from:f, to:t, basis:srvBasis,
              label:(f === t ? fmtLabel(t) : fmtLabel(f)+' – '+fmtLabel(t))+' · '+n+(n===1?' day':' days'),
              key:'weekly_'+f+'_'+t };
   }
@@ -296,15 +301,49 @@ function getDateRange(b) {
     const first = new Date(today.getFullYear(), today.getMonth(), 1);
     const end = yday < first ? new Date(first) : yday;
     const from = fmtDate(first), t = fmtDate(end);
-    return { asOf:t, from, to:t, label:today.toLocaleDateString('en-IN',{month:'long',year:'numeric'}), key:'monthly_'+from+'_'+t };
+    return { asOf:t, from, to:t, basis:srvBasis, label:today.toLocaleDateString('en-IN',{month:'long',year:'numeric'}), key:'monthly_'+from+'_'+t };
   }
   const f = fromCustom || fmtDate(today), t = toCustom || fmtDate(today);
   const n = daysBetween(f, t);
-  return { asOf:t, from:f, to:t, label:fmtLabel(f)+' – '+fmtLabel(t)+' · '+n+(n===1?' day':' days'), key:'custom_'+f+'_'+t };
+  return { asOf:t, from:f, to:t, basis:srvBasis, label:fmtLabel(f)+' – '+fmtLabel(t)+' · '+n+(n===1?' day':' days'), key:'custom_'+f+'_'+t };
 }
 
-/** The immediately preceding window of equal length, for the KPI deltas. */
+// Month-clipped Monday–Sunday week that CONTAINS the given ISO date. Mirrors
+// the server's pdWeekOf so the KPI "previous period" is exactly the chart's
+// previous-week bar (a week never crosses a month boundary).
+function weekOfISO(iso) {
+  const d = new Date(iso+'T00:00:00');
+  const y = d.getFullYear(), m = d.getMonth();
+  const dow = d.getDay() === 0 ? 7 : d.getDay();   // Mon=1..Sun=7
+  let mon = new Date(y, m, d.getDate() - dow + 1);
+  let sun = new Date(y, m, d.getDate() - dow + 7);
+  const firstOfMonth = new Date(y, m, 1);
+  const lastOfMonth  = new Date(y, m + 1, 0);
+  if (mon < firstOfMonth) mon = firstOfMonth;
+  if (sun > lastOfMonth)  sun = lastOfMonth;
+  return { from: fmtDate(mon), to: fmtDate(sun) };
+}
+
+/** The KPI comparison window — the SAME "previous period" the charts use:
+ *   yesterday → the day before
+ *   weekly    → the previous full (month-clipped) week
+ *   monthly   → the previous full calendar month
+ *   custom    → the immediately preceding window of equal length */
 function previousRange(range) {
+  const b = range.basis;
+  if (b === 'weekly') {
+    const dayBefore = new Date(range.from+'T00:00:00'); dayBefore.setDate(dayBefore.getDate()-1);
+    const w = weekOfISO(fmtDate(dayBefore));
+    return { asOf:w.to, from:w.from, to:w.to, label:'prev', key:'prev_'+w.from+'_'+w.to };
+  }
+  if (b === 'monthly') {
+    const cur = new Date(range.from+'T00:00:00');
+    const pFrom = new Date(cur.getFullYear(), cur.getMonth()-1, 1);
+    const pTo = new Date(cur.getFullYear(), cur.getMonth(), 0);   // last day of prev month
+    const f = fmtDate(pFrom), t = fmtDate(pTo);
+    return { asOf:t, from:f, to:t, label:'prev', key:'prev_'+f+'_'+t };
+  }
+  // yesterday / custom → equal-length window immediately before.
   const n = daysBetween(range.from, range.to);
   const pTo = new Date(range.from+'T00:00:00');   pTo.setDate(pTo.getDate()-1);
   const pFrom = new Date(pTo);                    pFrom.setDate(pTo.getDate()-(n-1));
@@ -344,22 +383,26 @@ function kpiCards(items) {
   ).join('');
 }
 
-function renderData(live, range, prev) {
+function renderData(live, range, prev, prevLoading) {
   const k = live.kpis;
   const pk = prev ? prev.kpis : null;
   document.getElementById('reportingPeriod').textContent = range.label;
   document.getElementById('rangeChip').textContent = range.label;
 
+  // While the previous-period comparison is still being fetched, show a
+  // "comparing…" placeholder in the delta slot instead of the fallback text,
+  // so the value doesn't visibly swap once the second request lands.
+  const spin = '<span class="nt">comparing…</span>';
   document.getElementById('kpiRow').innerHTML = kpiCards([
     { l:'Total Farmer App Users', v:fmtI(k.farmer_app_users),
       d: pk ? deltaAbs(k.farmer_app_users, pk.farmer_app_users, 'added in range')
-            : `as of ${fmtLabel(range.to)}` },
+            : (prevLoading ? spin : `as of ${fmtLabel(range.to)}`) },
     { l:'Secretary App Users', v:fmtI(k.secretary_app_users),
       d: pk ? deltaAbs(k.secretary_app_users, pk.secretary_app_users, 'added in range')
-            : `as of ${fmtLabel(range.to)}` },
+            : (prevLoading ? spin : `as of ${fmtLabel(range.to)}`) },
     { l:'Total Number of Pourers', v:fmtI(k.pourings_recorded),
       d: pk ? deltaPct(k.pourings_recorded, pk.pourings_recorded)
-            : `${fmtN(k.total_qty_ltrs)} ltrs · fat ${k.avg_fat}%` },
+            : (prevLoading ? spin : `${fmtN(k.total_qty_ltrs)} ltrs · fat ${k.avg_fat}%`) },
   ]);
 
   const span = daysBetween(range.from, range.to);
@@ -421,8 +464,9 @@ async function fetchLive() {
   const prevR = previousRange(range);
 
   if (clientCache[range.key]) {
-    renderData(clientCache[range.key], range, clientCache[prevR.key] || null);
-    if (!clientCache[prevR.key]) loadPrevAndRerender(range, prevR);
+    const prevMissing = !clientCache[prevR.key];
+    renderData(clientCache[range.key], range, clientCache[prevR.key] || null, prevMissing);
+    if (prevMissing) loadPrevAndRerender(range, prevR);
     return;
   }
   if (liveLoading) return;
@@ -431,8 +475,9 @@ async function fetchLive() {
   showLoading(range);
   try {
     const data = await fetchFromAPI(range);
-    renderData(data, range, clientCache[prevR.key] || null);
-    if (!clientCache[prevR.key]) loadPrevAndRerender(range, prevR);
+    const prevMissing = !clientCache[prevR.key];
+    renderData(data, range, clientCache[prevR.key] || null, prevMissing);
+    if (prevMissing) loadPrevAndRerender(range, prevR);
   } catch (e) {
     showEmpty('<b>Server not reachable</b> — start it with: <code>cd server &amp;&amp; python server.py</code>');
   } finally {
@@ -457,6 +502,40 @@ async function prefetch() {
 }
 
 /* ── filter bar wiring ───────────────────────────────────────────────────── */
+/* Selectable custom-range window. To match union-summary.html EXACTLY, the
+   bounds come from the same /union054/procurement wire (its daily `dates`
+   series drives union-summary's picker min/max). We fetch that window once and
+   cache it here; until it loads we fall back to a rolling ~90-day window. */
+let customWin = null; // { min:'YYYY-MM-DD', max:'YYYY-MM-DD' }
+async function loadCustomWindow() {
+  try {
+    const res = await fetch(`${API}/bangalore/union054/procurement`);
+    const json = await res.json();
+    const dates = json && json.success && json.data && json.data.wire && json.data.wire.dates;
+    if (Array.isArray(dates) && dates.length) {
+      customWin = { min: dates[0], max: dates[dates.length-1] };
+      if (basis === 'custom') constrainCustom();
+    }
+  } catch (e) { /* fall back to the 90-day window below */ }
+}
+
+/* Apply the window to the pickers. "From" spans [min, max]. "To" is bounded
+   below by the currently-selected "From" (days before From are greyed out)
+   and above by max. */
+function constrainCustom() {
+  let minStr, maxStr;
+  if (customWin) {
+    minStr = customWin.min; maxStr = customWin.max;
+  } else {
+    const today = new Date();
+    const min90 = new Date(today); min90.setDate(today.getDate()-90);
+    minStr = fmtDate(min90); maxStr = fmtDate(today);
+  }
+  const df = document.getElementById('dFrom'), dt = document.getElementById('dTo');
+  if (df) { df.min = minStr; df.max = maxStr; }
+  if (dt) { dt.min = fromCustom || minStr; dt.max = maxStr; }
+}
+
 document.getElementById('segBasis').addEventListener('click', e => {
   const btn = e.target.closest('button');
   if (!btn) return;
@@ -464,6 +543,8 @@ document.getElementById('segBasis').addEventListener('click', e => {
   document.querySelectorAll('#segBasis button').forEach(b => b.classList.toggle('active', b === btn));
   document.getElementById('customInputs').classList.toggle('on', basis === 'custom');
   if (basis === 'custom') {
+    // Show the pickers and prefill; DON'T fetch yet — the user confirms with
+    // Apply. If a range was applied before, keep showing it.
     if (lastCustomFrom && lastCustomTo) {
       fromCustom = lastCustomFrom; toCustom = lastCustomTo;
     } else if (!fromCustom) {
@@ -473,19 +554,36 @@ document.getElementById('segBasis').addEventListener('click', e => {
     }
     document.getElementById('dFrom').value = fromCustom;
     document.getElementById('dTo').value = toCustom;
+    constrainCustom();
+    if (lastCustomFrom && lastCustomTo) fetchLive();   // re-show a previously applied range
+    return;
   }
   fetchLive();
 });
+// Custom pickers only update state + constrain; fetching waits for Apply.
 document.getElementById('dFrom').addEventListener('change', e => {
   fromCustom = e.target.value;
-  if (fromCustom && toCustom) { lastCustomFrom = fromCustom; lastCustomTo = toCustom; fetchLive(); }
+  // If "to" is now before the new "from", snap it up to "from".
+  if (toCustom && toCustom < fromCustom) { toCustom = fromCustom; document.getElementById('dTo').value = toCustom; }
+  constrainCustom();
 });
 document.getElementById('dTo').addEventListener('change', e => {
   toCustom = e.target.value;
-  if (fromCustom && toCustom) { lastCustomFrom = fromCustom; lastCustomTo = toCustom; fetchLive(); }
+});
+document.getElementById('applyRange').addEventListener('click', () => {
+  const sd = document.getElementById('dFrom').value;
+  const ed = document.getElementById('dTo').value;
+  if (!sd || !ed) { alert('Please pick both a From and To date.'); return; }
+  const today = fmtDate(new Date());
+  if (ed > today) { alert('To date cannot be in the future.'); return; }
+  if (sd > ed)    { alert('From date cannot be after To date.'); return; }
+  fromCustom = sd; toCustom = ed;
+  lastCustomFrom = sd; lastCustomTo = ed;
+  fetchLive();
 });
 
 showEmpty();
+loadCustomWindow();
 fetchLive().then(() => prefetch());
 </script>
 </body>
