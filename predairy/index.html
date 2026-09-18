@@ -153,12 +153,12 @@ document.getElementById('reportingPeriod').textContent=PL[2];
 let basis='monthly',from=W.dates[Math.max(0,DAYS-14)],to=maxDate;
 
 function range(){
-  if(basis==='daily'){const tod=new Date();const yest=new Date(tod);yest.setDate(tod.getDate()-1);const yestStr=yest.toISOString().split('T')[0];let i=W.dates.indexOf(yestStr);if(i<0){i=DAYS-1;while(i>0&&W.dailyAll[i]===0)i--;}return{s:i,e:i+1};}//
+  if(basis==='daily'){const tod=new Date();const yest=new Date(tod);yest.setDate(tod.getDate()-1);const yestStr=yest.getFullYear()+"-"+("0"+(yest.getMonth()+1)).slice(-2)+"-"+("0"+yest.getDate()).slice(-2);let i=W.dates.indexOf(yestStr);if(i<0){i=DAYS-1;while(i>0&&W.dailyAll[i]===0)i--;}return{s:i,e:i+1};}//
   if(basis==='weekly'){
     // use today to find current week Mon
     const today=new Date(); const dow=today.getDay(); const daysFromMon=dow===0?6:dow-1;
     const mon=new Date(today); mon.setDate(today.getDate()-daysFromMon);
-    const monStr=mon.toISOString().split('T')[0];
+    const monStr=mon.getFullYear()+"-"+("0"+(mon.getMonth()+1)).slice(-2)+"-"+("0"+mon.getDate()).slice(-2);
     // find last non-zero day
     let last=DAYS-1; while(last>0&&W.dailyAll[last]===0)last--;
     let s=W.dates.indexOf(monStr); if(s<0)s=Math.max(0,last-6);
