@@ -153,7 +153,7 @@ document.getElementById('reportingPeriod').textContent=PL[2];
 let basis='monthly',from=W.dates[Math.max(0,DAYS-14)],to=maxDate;
 
 function range(){
-  if(basis==='daily'){let i=DAYS-1;while(i>0&&W.dailyAll[i]===0)i--;i=Math.max(0,i-1);return{s:i,e:i+1};}
+  if(basis==='daily'){const tod=new Date();const yest=new Date(tod);yest.setDate(tod.getDate()-1);const yestStr=yest.toISOString().split('T')[0];let i=W.dates.indexOf(yestStr);if(i<0){i=DAYS-1;while(i>0&&W.dailyAll[i]===0)i--;}return{s:i,e:i+1};}//
   if(basis==='weekly'){
     // use today to find current week Mon
     const today=new Date(); const dow=today.getDay(); const daysFromMon=dow===0?6:dow-1;
