@@ -26,12 +26,30 @@ jobs:
 
             sudo cp "$REPO"/*.html "$WEB"/
 
-            for f in "$REPO"/*.html; do
-              name=$(basename "$f")
-              if ! sudo cmp -s "$f" "$WEB/$name"; then
-                echo "DEPLOY VERIFICATION FAILED: $name does not match repo"
+            # Pre-dairy pages live in a subfolder; the root glob above does not
+            # recurse, so copy them explicitly.
+            sudo mkdir -p "$WEB"/predairy
+            sudo cp "$REPO"/predairy/*.html "$WEB"/predairy/
+
+            for f in "$REPO"/*.html "$REPO"/predairy/*.html; do
+              rel=${f#"$REPO"/}
+              if ! sudo cmp -s "$f" "$WEB/$rel"; then
+                echo "DEPLOY VERIFICATION FAILED: $rel does not match repo"
                 exit 1
               fi
             done
+
+            # Pre-dairy API (union054 + digital + farmers) runs as its own systemd
+            # service from /opt/procurement-api, a separate dir from this repo. The
+            # steps above only touch static HTML, so the API code must be copied over
+            # and the service restarted for API changes to take effect. Restart only
+            # when the file actually changed, to avoid needless service bounces.
+            API_SRC="$REPO/procurement-api/server.js"
+            API_DST=/opt/procurement-api/server.js
+            if [ -f "$API_SRC" ] && ! sudo cmp -s "$API_SRC" "$API_DST"; then
+              sudo cp "$API_SRC" "$API_DST"
+              sudo systemctl restart procurement-api.service
+              echo "$(date --iso-8601=seconds) | procurement-api updated + restarted" | sudo tee -a /home/opc/deploy.log
+            fi
 
             echo "$(date --iso-8601=seconds) | Deployed + verified from GitHub Actions" | sudo tee -a /home/opc/deploy.log

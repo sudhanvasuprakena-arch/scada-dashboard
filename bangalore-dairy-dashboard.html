@@ -160,7 +160,7 @@ button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 .p-cream .step-tag{color:var(--blue-deep)}
 .panel h3{font-size:26px;font-weight:800;color:var(--blue-ink);letter-spacing:-.01em;line-height:1.25;margin-top:1px;overflow:hidden;text-overflow:ellipsis}
 .panel .hint{font-size:20px;color:var(--muted);font-weight:500;margin:1px 0 6px;overflow:hidden;text-overflow:ellipsis}
-.panel-header{height:80px;display:flex;flex-direction:column;justify-content:flex-start;overflow:hidden}
+.panel-header{min-height:80px;display:flex;flex-direction:column;justify-content:flex-start}
 .rows{flex:1;display:flex;flex-direction:column;justify-content:space-evenly;gap:4px}
 .rows.stacked{gap:4px}
 .rw{
@@ -614,7 +614,7 @@ const BASE_URL = '';
 const params = new URLSearchParams(window.location.search);
 const dairy  = params.get('dairy') || 'bengaluru';
 
-function formatIN(n){ return Number(n).toLocaleString('en-IN'); }
+function formatIN(n){ return Math.round(Number(n) || 0).toLocaleString('en-IN'); }
 function num(v){ return parseFloat(v || 0); }
 function int(v){ return parseInt(v || 0, 10); }
 
@@ -657,8 +657,18 @@ async function loadSummary(){
   let milkIn = 0, milkOut = 0, trucks = 0, dispatched = 0;
   const din = await fetchData('truck-entry');
   if(din){ milkIn = din.reduce((s,r)=>{ const n=num(r.NetWeight); return s+(n>0?n:Math.max(0,num(r.GrossWeight)-num(r.TareWeight))); },0); trucks = din.length; }
-  const dout = await fetchData('milk-dispatch-truck');
-  if(dout){ milkOut = dout.reduce((s,r)=>s+num(r.NetWeight),0); dispatched = dout.length; }
+  // Milk dispatched must match the milk-dispatch-details page: it is the sum of
+  // Product Dairy + NMP transfers (Batch_Log), NOT the milk-dispatch-truck feed.
+  // Qty = SUM(TotalQty), trucks = SUM(Entries) across both categories.
+  const [pd, nmp] = await Promise.all([
+    fetchData('product-dispatch'),
+    fetchData('nmp-dispatch'),
+  ]);
+  for(const rows of [pd, nmp]){
+    if(!rows) continue;
+    milkOut    += rows.reduce((s,r)=>s+num(r.TotalQty),0);
+    dispatched += rows.reduce((s,r)=>s+(parseInt(r.Entries,10)||0),0);
+  }
   const used = milkIn - milkOut;
 
   setText('sum-in',  milkIn  > 0 ? formatIN(milkIn)  : '0');
@@ -772,32 +782,28 @@ async function loadDispatch(){
   const completed = d.filter(r=>r.IsCompleted).length;
   const pct = d.length ? ((completed/d.length)*100).toFixed(1) : 0;
   setFoot('disp-foot', `<span class="chip green">${completed}/${d.length} trucks · ${pct}%</span>`);
-  // Product Dairy from Batch_Log D3 IN (25,40) — includes all lines (CST + Dispatch Lines)
+  // Product Dairy from Batch_Log D3 IN (25,40) — includes all lines (CST + Dispatch Lines).
+  // Always set the tile (default 0 when the period has no data) so it never retains a
+  // stale value from a previously selected period.
   const prod = await fetchData('product-dispatch');
+  const prodQty = (prod||[]).reduce((s,r)=>s+num(r.TotalQty),0);
+  setHTML('disp-product', `${formatIN(Math.round(prodQty))}<small>Kg</small>`);
+  clearNone('#disp-product');
   const nmp = await fetchData('nmp-dispatch');
-  const pdQty = prod && prod.length ? prod.reduce((s,r)=>s+num(r.TotalQty),0) : 0;
-  const nmpQty = nmp && nmp.length ? nmp.reduce((s,r)=>s+num(r.TotalQty),0) : 0;
+  const nmpQty = (nmp||[]).reduce((s,r)=>s+num(r.TotalQty),0);
+  setHTML('disp-nmp', `${formatIN(Math.round(nmpQty))}<small>Kg</small>`);
+  clearNone('#disp-nmp');
   // disp-total = pd + nmp (matches details page kpi-net)
-  setHTML('disp-total', `${formatIN(Math.round(pdQty+nmpQty))}<small>Kg</small>`);
+  setHTML('disp-total', `${formatIN(Math.round(prodQty+nmpQty))}<small>Kg</small>`);
   clearNone('#disp-total');
-  if(prod && prod.length){
-    setHTML('disp-product', `${formatIN(Math.round(pdQty))}<small>Kg</small>`);
-    clearNone('#disp-product');
-  }
-  if(nmp && nmp.length){
-    setHTML('disp-nmp', `${formatIN(Math.round(nmpQty))}<small>Kg</small>`);
-    clearNone('#disp-nmp');
-  }
   // Other unions from MilkDispatch (excluding NMP, milk products only)
   const others = await fetchData('milk-dispatch');
-  if(others && others.length){
-    const milkProducts = ['RAW MILK','PAST MILK','SKIM MILK','HOMOGENISED MILK'];
-    const otherQty = others
-      .filter(r=>milkProducts.includes((r.ProductCode||'').toUpperCase()) && !(r.DairyCode||'').toUpperCase().includes('NMP'))
-      .reduce((s,r)=>s+num(r.TotalQty),0);
-    setHTML('disp-other', `${formatIN(Math.round(otherQty))}<small>Kg</small>`);
-    clearNone('#disp-other');
-  }
+  const milkProducts = ['RAW MILK','PAST MILK','SKIM MILK','HOMOGENISED MILK'];
+  const otherQty = (others||[])
+    .filter(r=>milkProducts.includes((r.ProductCode||'').toUpperCase()) && !(r.DairyCode||'').toUpperCase().includes('NMP'))
+    .reduce((s,r)=>s+num(r.TotalQty),0);
+  setHTML('disp-other', `${formatIN(Math.round(otherQty))}<small>Kg</small>`);
+  clearNone('#disp-other');
 }
 
 /* ---------- Stage 6 · AI Production ---------- */

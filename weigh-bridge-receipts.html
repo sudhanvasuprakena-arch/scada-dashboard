@@ -307,42 +307,74 @@ async function fetchData(path, extra=''){
 /* Decide which columns to show per product */
 function hasFatSNF(product){ return /milk|cream|paneer/i.test(product); }
 
+/* Net Kg for a row: NetWeight if present, else Gross − Tare. */
+function rowNet(r){ return num(r.NetWeight)>0 ? num(r.NetWeight) : Math.max(0, num(r.GrossWeight)-num(r.TareWeight)); }
+
+/* Roll DairyCode up into one of three combined sources so the section shows a
+   handful of grouped rows instead of one row per raw code:
+   - BMC          : any code containing "BMC" (BMC_44, BMC-7, "BMC 64", …)
+   - CC           : chilling centres — codes containing "CC" ((ANEKAL CC), …)
+   - Other Unions : everything else (CHIMUL, SHIMUL, other dairies, stray codes) */
+function srcKey(code){
+  const c = (code || '').trim();
+  if(/bmc/i.test(c)) return 'BMC';
+  if(/\bcc\b/i.test(c) || /cc\)/i.test(c)) return 'CC';
+  return 'Other Unions';
+}
+
+/* Quantity-weighted average of `field`, weighted by each row's net Kg. Fat/SNF
+   must be weighted by quantity, not a plain mean, because trucks carry very
+   different volumes. Returns null when no usable rows. */
+function weightedAvg(rows, field){
+  let wsum = 0, w = 0;
+  rows.forEach(r=>{
+    const v = num(r[field]), kg = rowNet(r);
+    if(v>0 && kg>0){ wsum += v*kg; w += kg; }
+  });
+  return w>0 ? (wsum/w).toFixed(2) : null;
+}
+
 function renderSection(product, rows, catIndex){
-  const totalNet = rows.reduce((s,r)=>s+(num(r.NetWeight)>0?num(r.NetWeight):Math.max(0,num(r.GrossWeight)-num(r.TareWeight))),0);
-  const fatRows  = rows.filter(r=>num(r.Fat_First)>0);
-  const snfRows  = rows.filter(r=>num(r.SNF_First)>0);
-  const avgFat   = fatRows.length ? (fatRows.reduce((s,r)=>s+num(r.Fat_First),0)/fatRows.length).toFixed(2) : null;
-  const avgSNF   = snfRows.length ? (snfRows.reduce((s,r)=>s+num(r.SNF_First),0)/snfRows.length).toFixed(2) : null;
+  const totalNet = rows.reduce((s,r)=>s+rowNet(r),0);
   const showFS   = hasFatSNF(product);
+  // Section footer Fat/SNF are quantity-weighted across every truck.
+  const avgFat   = weightedAvg(rows, 'Fat_First');
+  const avgSNF   = weightedAvg(rows, 'SNF_First');
 
   const fatSnfHeaders = showFS ? '<th class="r">Avg Fat (%)</th><th class="r">Avg SNF (%)</th>' : '';
   const fatSnfFooter  = showFS
     ? `<td class="r kg">${avgFat ? avgFat+'<small>%</small>' : '—'}</td><td class="r kg">${avgSNF ? avgSNF+'<small>%</small>' : '—'}</td>`
     : '';
 
-  /* Group by DairyCode (source) */
+  /* Group into the three combined sources (BMC, CC, Other Unions). Each is one
+     rolled-up row; Fat/SNF quantity-weighted. */
   const bySource = {};
   rows.forEach(r=>{
-    const src = r.DairyCode || 'Unknown';
+    const src = srcKey(r.DairyCode);
     if(!bySource[src]) bySource[src] = [];
     bySource[src].push(r);
   });
 
-  const sourceRows = Object.entries(bySource).map(([src, srows])=>{
-    const sNet = srows.reduce((s,r)=>s+(num(r.NetWeight)>0?num(r.NetWeight):Math.max(0,num(r.GrossWeight)-num(r.TareWeight))),0);
-    const sFatR = srows.filter(r=>num(r.Fat_First)>0);
-    const sSnfR = srows.filter(r=>num(r.SNF_First)>0);
-    const sFat  = sFatR.length ? (sFatR.reduce((s,r)=>s+num(r.Fat_First),0)/sFatR.length).toFixed(2) : '—';
-    const sSNF  = sSnfR.length ? (sSnfR.reduce((s,r)=>s+num(r.SNF_First),0)/sSnfR.length).toFixed(2) : '—';
+  // Stable display order: BMC, CC, Other Unions, then anything unexpected;
+  // ties broken by truck count.
+  const order = { 'BMC':0, 'CC':1, 'Other Unions':2 };
+  const sortedSources = Object.entries(bySource)
+    .sort((a,b)=> (order[a[0]] ?? 9) - (order[b[0]] ?? 9) || b[1].length - a[1].length);
+
+  const sourceRows = sortedSources.map(([src, srows])=>{
+    const sNet  = srows.reduce((s,r)=>s+rowNet(r),0);
+    const sFat  = weightedAvg(srows, 'Fat_First');
+    const sSNF  = weightedAvg(srows, 'SNF_First');
+    const sDone = srows.filter(r=>r.IsCompleted).length;
     const fatSnfCells = showFS
-      ? `<td class="r pc">${sFat !== '—' ? sFat+'<small>%</small>' : '—'}</td><td class="r pc">${sSNF !== '—' ? sSNF+'<small>%</small>' : '—'}</td>`
+      ? `<td class="r pc">${sFat ? sFat+'<small>%</small>' : '—'}</td><td class="r pc">${sSNF ? sSNF+'<small>%</small>' : '—'}</td>`
       : '';
     return `<tr>
       <td><span class="src">${src}</span></td>
       <td class="r kg">${srows.length} <small>trucks</small></td>
       <td class="r kg">${formatIN(Math.round(sNet))}<small>Kg</small></td>
       ${fatSnfCells}
-      <td class="r"><span class="chip ${srows.filter(r=>r.IsCompleted).length===srows.length?'green':'amber'}">${srows.filter(r=>r.IsCompleted).length}/${srows.length}</span></td>
+      <td class="r"><span class="chip ${sDone===srows.length?'green':'amber'}">${sDone}/${srows.length}</span></td>
     </tr>`;
   }).join('');
 
@@ -357,7 +389,7 @@ function renderSection(product, rows, catIndex){
     <table>
       <thead>
         <tr>
-          <th>Source (Dairy Code)</th>
+          <th>Source</th>
           <th class="r">Trucks</th>
           <th class="r">Total Received (Kg)</th>
           ${fatSnfHeaders}

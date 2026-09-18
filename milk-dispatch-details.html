@@ -269,14 +269,14 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
     <span class="cat-tag">Category 1</span>
     <h3>Milk Dispatched to Product Dairy</h3>
   </div>
-  <div class="section-total reveal"><span class="tot num" id="tot-pd">—<small> Kg</small></span></div>
+  <span class="tot num" id="tot-pd" hidden></span>
   <div class="tanks" id="sec-pd"></div>
 
   <div class="section-head reveal" style="margin-top:26px">
     <span class="cat-tag">Category 2</span>
     <h3>Milk Dispatched to NMP (Nandini Milk Products)</h3>
   </div>
-  <div class="section-total reveal"><span class="tot num" id="tot-nmp">—<small> Kg</small></span></div>
+  <span class="tot num" id="tot-nmp" hidden></span>
   <div class="tanks" id="sec-nmp"></div>
 
 </main>
@@ -294,7 +294,9 @@ const dispatchData = {
   nmp: [],
 };
 
-function formatIN(n){ return n.toLocaleString('en-IN'); }
+// Kg values are whole numbers on screen — round before formatting so totals
+// (which sum un-rounded section quantities) don't show a stray .88 tail.
+function formatIN(n){ return Math.round(Number(n) || 0).toLocaleString('en-IN'); }
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 document.querySelectorAll('[data-count]').forEach(el=>{
   const target = parseInt(el.dataset.count,10);
@@ -334,6 +336,9 @@ function renderSection(list, wrapId, totId, emptyMsg){
     const kg  = d.kg  == null ? '—' : formatIN(d.kg);
     const fat = d.fat == null ? '—' : d.fat.toFixed(2);
     const snf = d.snf == null ? '—' : d.snf.toFixed(2);
+    // Hide the Avg Fat / Avg SNF block entirely when both are null (e.g. a
+    // combined "To Production Dairy" card where an average is meaningless).
+    const showFS = !(d.fat == null && d.snf == null);
     const typesHtml = d.types && d.types.length
       ? d.types.map(t=>`<span class="vchip">${t}</span>`).join('')
       : '';
@@ -349,10 +354,10 @@ function renderSection(list, wrapId, totId, emptyMsg){
           <div class="lbl">Total dispatched</div>
           <div class="v num">${kg}<small>Kg</small></div>
         </div>
-        <div class="fs">
+        ${showFS ? `<div class="fs">
           <div class="cell"><div class="lbl">Avg Fat</div><div class="v num">${fat}<small>%</small></div></div>
           <div class="cell"><div class="lbl">Avg SNF</div><div class="v num">${snf}<small>%</small></div></div>
-        </div>
+        </div>` : ''}
         ${typesHtml ? `<div class="vars"><div class="lbl">Product Types</div><div class="vlist">${typesHtml}</div></div>` : ''}
         <div class="vars">
           <div class="lbl">Trucks</div>
@@ -443,17 +448,15 @@ async function loadDispatchKpis(){
   const el = document.getElementById('sec-wb'); if(el){ el.innerHTML=''; renderSection(wb.map(toEntry), 'sec-wb', 'tot-wb', 'No weigh bridge dispatches for this range.'); }
 }
 
-/* Merge only the "Dispatch Line-N" rows into a single entry; any other row
-   (e.g. "CST To Product Dairy", which is a cream transfer) is left untouched.
-   Quantities and trucks are summed; Fat/SNF are quantity-weighted averages
-   (the correct way to combine two streams — a plain mean would misreport
-   when the lines carry very different volumes). Rows with no Fat/SNF are
-   skipped in the weighting so they don't drag the average down. */
-function combineLines(rows, label){
-  const isLine = r => /dispatch\s*line/i.test(r.LineName || '');
-  const lines  = rows.filter(isLine);
-  const others = rows.filter(r => !isLine(r));
-
+/* Merge dispatch rows into a single entry under `label`.
+   When `mergeAll` is true (Product Dairy: Dispatch Line-N + CST To Product
+   Dairy are the same physical stream), EVERY row is summed into one entry —
+   quantities and trucks add up, and Fat/SNF are dropped (set null) so the
+   combined card shows only Total dispatched + Trucks.
+   When `mergeAll` is false (default, e.g. NMP), only the "Dispatch Line-N"
+   rows are merged (Fat/SNF as quantity-weighted averages) and any other row
+   is kept as its own card. */
+function combineLines(rows, label, mergeAll){
   const toEntry = r => ({
     name: r.LineName,
     kg: Math.round(n2(r.TotalQty)),
@@ -463,50 +466,21 @@ function combineLines(rows, label){
     source: 'Batch_Log'
   });
 
-  const out = [];
-  if(lines.length){
-    let kg = 0, trucks = 0, fatQty = 0, fatSum = 0, snfQty = 0, snfSum = 0;
-    lines.forEach(r=>{
-      const q = n2(r.TotalQty);
-      kg += q;
+  if(mergeAll){
+    if(!rows.length) return [];
+    let kg = 0, trucks = 0;
+    rows.forEach(r=>{
+      kg += n2(r.TotalQty);
       trucks += (parseInt(r.Entries,10) || 0);
-      const f = n2(r.AvgFat), s = n2(r.AvgSNF);
-      if(f > 0 && q > 0){ fatSum += f * q; fatQty += q; }
-      if(s > 0 && q > 0){ snfSum += s * q; snfQty += q; }
     });
-    out.push({
-      name: label,
-      kg: Math.round(kg),
-      trucks: trucks,
-      fat: fatQty > 0 ? parseFloat((fatSum/fatQty).toFixed(2)) : null,
-      snf: snfQty > 0 ? parseFloat((snfSum/snfQty).toFixed(2)) : null,
-      source: 'Batch_Log'
-    });
+    // Fat/SNF intentionally null — combining distinct streams into one card
+    // makes an average meaningless, so we hide those cells entirely.
+    return [{ name: label, kg: Math.round(kg), trucks: trucks, fat: null, snf: null, source: 'Batch_Log' }];
   }
-  // keep non-dispatch-line rows as their own cards
-  others.forEach(r => out.push(toEntry(r)));
-  return out;
-}
 
-/* Merge only the "Dispatch Line-N" rows into a single entry; any other row
-   (e.g. "CST To Product Dairy", which is a cream transfer) is left untouched.
-   Quantities and trucks are summed; Fat/SNF are quantity-weighted averages
-   (the correct way to combine two streams — a plain mean would misreport
-   when the lines carry very different volumes). Rows with no Fat/SNF are
-   skipped in the weighting so they don't drag the average down. */
-function combineLines(rows, label){
   const isLine = r => /dispatch\s*line/i.test(r.LineName || '');
   const lines  = rows.filter(isLine);
   const others = rows.filter(r => !isLine(r));
-
-  const toEntry = r => ({
-    name: r.LineName,
-    kg: Math.round(n2(r.TotalQty)),
-    trucks: parseInt(r.Entries,10) || 0,
-    fat: n2(r.AvgFat) || null,
-    snf: n2(r.AvgSNF) || null,
-    source: 'Batch_Log'
-  });
 
   const out = [];
   if(lines.length){
@@ -542,7 +516,7 @@ async function loadProductDairy(){
   }catch(e){}
   const el = document.getElementById('sec-pd'); if(el) el.innerHTML='';
   if(!d || !d.length){ renderSection([], 'sec-pd', 'tot-pd', 'No product dairy transfers for this range.'); return; }
-  renderSection(combineLines(d, 'To Production Dairy'), 'sec-pd', 'tot-pd', 'No product dairy transfers for this range.');
+  renderSection(combineLines(d, 'To Production Dairy', true), 'sec-pd', 'tot-pd', 'No product dairy transfers for this range.');
 }
 
 async function loadNMP(){

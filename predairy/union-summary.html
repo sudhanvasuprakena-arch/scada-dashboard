@@ -17,7 +17,7 @@ body{background:var(--bg);color:var(--ink)}
 .topnav a:hover{color:#fff}
 .topnav a.active{color:#fff;border-bottom-color:#7db4e8}
 .pbadge{margin-left:auto;font-size:12px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);padding:6px 14px;border-radius:20px}
-main{max-width:1440px;margin:0 auto;padding:26px 30px 60px}
+main{max-width:100%;width:100%;margin:0;padding:26px 30px 60px}
 .pagehead{margin-bottom:22px;text-align:center}
 .pagehead h2{font-size:38px;font-weight:800;color:var(--navy);letter-spacing:-.5px;line-height:1.2}
 .pagehead p{font-size:14px;color:var(--muted);margin-top:6px}
@@ -118,7 +118,7 @@ footer{font-size:11.5px;color:var(--muted);text-align:center;padding:20px}
 <body>
 <div class="topbar">
   <div class="brand"><div class="ic">🥛</div>BAMUL</div>
-  <nav class="topnav"><a href="union-summary.html" class="active">Union Summary</a><a href="index.html" class="">Overview</a><a href="procurement.html" class="">Procurement & Quality</a><a href="digital.html" class="">Digital Transformation</a><a href="farmers.html" class="">Farmer Engagement</a></nav>
+  <nav class="topnav"><a href="../bangalore-dairy-dashboard.html" title="Back to Post-Dairy Dashboard">← Post-Dairy</a><a href="union-summary.html" class="active">Union Summary</a><a href="index.html" class="">Overview</a><a href="procurement.html" class="">Procurement & Quality</a><a href="digital.html" class="">Digital Transformation</a><a href="farmers.html" class="">Farmer Engagement</a></nav>
   <div class="pbadge">Reporting period: <b>February 2026</b></div>
 </div>
 <main>
@@ -164,8 +164,10 @@ const chg = a => pct(last(a)-prev(a), prev(a));
 function delta(cur,prv,invert=false,suffix){
   if(!prv) return '<span class="nt">—</span>';
   suffix = suffix ?? ('% vs '+PL[PRV]);
-  const d=100*(cur-prv)/prv, cls=(d>=0)!==invert?'up':'dn';
-  return `<span class="${cls}">${d>=0?'▲':'▼'} ${Math.abs(d).toFixed(1)}${suffix}</span>`;
+  const d=100*(cur-prv)/prv;
+  if(Math.abs(d)<0.05) return `<span class="nt">— 0.0${suffix}</span>`;
+  const cls=(d>0)!==invert?'up':'dn';
+  return `<span class="${cls}">${d>0?'▲':'▼'} ${Math.abs(d).toFixed(1)}${suffix}</span>`;
 }
 function makeSortable(tbl){
   tbl.querySelectorAll('th').forEach((th,i)=>{th.addEventListener('click',()=>{
@@ -190,6 +192,13 @@ const totMPCS = bucket(D.weightBuckets,/Grand/).counts;
 
 let W = D.wire;
 let DAYS = W.dates.length;
+// Index of the last day that actually has data. Today (and any trailing empty
+// days) has zero purchase because it hasn't synced yet, so period windows must
+// end here — not at DAYS — otherwise the empty day drags averages/totals down.
+function lastDataIdx(){
+  for(let i=DAYS-1;i>=0;i--){ if((W.dailyAll[i]||0)>0) return i; }
+  return DAYS-1;
+}
 const fmtD = iso => { const d=new Date(iso+'T00:00:00');
   return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+d.getFullYear(); };
 const fmtDs = iso => { const d=new Date(iso+'T00:00:00');
@@ -199,15 +208,16 @@ const sum = a => a.reduce((s,x)=>s+x,0);
 let basis='monthly', from='', to='';  // custom range defaults set from live data in applyData()
 
 function range(){
-  if(basis==='daily') return {s:Math.max(0,DAYS-2),e:DAYS-1};  // "Yesterday" = last full day (today's data is partial)
+  const last = lastDataIdx();                  // last day WITH data (excludes empty today)
+  const END = last+1;                          // half-open end at the last data day
+  if(basis==='daily') return {s:Math.max(0,last),e:END};  // "Yesterday" = last day with data
   if(basis==='weekly'){
-    // "This week" = Monday of the current week → today (grows through the week).
-    const lastIdx = DAYS-1;                    // today (last day in the wire series)
-    const dow = new Date(W.dates[lastIdx]+'T00:00:00').getDay(); // 0=Sun..6=Sat
+    // "This week" = Monday of the current week → last day with data (grows through the week).
+    const dow = new Date(W.dates[last]+'T00:00:00').getDay(); // 0=Sun..6=Sat
     const backToMon = (dow+6)%7;               // days since Monday
-    return {s:Math.max(0,lastIdx-backToMon), e:DAYS};
+    return {s:Math.max(0,last-backToMon), e:END};
   }
-  if(basis==='monthly') return {s:W.monthStarts[2],e:DAYS};
+  if(basis==='monthly') return {s:W.monthStarts[2],e:END};
   let s=W.dates.indexOf(from), e=W.dates.indexOf(to)+1;
   if(s<0)s=0; if(e<=0)e=DAYS; if(e<=s){const t=s;s=e-1;e=t+1;}
   return {s,e};
@@ -230,6 +240,58 @@ const SUMROWS = [
  {l:'Secretary App Download',              k:'secretaryApp', cum:true},
 ];
 
+// Build the comparison columns for the current basis.
+// Monthly  → the 3 API months (Jul/Aug/Sept), values straight from U[k].
+// Yesterday→ the last 3 complete days.
+// Weekly   → the last 3 complete weeks.
+// Custom   → falls back to monthly columns (range drives the "Selected period" only).
+// Each column carries a day-index window [s,e) into the wire series so daily-backed
+// rows (purchase, fat, snf, and anything that scales with purchase) can be computed
+// for real. Rows without a daily source (localSale, sampleMilk, app counts) show N/A
+// in the day/week columns.
+function periodColumns(){
+  if(basis==='weekly'){
+    // last 3 COMPLETE weeks (Mon–Sun). Exclude the current partial week.
+    const lastIdx=DAYS-1;
+    const dow=new Date(W.dates[lastIdx]+'T00:00:00').getDay();   // 0=Sun..6=Sat
+    const backToMon=(dow+6)%7;
+    const curMonStart=Math.max(0,lastIdx-backToMon);             // this week's Monday
+    const cols=[];
+    const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const dnum=iso=>new Date(iso+'T00:00:00').getDate();
+    const dmon=iso=>MON[new Date(iso+'T00:00:00').getMonth()];
+    for(let k=3;k>=1;k--){
+      const s=curMonStart-7*k, e=s+7;
+      if(s<0) continue;
+      // Label spans the 7 actual days covered: start day to the last day of the
+      // window (e.g. "17–23 Aug", "31 Aug – 6 Sep"). Fully derived from the dates.
+      const a=W.dates[s], b=W.dates[Math.min(e-1,DAYS-1)];
+      const label = dmon(a)===dmon(b)
+        ? `${dnum(a)}–${dnum(b)} ${dmon(b)}`
+        : `${dnum(a)} ${dmon(a)} – ${dnum(b)} ${dmon(b)}`;
+      cols.push({s,e,label});
+    }
+    return {cols,daily:true};
+  }
+  if(basis==='daily'){
+    // The Selected-period column shows the last complete day (lastFull). To avoid
+    // repeating it, the comparison columns are the 3 days BEFORE it (e.g. 14,15,16
+    // when the selected day is 17) — mirroring how weekly shows prior complete weeks.
+    const lastFull=DAYS-2;
+    const cols=[];
+    for(let k=3;k>=1;k--){
+      const i=lastFull-k;
+      if(i<0) continue;
+      cols.push({s:i,e:i+1,label:fmtDs(W.dates[i])});
+    }
+    return {cols,daily:true};
+  }
+  // Monthly / custom → month columns. The Selected-period column already shows the
+  // current month (Sept), so only show the prior COMPLETE months (Jul, Aug) here to
+  // avoid duplicating the current month — same principle as weekly/daily.
+  return {cols:PL.slice(0,2).map((label,i)=>({monthIdx:i,label})),daily:false};
+}
+
 function render(){
   const r=range(), n=r.e-r.s;
   const _ci=document.getElementById('customInputs'); if(_ci) _ci.style.display = basis==='custom'?'':'none';
@@ -239,31 +301,77 @@ function render(){
   const _ss=document.getElementById('smpSum'); if(_ss) _ss.style.display = basis==='monthly'?'none':'';
 
   const share = basis==='monthly' ? 1 : sum(W.dailyAll.slice(r.s,r.e))/U.purchase[2];
-  // The latest period (index 2) is the current, still-in-progress month, so comparing
-  // it against a full month shows a misleading ~-80% drop. Compare the two most recent
-  // COMPLETE months instead (index 1 vs 0), giving a real month-over-month change.
-  const cmpNew = 1, cmpOld = 0;
-  let html=`<thead><tr><th class="l">Particulars</th><th>Selected period</th>${PL.map(p=>`<th>${p}</th>`).join('')}<th>Change (${PL[cmpNew]} vs ${PL[cmpOld]})</th></tr></thead><tbody>`;
+  const { cols, daily } = periodColumns();
+  // Change = most recent period vs the one before it. For monthly we compare the two
+  // COMPLETE months (Aug vs Jul, indices 1 vs 0) to avoid the partial-current-month
+  // distortion; for day/week we compare the last two columns shown.
+  const cmpNew = daily ? cols.length-1 : 1;
+  const cmpOld = daily ? cols.length-2 : 0;
+  const showChange = cols.length>=2;
+  const chgLbl = (cols[cmpNew]&&cols[cmpOld]) ? `${cols[cmpNew].label} vs ${cols[cmpOld].label}` : 'Change';
+  const chgTh = showChange ? `<th>Change (${chgLbl})</th>` : '';
+  let html=`<thead><tr><th class="l">Particulars</th><th>Selected period</th>${cols.map(c=>`<th>${c.label}</th>`).join('')}${chgTh}</tr></thead><tbody>`;
   const isNA = x => x===null || x===undefined;   // e.g. Sample Milk (no OCI source)
+
+  // Per-row value for a given column. Daily-backed rows scale the monthly figure by
+  // the column window's share of purchase; fat/snf use their own daily averages.
+  // Rows without a daily source return null (→ N/A) in day/week columns.
+  const DAILY_OK = new Set(['purchase','measurements','autoWeightQty','manualWeightQty','netPurchase']);
+  function colVal(row, c){
+    const v=U[row.k];
+    if(!daily){ return v ? v[c.monthIdx] : null; }         // monthly/custom → API month value
+    if(row.avg){ // fat → real daily average over the window
+      const w=W.fatAll.slice(c.s,c.e).filter(x=>x>0);
+      return w.length? sum(w)/w.length : null;
+    }
+    if(row.cum){ // app downloads are cumulative → show the value as of the column's last day
+      const arr = row.k==='farmerApp' ? W.farmerAppCum : W.secAppCum;
+      return arr ? arr[c.e-1] : null;
+    }
+    if(DAILY_OK.has(row.k)){
+      // scale the current-month total by this window's share of the month's purchase
+      const winQty=sum(W.dailyAll.slice(c.s,c.e));
+      const monthQty=U.purchase[2]||0;
+      const monthVal=(U[row.k]?U[row.k][2]:0)||0;
+      return monthQty? monthVal*(winQty/monthQty) : null;
+    }
+    return null; // localSale, sampleMilk → no daily source
+  }
+
   SUMROWS.forEach(row=>{
     const v=U[row.k];
-    // Metric with no data source (all null) → show N/A across the row
+    // Metric with no data source at all (all null across months) → N/A whole row
     if(Array.isArray(v) && v.every(isNA)){
       html+=`<tr><td class="l"><b>${row.l}</b></td>`
         + `<td class="nt">N/A</td>`
-        + v.map(()=>`<td class="nt">N/A</td>`).join('')
-        + `<td class="nt">—</td></tr>`;
+        + cols.map(()=>`<td class="nt">N/A</td>`).join('')
+        + (showChange?`<td class="nt">—</td>`:'') + `</tr>`;
       return;
     }
+    // Selected-period value (unchanged behaviour)
     let selVal, selTxt;
     if(row.cum){ selVal = row.k==='farmerApp' ? W.farmerAppCum[r.e-1] : W.secAppCum[r.e-1]; selTxt=fmtL(selVal); }
     else if(row.avg){ selVal = basis==='monthly'? v[2] : sum(W.fatAll.slice(r.s,r.e))/n; selTxt=selVal.toFixed(2); }
     else { selVal = v[2]*share; selTxt=fmtL(selVal); }
-    const ch = pct(v[cmpNew]-v[cmpOld], v[cmpOld]);
+
+    // Per-column cells
+    const colVals = cols.map(c=>colVal(row,c));
+    const cellsHtml = colVals.map(x=>`<td data-v="${x??''}">${isNA(x)?'<span class="nt">N/A</span>':(row.avg? x.toFixed(2) : fmtL(x))}</td>`).join('');
+
+    // Change between the two comparison columns
+    let chgTd='';
+    if(showChange){
+      const a=colVals[cmpNew], b=colVals[cmpOld];
+      if(isNA(a) || isNA(b) || !b){ chgTd = `<td class="nt">—</td>`; }
+      else {
+        const ch=pct(a-b,b);
+        chgTd = `<td data-v="${ch}">${Math.abs(ch)<0.05?'<span class="nt">— 0.0%</span>':`<span class="${ch>0?'up':'dn'}">${ch>0?'▲':'▼'} ${Math.abs(ch).toFixed(1)}%</span>`}</td>`;
+      }
+    }
     html+=`<tr><td class="l"><b>${row.l}</b></td>
     <td data-v="${selVal}"><b>${selTxt}</b></td>
-    ${v.map(x=>`<td data-v="${x}">${isNA(x)?'<span class="nt">N/A</span>':(row.avg? x.toFixed(2) : fmtL(x))}</td>`).join('')}
-    <td data-v="${ch}"><span class="${ch>=0?'up':'dn'}">${ch>=0?'▲':'▼'} ${Math.abs(ch).toFixed(1)}%</span></td></tr>`;
+    ${cellsHtml}
+    ${chgTd}</tr>`;
   });
   const tbl=document.getElementById('tblUnion');
   tbl.innerHTML=html+'</tbody>'; makeSortable(tbl);
