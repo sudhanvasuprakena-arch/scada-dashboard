@@ -273,13 +273,15 @@ const C = {navy:'#0d2b4e',teal:'#0e8f7e',green:'#1a9e55',red:'#d64545',grey:'#b9
 
 function getDateRange(b) {
   b = b || basis;
+  // Server-side basis name for the comparison-period windows (daily→yesterday).
+  const srvBasis = b === 'daily' ? 'yesterday' : b;
   const today = new Date();
   if (b === 'daily') {
     // "Yesterday" — today's collection is still arriving, so the last full day
     // is yesterday. Matches union-summary.html.
     const y = new Date(today); y.setDate(today.getDate() - 1);
     const t = fmtDate(y);
-    return { from:t, to:t, label:fmtLabel(t)+' · 1 day', key:'daily_'+t };
+    return { from:t, to:t, basis:srvBasis, label:fmtLabel(t)+' · 1 day', key:'daily_'+t };
   }
   // Ranges end at YESTERDAY, never today: today's collection is still arriving,
   // so including it adds an empty trailing point to the charts and a false
@@ -296,7 +298,7 @@ function getDateRange(b) {
     const end = yday < mon ? new Date(mon) : yday;   // don't go before Monday
     const f = fmtDate(mon), t = fmtDate(end);
     const n = Math.round((new Date(t+'T00:00:00') - new Date(f+'T00:00:00'))/86400000) + 1;
-    return { from:f, to:t,
+    return { from:f, to:t, basis:srvBasis,
              label:(f === t ? fmtLabel(t) : fmtLabel(f)+' – '+fmtLabel(t))+' · '+n+(n===1?' day':' days'),
              key:'weekly_'+f+'_'+t };
   }
@@ -306,11 +308,11 @@ function getDateRange(b) {
     const first = new Date(today.getFullYear(), today.getMonth(), 1);
     const end = yday < first ? new Date(first) : yday;
     const from = fmtDate(first), t = fmtDate(end);
-    return { from, to:t, label:today.toLocaleDateString('en-IN',{month:'long',year:'numeric'}), key:'monthly_'+from+'_'+t };
+    return { from, to:t, basis:srvBasis, label:today.toLocaleDateString('en-IN',{month:'long',year:'numeric'}), key:'monthly_'+from+'_'+t };
   }
   const f = fromCustom || fmtDate(today), t = toCustom || fmtDate(today);
   const n = daysBetween(f,t);
-  return { from:f, to:t, label:fmtLabel(f)+' – '+fmtLabel(t)+' · '+n+(n===1?' day':' days'), key:'custom_'+f+'_'+t };
+  return { from:f, to:t, basis:srvBasis, label:fmtLabel(f)+' – '+fmtLabel(t)+' · '+n+(n===1?' day':' days'), key:'custom_'+f+'_'+t };
 }
 
 /** The immediately preceding window of equal length, for the KPI deltas. */
@@ -327,7 +329,7 @@ async function fetchFromAPI(range) {
   // /bundle returns KPIs, taluk table and chart series in one round trip.
   // Both halves read the same cached day aggregates server-side, so this is
   // no more expensive than /all was on its own.
-  const res = await fetch(`${API}/digital/bundle?from_date=${range.from}&to_date=${range.to}`);
+  const res = await fetch(`${API}/digital/bundle?from_date=${range.from}&to_date=${range.to}&basis=${range.basis||''}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
   clientCache[range.key] = data;
@@ -336,7 +338,7 @@ async function fetchFromAPI(range) {
 
 async function fetchSeriesAndRerender(range) {
   try {
-    const res = await fetch(`${API}/digital/series?from_date=${range.from}&to_date=${range.to}`);
+    const res = await fetch(`${API}/digital/series?from_date=${range.from}&to_date=${range.to}&basis=${range.basis||''}`);
     if (!res.ok) return;
     const series = await res.json();
     const cached = clientCache[range.key];
@@ -452,81 +454,46 @@ function renderData(live, range, prev, prevLoading) {
 
 /* ── charts (logic unchanged) ────────────────────────────────────────────── */
 const shortBucket = s => s === '100%' ? '100% Online' : s === '0%' ? '100% Manual' : s;
-const fmtDs = iso => { const d = new Date(iso+'T00:00:00'); return (d.getMonth()+1)+'/'+(d.getDate()); };
 
+// Chart 1 — Milk Auto/Manual weighed quantity, one column per comparison
+// period. Auto (green) sits behind at full height; Manual (grey), same width,
+// draws in front from the same baseline so both stay visible.
 function renderMixChart(live) {
-  const s = live.series;
-  const n = s.dates.length;
-  let labels, autoData, manData;
-  if (n === 1) {
-    labels   = live.taluks.map(t => t.taluk);
-    autoData = live.taluks.map(t => +(t.auto_weight_pct).toFixed(1));
-    manData  = live.taluks.map(t => +(100 - t.auto_weight_pct).toFixed(1));
-    document.getElementById('csMix').textContent = `Auto vs manual weight share by taluk (${live.union.from_date})`;
-  } else if (n <= 14) {
-    labels   = s.dates.map(fmtDs);
-    autoData = s.auto_qty;
-    manData  = s.total_qty.map((v,i) => +(v - s.auto_qty[i]).toFixed(0));
-    document.getElementById('csMix').textContent = 'Auto vs manual weighed quantity by day';
-  } else {
-    labels = []; autoData = []; manData = [];
-    for (let i = 0; i < n; i += 7) {
-      const slice = s.dates.slice(i, i+7);
-      const aq = s.auto_qty.slice(i, i+7).reduce((a,b)=>a+b,0);
-      const tq = s.total_qty.slice(i, i+7).reduce((a,b)=>a+b,0);
-      labels.push('Wk ' + fmtDs(slice[slice.length-1]));
-      autoData.push(+aq.toFixed(0));
-      manData.push(+(tq-aq).toFixed(0));
-    }
-    document.getElementById('csMix').textContent = 'Auto vs manual weighed quantity by week';
-  }
+  const snaps = live.series.bucket_snapshots || [];
+  const labels   = snaps.map(s => s.label);
+  const autoData = snaps.map(s => s.auto_qty);
+  const manData  = snaps.map(s => s.manual_qty);
+  document.getElementById('csMix').textContent =
+    'Auto vs manual weighed quantity — ' + labels.join(' vs ');
   if (cMix) cMix.destroy();
-  const pctMode = (n === 1);   // single-day branch shows % share
-  // Overlaid bars, both rising from zero on the SAME x-slot (x.stacked groups
-  // them into one column; y is NOT stacked so neither is lifted). Auto (green)
-  // is drawn first -> sits behind at full height. Manual (grey) is drawn second
-  // -> sits in front, covering the bottom of the green up to its own (smaller)
-  // value. Result: grey shows at the bottom, green shows above it, both from
-  // the same baseline. Same width so the front grey overlays the green.
   cMix = new Chart(document.getElementById('chMix'), { type:'bar', data:{ labels, datasets:[
-    // Auto (green) full width behind. order:2 = drawn first / underneath.
     { label:'Auto Weight',   data:autoData, backgroundColor:C.teal, borderRadius:4, categoryPercentage:0.8, barPercentage:1.0, order:2 },
-    // Manual (grey) in front, SAME width as green. order:1 = drawn on top so
-    // it stays visible over the green instead of being masked behind it.
     { label:'Manual Weight', data:manData,  backgroundColor:C.grey, borderRadius:4, categoryPercentage:0.8, barPercentage:1.0, order:1 }
   ]}, options:{ maintainAspectRatio:false,
     plugins:{ legend:{ position:'bottom' },
-      tooltip:{ callbacks:{ label: c => `${c.dataset.label}: ${fmtN(c.raw)}${pctMode ? ' %' : ' Ltr'}` } } },
+      tooltip:{ callbacks:{ label: c => `${c.dataset.label}: ${fmtN(c.raw)} Ltr` } } },
     scales:{
-      x:{ stacked:true, ticks:{ maxTicksLimit:14 } },
-      y:{ stacked:false, beginAtZero:true,
-          max: pctMode ? 100 : undefined,
-          ticks:{ callback: v => fmtN(v) } }
+      x:{ stacked:true },
+      y:{ stacked:false, beginAtZero:true, ticks:{ callback: v => fmtN(v) } }
     } } });
 }
 
+// Chart 2 — Fully Online vs Fully Manual (Weight) society counts, grouped bars
+// with one group per comparison period.
 function renderExtremeChart(live) {
-  const s = live.series;
-  const n = s.dates.length;
-  let labels, onData, manData;
-  if (n === 1) {
-    labels  = live.taluks.map(t => t.taluk);
-    onData  = live.taluks.map(t => t.fully_online_weight);
-    manData = live.taluks.map(t => t.fully_manual_weight);
-    document.getElementById('csExt').textContent = 'Count of societies at the two extremes by taluk';
-  } else {
-    labels  = s.dates.map(fmtDs);
-    onData  = s.fully_online_weight;
-    manData = s.fully_manual_weight;
-    document.getElementById('csExt').textContent = 'Count of societies at the two extremes over time';
-  }
+  const snaps = live.series.bucket_snapshots || [];
+  const labels  = snaps.map(s => s.label);
+  const onData  = snaps.map(s => s.fully_online_weight);
+  const manData = snaps.map(s => s.fully_manual_weight);
+  document.getElementById('csExt').textContent =
+    'Societies at the two extremes — ' + labels.join(' vs ');
   if (cExt) cExt.destroy();
-  const type = n > 7 ? 'line' : 'bar';
-  cExt = new Chart(document.getElementById('chExtreme'), { type, data:{ labels, datasets:[
-    { label:'100% Online Weight', data:onData,  borderColor:C.green, backgroundColor:C.green, tension:.3, pointRadius: type==='line'?2:0, borderRadius:4 },
-    { label:'100% Manual Weight', data:manData, borderColor:C.red,   backgroundColor:C.red,   tension:.3, pointRadius: type==='line'?2:0, borderRadius:4 }
-  ]}, options:{ maintainAspectRatio:false, plugins:{ legend:{ position:'bottom' } },
-    scales:{ x:{ ticks:{ maxTicksLimit:14 } } } } });
+  cExt = new Chart(document.getElementById('chExtreme'), { type:'bar', data:{ labels, datasets:[
+    { label:'100% Online Weight', data:onData,  backgroundColor:C.green, borderRadius:4 },
+    { label:'100% Manual Weight', data:manData, backgroundColor:C.red,   borderRadius:4 }
+  ]}, options:{ maintainAspectRatio:false, plugins:{ legend:{ position:'bottom' },
+      tooltip:{ callbacks:{ label: c => `${c.dataset.label}: ${fmtN(c.raw)} MPCS` } } },
+    scales:{ y:{ beginAtZero:true } } } });
 }
 
 // Horizontal grouped bars, one series per snapshot period. When the range is
