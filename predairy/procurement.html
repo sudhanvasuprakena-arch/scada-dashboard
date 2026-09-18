@@ -217,7 +217,7 @@ function range(){
     let s=W.dates.indexOf(monStr); if(s<0)s=Math.max(0,last-6);
     return{s,e:last+1};
   }
-  if(basis==='monthly') return {s:W.monthStarts[2],e:DAYS};
+  if(basis==='monthly'){const tod=new Date();const yest=new Date(tod);yest.setDate(tod.getDate()-1);const yestStr=yest.toISOString().split('T')[0];let e=W.dates.indexOf(yestStr)+1;if(e<=0)e=DAYS;return{s:W.monthStarts[2],e};}//
   let s=W.dates.indexOf(from), e=W.dates.indexOf(to)+1;
   if(s<0)s=0; if(e<=0)e=DAYS; if(e<=s){const t=s;s=e-1;e=t+1;}
   return {s,e};
