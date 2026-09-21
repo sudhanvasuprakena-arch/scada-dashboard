@@ -411,10 +411,19 @@ function renderSection(product, rows, catIndex){
 }
 
 async function loadAll(){
-  const d = await fetchData('truck-entry', '&all=true');
+  let d = await fetchData('truck-entry', '&all=true');
   const main = document.getElementById('main-content');
 
   if(!d || !d.length){
+    main.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px">No data for selected period</div>';
+    return;
+  }
+
+  // Exclude Butter and Cream — they are not counted as milk received, so they
+  // drop out of the Total milk received KPI and don't get their own category.
+  const EXCLUDED = /^(butter|cream)$/i;
+  d = d.filter(r => !EXCLUDED.test((r.ProductCode || '').trim()));
+  if(!d.length){
     main.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px">No data for selected period</div>';
     return;
   }
@@ -441,7 +450,7 @@ async function loadAll(){
     byProduct[p].push(r);
   });
 
-  const CAT_ORDER = p => /^PAST MILK$/i.test(p) ? 2 : /^SKIM MILK POWDER$/i.test(p) ? 3 : /^CREAM$/i.test(p) ? 4 : 1;
+  const CAT_ORDER = p => /^PAST MILK$/i.test(p) ? 2 : /^SKIM MILK POWDER$/i.test(p) ? 3 : 1;
   main.innerHTML = Object.entries(byProduct)
     .sort(([a],[b]) => CAT_ORDER(a) - CAT_ORDER(b))
     .map(([product, rows], i) => renderSection(product, rows, i+1))
