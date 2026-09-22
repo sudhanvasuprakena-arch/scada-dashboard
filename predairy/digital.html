@@ -319,19 +319,15 @@ function getDateRange(b) {
   return { from:f, to:t, basis:srvBasis, label:fmtLabel(f)+' – '+fmtLabel(t)+' · '+n+(n===1?' day':' days'), key:'custom_'+f+'_'+t };
 }
 
-// Month-clipped Monday–Sunday week that CONTAINS the given ISO date. Mirrors
-// the server's pdWeekOf so the KPI "previous period" is exactly the chart's
-// previous-week bar (a week never crosses a month boundary).
+// Full Monday–Sunday week that CONTAINS the given ISO date. Weeks are NOT
+// clipped to the month (a week keeps its real 7-day span across a month
+// boundary), mirroring the server's pdWeekOf so the KPI "previous period"
+// matches the chart's previous-week bar.
 function weekOfISO(iso) {
   const d = new Date(iso+'T00:00:00');
-  const y = d.getFullYear(), m = d.getMonth();
   const dow = d.getDay() === 0 ? 7 : d.getDay();   // Mon=1..Sun=7
-  let mon = new Date(y, m, d.getDate() - dow + 1);
-  let sun = new Date(y, m, d.getDate() - dow + 7);
-  const firstOfMonth = new Date(y, m, 1);
-  const lastOfMonth  = new Date(y, m + 1, 0);
-  if (mon < firstOfMonth) mon = firstOfMonth;
-  if (sun > lastOfMonth)  sun = lastOfMonth;
+  const mon = new Date(d); mon.setDate(d.getDate() - dow + 1);
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
   return { from: fmtDate(mon), to: fmtDate(sun) };
 }
 

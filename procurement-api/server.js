@@ -873,18 +873,13 @@ function pdSpanLabel(d0, d1) {
     return `${a.getUTCDate()}\u2013${b.getUTCDate()} ${PD_MON[am]}`;
   return `${a.getUTCDate()} ${PD_MON[am]} \u2013 ${b.getUTCDate()} ${PD_MON[bm]}`;
 }
-// Month-clipped Monday–Sunday week that CONTAINS date `d` (UTC Date).
-// A week never crosses a month boundary: the first week of a month starts on
-// the 1st (even mid-week) and the last week ends on the last day of the month.
+// Full Monday–Sunday week that CONTAINS date `d` (UTC Date). Weeks are NOT
+// clipped to the month — a week keeps its real 7-day span even when it crosses
+// a month boundary (e.g. 31 Aug – 6 Sep).
 function pdWeekOf(d) {
-  const y = d.getUTCFullYear(), m = d.getUTCMonth();
   const dow = d.getUTCDay() === 0 ? 7 : d.getUTCDay();   // Mon=1..Sun=7
-  let mon = new Date(Date.UTC(y, m, d.getUTCDate() - dow + 1));
-  let sun = new Date(Date.UTC(y, m, d.getUTCDate() - dow + 7));
-  const firstOfMonth = new Date(Date.UTC(y, m, 1));
-  const lastOfMonth  = new Date(Date.UTC(y, m + 1, 0));
-  if (mon < firstOfMonth) mon = firstOfMonth;
-  if (sun > lastOfMonth)  sun = lastOfMonth;
+  const mon = new Date(d); mon.setUTCDate(d.getUTCDate() - dow + 1);
+  const sun = new Date(mon); sun.setUTCDate(mon.getUTCDate() + 6);
   return { from: pdIso(mon), to: pdIso(sun) };
 }
 function pdPrevWeek(week) { return pdWeekOf(pdParseDay(pdAddDays(week.from, -1))); }
@@ -896,9 +891,26 @@ function pdPrevWeek(week) { return pdWeekOf(pdParseDay(pdAddDays(week.from, -1))
 //   monthly   → this month (clipped to `toDate` if partial) + the previous 2
 //   custom    → the N-day span + the previous N days + the N days before that
 function pdComparePeriods(fromDate, toDate, basis) {
-  if (basis === 'yesterday' || fromDate === toDate) {
+  // Check the explicit basis FIRST. A partial current week/month can be a
+  // single day (e.g. Tuesday → current week is just Monday), and we must still
+  // compare against whole prior weeks/months — not fall back to single days.
+  if (basis === 'weekly') {
+    // Every full Mon–Sun week from the FIRST week of the current month (the
+    // Monday of the week containing the 1st — may fall in the previous month,
+    // e.g. 31 Aug for a Sep whose 1st is a Tuesday) up to the week that
+    // contains `toDate` (the last data day). The final week is clipped to
+    // `toDate` so it shows only the days collected so far. Count is dynamic.
+    const t = pdParseDay(toDate);
+    const first = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), 1));
+    let wkStart = pdParseDay(pdWeekOf(first).from);
     const out = [];
-    for (let k = 2; k >= 0; k--) { const d = pdAddDays(toDate, -k); out.push([pdSpanLabel(d, d), d, d]); }
+    while (pdIso(wkStart) <= toDate) {
+      const wkEnd = new Date(wkStart); wkEnd.setUTCDate(wkStart.getUTCDate() + 6);
+      const endIso = pdIso(wkEnd) > toDate ? toDate : pdIso(wkEnd);  // clip current partial week
+      const fromIso = pdIso(wkStart);
+      out.push([pdSpanLabel(fromIso, endIso), fromIso, endIso]);
+      wkStart = new Date(wkStart); wkStart.setUTCDate(wkStart.getUTCDate() + 7);
+    }
     return out;
   }
   if (basis === 'monthly') {
@@ -915,11 +927,10 @@ function pdComparePeriods(fromDate, toDate, basis) {
     }
     return out;
   }
-  if (basis === 'weekly') {
-    const cur = { from: fromDate, to: toDate };
-    const w1 = pdPrevWeek(cur);
-    const w2 = pdPrevWeek(w1);
-    return [w2, w1, cur].map(w => [pdSpanLabel(w.from, w.to), w.from, w.to]);
+  if (basis === 'yesterday' || fromDate === toDate) {
+    const out = [];
+    for (let k = 2; k >= 0; k--) { const d = pdAddDays(toDate, -k); out.push([pdSpanLabel(d, d), d, d]); }
+    return out;
   }
   // custom (default): N-day span vs previous N vs the N before that
   const N = Math.round((pdParseDay(toDate) - pdParseDay(fromDate)) / 86400000) + 1;
