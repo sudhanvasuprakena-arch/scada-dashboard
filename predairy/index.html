@@ -193,7 +193,7 @@ function renderKPIs(){
   const fat=basis==='monthly'?U.avgFat[2]:sum(W.fatAll.slice(r.s,r.e))/n;
   const snf=basis==="monthly"?U.avgSnf[2]:sum(W.snfAll.slice(r.s,r.e))/n;
   const perDay=v/n;
-  const prevLabel=basis==='monthly'?PL[1]:'prev period';
+  const prevLabel=basis==='monthly'?PL[1]:basis==='daily'?'prev day':basis==='weekly'?'prev week':'prev period';
   document.getElementById('kpiRow').innerHTML=[
     {l:'Milk Purchase',v:fmt(perDay)+' Ltr/day',d:delta(v,p,prevLabel)},
     {l:'Average Fat',v:fat.toFixed(2)+' %',d:'<span class="nt">day value</span>'},
