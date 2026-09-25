@@ -481,7 +481,8 @@ async function buildProcurementCache() {
         SUM(a.kg_fat)*100/NULLIF(SUM(a.quantity),0) AS fat,
         SUM(a.kg_snf)*100/NULLIF(SUM(a.quantity),0) AS snf
       FROM tbl_aggregation_data a
-      WHERE a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
+      WHERE a.table_name='tbl_milk_collection'
+        AND a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
       GROUP BY DATE(a.collection_date) ORDER BY ds
     `, [last90[0], last90[last90.length-1]]);
 
@@ -491,7 +492,8 @@ async function buildProcurementCache() {
       FROM tbl_aggregation_data a
       JOIN tbl_dcs d ON a.dcs_code=d.dcs_code AND d.is_delete=0
       JOIN tbl_sub_districts sd ON d.sub_district_code=sd.sub_district_code
-      WHERE a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
+      WHERE a.table_name='tbl_milk_collection'
+        AND a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
       GROUP BY sd.sub_district_name, DATE(a.collection_date) ORDER BY ds
     `, [last90[0], last90[last90.length-1]]);
     const talukDailyMap = {};
