@@ -222,13 +222,28 @@ function range(){
     const backToMon = (dow+6)%7;               // days since Monday
     return {s:Math.max(0,last-backToMon), e:END};
   }
-  if(basis==='monthly') return {s:W.monthStarts[2],e:END};
+  if(basis==='monthly'){
+    // Start of the month containing the last data day. Don't assume
+    // monthStarts[2] exists — the 90-day wire may contain only 2 month
+    // boundaries, which left r.s undefined and produced "NaN days" in the label.
+    const ms = Array.isArray(W.monthStarts) ? W.monthStarts : [];
+    let s = ms.length ? ms[ms.length-1] : -1;   // most recent month-start in the wire
+    if(s<0 || s>last){
+      // Fallback: walk back from the last data day to the 1st of its month.
+      const d = new Date(W.dates[last]+'T00:00:00');
+      const firstIso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+      const idx = W.dates.indexOf(firstIso);
+      s = idx>=0 ? idx : Math.max(0, last-(d.getDate()-1));
+    }
+    return {s:Math.max(0,s), e:END};
+  }
   let s=W.dates.indexOf(from), e=W.dates.indexOf(to)+1;
   if(s<0)s=0; if(e<=0)e=DAYS; if(e<=s){const t=s;s=e-1;e=t+1;}
   return {s,e};
 }
 function rangeLabel(r){
   const a=W.dates[r.s], b=W.dates[r.e-1], n=r.e-r.s;
+  if(!a || !b || !Number.isFinite(n)) return '';   // guard against NaN/undefined labels
   return (a===b? fmtD(a) : fmtDs(a)+' – '+fmtD(b)) + ' · ' + n + (n===1?' day':' days');
 }
 
