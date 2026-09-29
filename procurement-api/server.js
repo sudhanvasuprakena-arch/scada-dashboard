@@ -433,7 +433,8 @@ async function buildProcurementCache() {
         FROM tbl_aggregation_data a
         JOIN tbl_dcs d ON a.dcs_code=d.dcs_code AND d.is_delete=0
         JOIN tbl_sub_districts s ON d.sub_district_code=s.sub_district_code
-        WHERE a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
+        WHERE a.table_name='tbl_milk_collection'
+          AND a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
         GROUP BY s.sub_district_name ORDER BY purchase DESC
       `, [m.start, m.end]);
       return r;
@@ -475,23 +476,29 @@ async function buildProcurementCache() {
     }));
 
     // Daily wire (last 90 days)
+    // NOTE: must filter table_name='tbl_milk_collection' — tbl_aggregation_data
+    // also holds dispatch/receipt/local-sale/product-sale rows. Without this the
+    // daily series (which drives the weekly & daily columns) double-counts those
+    // categories and inflates purchase ~2x. Matches the monthly union query above.
     const [dailyRows] = await c.query(`
       SELECT DATE(a.collection_date) AS ds,
         SUM(a.quantity) AS qty,
         SUM(a.kg_fat)*100/NULLIF(SUM(a.quantity),0) AS fat,
         SUM(a.kg_snf)*100/NULLIF(SUM(a.quantity),0) AS snf
       FROM tbl_aggregation_data a
-      WHERE a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
+      WHERE a.table_name='tbl_milk_collection'
+        AND a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
       GROUP BY DATE(a.collection_date) ORDER BY ds
     `, [last90[0], last90[last90.length-1]]);
 
-    // Daily per-taluk wire
+    // Daily per-taluk wire (same table_name filter — collection rows only)
     const [talukDailyRows] = await c.query(`
       SELECT sd.sub_district_name AS taluk, DATE(a.collection_date) AS ds, SUM(a.quantity) AS qty
       FROM tbl_aggregation_data a
       JOIN tbl_dcs d ON a.dcs_code=d.dcs_code AND d.is_delete=0
       JOIN tbl_sub_districts sd ON d.sub_district_code=sd.sub_district_code
-      WHERE a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
+      WHERE a.table_name='tbl_milk_collection'
+        AND a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
       GROUP BY sd.sub_district_name, DATE(a.collection_date) ORDER BY ds
     `, [last90[0], last90[last90.length-1]]);
     const talukDailyMap = {};
@@ -530,14 +537,16 @@ async function buildProcurementCache() {
       FROM tbl_aggregation_data a
       JOIN tbl_dcs d ON a.dcs_code=d.dcs_code AND d.is_delete=0
       JOIN tbl_sub_districts s ON d.sub_district_code=s.sub_district_code
-      WHERE a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
+      WHERE a.table_name='tbl_milk_collection'
+        AND a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
       GROUP BY a.dcs_code,d.dcs_name,s.sub_district_name
       ORDER BY qty DESC LIMIT 40
     `, [cur.days, cur.start, cur.end]);
     const [mpcsPrvRows] = await c.query(`
       SELECT a.dcs_code, SUM(a.quantity) AS qty
       FROM tbl_aggregation_data a
-      WHERE a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
+      WHERE a.table_name='tbl_milk_collection'
+        AND a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
       GROUP BY a.dcs_code
     `, [prv.start, prv.end]);
     const mpcsPrvMap = {};
