@@ -396,8 +396,15 @@ function getMonthRanges(n=3){
   const ranges=[], now=new Date();
   for(let i=n-1;i>=0;i--){
     const s=new Date(now.getFullYear(),now.getMonth()-i,1);
-    const e=new Date(now.getFullYear(),now.getMonth()-i+1,0);
-    ranges.push({ label:s.toLocaleString('en-IN',{month:'short',year:'2-digit'}), days:e.getDate(), start:s.toISOString().split('T')[0], end:e.toISOString().split('T')[0] });
+    const e=new Date(now.getFullYear(),now.getMonth()-i+1,0);        // last day of month
+    const nx=new Date(now.getFullYear(),now.getMonth()-i+1,1);       // first day of NEXT month (exclusive upper bound)
+    // endExcl is used with a half-open range (>= start AND < endExcl). The old
+    // `end` (bare last-day date) with BETWEEN dropped the final day's rows because
+    // collection_date is a datetime (e.g. '...31 16:00' > '...31 00:00'). Kept for
+    // reference but queries should use start/endExcl.
+    ranges.push({ label:s.toLocaleString('en-IN',{month:'short',year:'2-digit'}), days:e.getDate(),
+      start:s.toISOString().split('T')[0], end:e.toISOString().split('T')[0],
+      endExcl:nx.toISOString().split('T')[0] });
   }
   return ranges;
 }
@@ -434,9 +441,9 @@ async function buildProcurementCache() {
         JOIN tbl_dcs d ON a.dcs_code=d.dcs_code AND d.is_delete=0
         JOIN tbl_sub_districts s ON d.sub_district_code=s.sub_district_code
         WHERE a.table_name='tbl_milk_collection'
-          AND a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
+          AND a.collection_date >= ? AND a.collection_date < ? AND a.collection_date<=NOW()
         GROUP BY s.sub_district_name ORDER BY purchase DESC
-      `, [m.start, m.end]);
+      `, [m.start, m.endExcl]);
       return r;
     }));
 
@@ -450,23 +457,23 @@ async function buildProcurementCache() {
           SUM(a.member_count) AS measurements
         FROM tbl_aggregation_data a
         WHERE a.table_name='tbl_milk_collection'
-          AND a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
-      `, [m.start, m.end]);
+          AND a.collection_date >= ? AND a.collection_date < ? AND a.collection_date<=NOW()
+      `, [m.start, m.endExcl]);
       // Local sale from aggregation (real)
       const [ls] = await c.query(`
         SELECT SUM(a.quantity) AS localSale
         FROM tbl_aggregation_data a
         WHERE a.table_name='tbl_local_milk_sale'
-          AND a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
-      `, [m.start, m.end]);
+          AND a.collection_date >= ? AND a.collection_date < ? AND a.collection_date<=NOW()
+      `, [m.start, m.endExcl]);
       // Auto vs manual weight from raw milk_collection (uses idx_date_auto_qty)
       const [aw] = await c.query(`
         SELECT
           SUM(CASE WHEN is_quantity_auto=1 THEN quantity ELSE 0 END) AS autoWeightQty,
           SUM(CASE WHEN is_quantity_auto=0 THEN quantity ELSE 0 END) AS manualWeightQty
         FROM tbl_milk_collection
-        WHERE collection_date BETWEEN ? AND ? AND collection_date<=NOW()
-      `, [m.start, m.end]);
+        WHERE collection_date >= ? AND collection_date < ? AND collection_date<=NOW()
+      `, [m.start, m.endExcl]);
       return {
         ...r[0],
         localSale: ls[0].localSale,
@@ -538,17 +545,17 @@ async function buildProcurementCache() {
       JOIN tbl_dcs d ON a.dcs_code=d.dcs_code AND d.is_delete=0
       JOIN tbl_sub_districts s ON d.sub_district_code=s.sub_district_code
       WHERE a.table_name='tbl_milk_collection'
-        AND a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
+        AND a.collection_date >= ? AND a.collection_date < ? AND a.collection_date<=NOW()
       GROUP BY a.dcs_code,d.dcs_name,s.sub_district_name
       ORDER BY qty DESC LIMIT 40
-    `, [cur.days, cur.start, cur.end]);
+    `, [cur.days, cur.start, cur.endExcl]);
     const [mpcsPrvRows] = await c.query(`
       SELECT a.dcs_code, SUM(a.quantity) AS qty
       FROM tbl_aggregation_data a
       WHERE a.table_name='tbl_milk_collection'
-        AND a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
+        AND a.collection_date >= ? AND a.collection_date < ? AND a.collection_date<=NOW()
       GROUP BY a.dcs_code
-    `, [prv.start, prv.end]);
+    `, [prv.start, prv.endExcl]);
     const mpcsPrvMap = {};
     mpcsPrvRows.forEach(r => { mpcsPrvMap[r.dcs_code] = parseFloat(r.qty)||0; });
 
@@ -567,9 +574,9 @@ async function buildProcurementCache() {
         JOIN tbl_dcs d ON a.dcs_code=d.dcs_code AND d.is_delete=0
         JOIN tbl_sub_districts s ON d.sub_district_code=s.sub_district_code
         WHERE a.table_name='tbl_local_milk_sale'
-          AND a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
+          AND a.collection_date >= ? AND a.collection_date < ? AND a.collection_date<=NOW()
         GROUP BY s.sub_district_name
-      `, [m.start, m.end]);
+      `, [m.start, m.endExcl]);
       const map={}; r.forEach(x=>map[x.taluk]=parseFloat(x.localSale)||0); return map;
     }));
 
