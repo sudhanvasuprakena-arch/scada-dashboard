@@ -486,6 +486,17 @@ async function buildProcurementCache() {
       GROUP BY DATE(a.collection_date) ORDER BY ds
     `, [last90[0], last90[last90.length-1]]);
 
+    // Daily auto weight share from tbl_milk_collection
+    const [autoRows] = await c.query(`
+      SELECT DATE(collection_date) AS ds,
+        SUM(CASE WHEN is_quantity_auto=1 THEN quantity ELSE 0 END)*100/NULLIF(SUM(quantity),0) AS autoShare
+      FROM tbl_milk_collection
+      WHERE collection_date BETWEEN ? AND ? AND collection_date<=NOW()
+      GROUP BY DATE(collection_date) ORDER BY ds
+    `, [last90[0], last90[last90.length-1]]);
+    const autoMap = {};
+    autoRows.forEach(r => { autoMap[r.ds.toISOString().split('T')[0]] = parseFloat(r.autoShare)||0; });
+
     // Daily per-taluk wire
     const [talukDailyRows] = await c.query(`
       SELECT sd.sub_district_name AS taluk, DATE(a.collection_date) AS ds, SUM(a.quantity) AS qty
@@ -512,6 +523,7 @@ async function buildProcurementCache() {
     const wireQty = last90.map(d => parseFloat(dmap[d]?.qty)||0);
     const wireFat = last90.map(d => parseFloat(dmap[d]?.fat)||0);
     const wireSnf = last90.map(d => parseFloat(dmap[d]?.snf)||0);
+    const wireAuto = last90.map(d => autoMap[d]||0);
 
     const weekly = [];
     for(let i=0;i+7<=last90.length;i+=7)
@@ -626,7 +638,7 @@ async function buildProcurementCache() {
         return {taluk:r.taluk,name:r.name,qty:curQty,avgFat:parseFloat(r.avgFat)||0,perDay:parseFloat(r.perDay)||0,chg:{daily:chgMoM,weekly:chgMoM,monthly:chgMoM,custom:chgMoM}};
       }),
       wire:{ dates:last90, dailyAll:wireQty, fatAll:wireFat, snfAll:wireSnf,
-        autoAll:wireQty.map(()=>90), weekly, monthStarts, monthDays,
+        autoAll:wireAuto, weekly, monthStarts, monthDays,
         talukDaily,
         farmerAppCum:last90.map(()=>appR[0].farmerApp||0),
         secAppCum:last90.map(()=>appR[0].secretaryApp||0),
