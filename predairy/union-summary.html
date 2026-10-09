@@ -126,7 +126,7 @@ footer{font-size:11.5px;color:var(--muted);text-align:center;padding:20px}
 <div class="topbar">
   <div class="brand"><div class="ic">🥛</div>BAMUL</div>
   <nav class="topnav"><a href="../bangalore-dairy-dashboard.html" title="Back to Post-Dairy Dashboard">← Post-Dairy</a><a href="union-summary.html" class="active">Union Summary</a><a href="index.html" class="">Overview</a><a href="procurement.html" class="">Procurement & Quality</a><a href="digital.html" class="">Digital Transformation</a><a href="farmers.html" class="">Farmer Engagement</a></nav>
-  <div class="pbadge">Reporting period: <b>February 2026</b></div>
+  <div class="pbadge">Reporting period: <b id="reportingPeriod">—</b></div>
 </div>
 <main>
 <div class="filterbar">
@@ -222,13 +222,28 @@ function range(){
     const backToMon = (dow+6)%7;               // days since Monday
     return {s:Math.max(0,last-backToMon), e:END};
   }
-  if(basis==='monthly') return {s:W.monthStarts[2],e:END};
+  if(basis==='monthly'){
+    // Start of the month containing the last data day. Don't assume
+    // monthStarts[2] exists — the 90-day wire may contain only 2 month
+    // boundaries, which left r.s undefined and produced "NaN days" in the label.
+    const ms = Array.isArray(W.monthStarts) ? W.monthStarts : [];
+    let s = ms.length ? ms[ms.length-1] : -1;   // most recent month-start in the wire
+    if(s<0 || s>last){
+      // Fallback: walk back from the last data day to the 1st of its month.
+      const d = new Date(W.dates[last]+'T00:00:00');
+      const firstIso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+      const idx = W.dates.indexOf(firstIso);
+      s = idx>=0 ? idx : Math.max(0, last-(d.getDate()-1));
+    }
+    return {s:Math.max(0,s), e:END};
+  }
   let s=W.dates.indexOf(from), e=W.dates.indexOf(to)+1;
   if(s<0)s=0; if(e<=0)e=DAYS; if(e<=s){const t=s;s=e-1;e=t+1;}
   return {s,e};
 }
 function rangeLabel(r){
   const a=W.dates[r.s], b=W.dates[r.e-1], n=r.e-r.s;
+  if(!a || !b || !Number.isFinite(n)) return '';   // guard against NaN/undefined labels
   return (a===b? fmtD(a) : fmtDs(a)+' – '+fmtD(b)) + ' · ' + n + (n===1?' day':' days');
 }
 
@@ -396,6 +411,13 @@ document.getElementById('dFrom').addEventListener('change',e=>{from=e.target.val
 document.getElementById('dTo').addEventListener('change',e=>{to=e.target.value;render();});
 document.querySelectorAll('#segBasis button').forEach(b=>b.classList.toggle('active',b.dataset.b===basis));
 
+// Update the header "Reporting period" badge from the current data. Prefers the
+// data's periodName; falls back to the latest period label. Never left hardcoded.
+function setReportingPeriod(){
+  const el = document.getElementById('reportingPeriod');
+  if(!el) return;
+  el.textContent = (D && D.periodName) ? D.periodName : (PL[CUR] || '—');
+}
 // ── Load live OCI data (falls back to embedded sample on failure) ──────────────
 function applyData(dd){
   D = dd;
@@ -405,6 +427,7 @@ function applyData(dd){
   U = D.union;
   W = D.wire;
   DAYS = W.dates.length;
+  setReportingPeriod();
   // Custom-range pickers: constrain to the real data window and default to last 7 days
   const first = W.dates[0], lastD = W.dates[DAYS-1];
   const df=document.getElementById('dFrom'), dt=document.getElementById('dTo');
@@ -414,6 +437,7 @@ function applyData(dd){
   if(!to   || to<first   || to>lastD)   to   = lastD;
 }
 (async function boot(){
+  setReportingPeriod(); // set from fallback data first so the badge is never blank/stale
   render(); // paint immediately with fallback so the page is never blank
   let json;
   try{

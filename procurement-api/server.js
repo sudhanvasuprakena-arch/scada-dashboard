@@ -396,8 +396,15 @@ function getMonthRanges(n=3){
   const ranges=[], now=new Date();
   for(let i=n-1;i>=0;i--){
     const s=new Date(now.getFullYear(),now.getMonth()-i,1);
-    const e=new Date(now.getFullYear(),now.getMonth()-i+1,0);
-    ranges.push({ label:s.toLocaleString('en-IN',{month:'short',year:'2-digit'}), days:e.getDate(), start:s.toISOString().split('T')[0], end:e.toISOString().split('T')[0] });
+    const e=new Date(now.getFullYear(),now.getMonth()-i+1,0);        // last day of month
+    const nx=new Date(now.getFullYear(),now.getMonth()-i+1,1);       // first day of NEXT month (exclusive upper bound)
+    // endExcl is used with a half-open range (>= start AND < endExcl). The old
+    // `end` (bare last-day date) with BETWEEN dropped the final day's rows because
+    // collection_date is a datetime (e.g. '...31 16:00' > '...31 00:00'). Kept for
+    // reference but queries should use start/endExcl.
+    ranges.push({ label:s.toLocaleString('en-IN',{month:'short',year:'2-digit'}), days:e.getDate(),
+      start:s.toISOString().split('T')[0], end:e.toISOString().split('T')[0],
+      endExcl:nx.toISOString().split('T')[0] });
   }
   return ranges;
 }
@@ -433,9 +440,10 @@ async function buildProcurementCache() {
         FROM tbl_aggregation_data a
         JOIN tbl_dcs d ON a.dcs_code=d.dcs_code AND d.is_delete=0
         JOIN tbl_sub_districts s ON d.sub_district_code=s.sub_district_code
-        WHERE a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
+        WHERE a.table_name='tbl_milk_collection'
+          AND a.collection_date >= ? AND a.collection_date < ? AND a.collection_date<=NOW()
         GROUP BY s.sub_district_name ORDER BY purchase DESC
-      `, [m.start, m.end]);
+      `, [m.start, m.endExcl]);
       return r;
     }));
 
@@ -449,23 +457,23 @@ async function buildProcurementCache() {
           SUM(a.member_count) AS measurements
         FROM tbl_aggregation_data a
         WHERE a.table_name='tbl_milk_collection'
-          AND a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
-      `, [m.start, m.end]);
+          AND a.collection_date >= ? AND a.collection_date < ? AND a.collection_date<=NOW()
+      `, [m.start, m.endExcl]);
       // Local sale from aggregation (real)
       const [ls] = await c.query(`
         SELECT SUM(a.quantity) AS localSale
         FROM tbl_aggregation_data a
         WHERE a.table_name='tbl_local_milk_sale'
-          AND a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
-      `, [m.start, m.end]);
+          AND a.collection_date >= ? AND a.collection_date < ? AND a.collection_date<=NOW()
+      `, [m.start, m.endExcl]);
       // Auto vs manual weight from raw milk_collection (uses idx_date_auto_qty)
       const [aw] = await c.query(`
         SELECT
           SUM(CASE WHEN is_quantity_auto=1 THEN quantity ELSE 0 END) AS autoWeightQty,
           SUM(CASE WHEN is_quantity_auto=0 THEN quantity ELSE 0 END) AS manualWeightQty
         FROM tbl_milk_collection
-        WHERE collection_date BETWEEN ? AND ? AND collection_date<=NOW()
-      `, [m.start, m.end]);
+        WHERE collection_date >= ? AND collection_date < ? AND collection_date<=NOW()
+      `, [m.start, m.endExcl]);
       return {
         ...r[0],
         localSale: ls[0].localSale,
@@ -475,6 +483,10 @@ async function buildProcurementCache() {
     }));
 
     // Daily wire (last 90 days)
+    // NOTE: must filter table_name='tbl_milk_collection' — tbl_aggregation_data
+    // also holds dispatch/receipt/local-sale/product-sale rows. Without this the
+    // daily series (which drives the weekly & daily columns) double-counts those
+    // categories and inflates purchase ~2x. Matches the monthly union query above.
     const [dailyRows] = await c.query(`
       SELECT DATE(a.collection_date) AS ds,
         SUM(a.quantity) AS qty,
@@ -497,7 +509,7 @@ async function buildProcurementCache() {
     const autoMap = {};
     autoRows.forEach(r => { autoMap[r.ds.toISOString().split('T')[0]] = parseFloat(r.autoShare)||0; });
 
-    // Daily per-taluk wire
+    // Daily per-taluk wire (same table_name filter — collection rows only)
     const [talukDailyRows] = await c.query(`
       SELECT sd.sub_district_name AS taluk, DATE(a.collection_date) AS ds, SUM(a.quantity) AS qty
       FROM tbl_aggregation_data a
@@ -544,16 +556,18 @@ async function buildProcurementCache() {
       FROM tbl_aggregation_data a
       JOIN tbl_dcs d ON a.dcs_code=d.dcs_code AND d.is_delete=0
       JOIN tbl_sub_districts s ON d.sub_district_code=s.sub_district_code
-      WHERE a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
+      WHERE a.table_name='tbl_milk_collection'
+        AND a.collection_date >= ? AND a.collection_date < ? AND a.collection_date<=NOW()
       GROUP BY a.dcs_code,d.dcs_name,s.sub_district_name
       ORDER BY qty DESC LIMIT 40
-    `, [cur.days, cur.start, cur.end]);
+    `, [cur.days, cur.start, cur.endExcl]);
     const [mpcsPrvRows] = await c.query(`
       SELECT a.dcs_code, SUM(a.quantity) AS qty
       FROM tbl_aggregation_data a
-      WHERE a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
+      WHERE a.table_name='tbl_milk_collection'
+        AND a.collection_date >= ? AND a.collection_date < ? AND a.collection_date<=NOW()
       GROUP BY a.dcs_code
-    `, [prv.start, prv.end]);
+    `, [prv.start, prv.endExcl]);
     const mpcsPrvMap = {};
     mpcsPrvRows.forEach(r => { mpcsPrvMap[r.dcs_code] = parseFloat(r.qty)||0; });
 
@@ -572,9 +586,9 @@ async function buildProcurementCache() {
         JOIN tbl_dcs d ON a.dcs_code=d.dcs_code AND d.is_delete=0
         JOIN tbl_sub_districts s ON d.sub_district_code=s.sub_district_code
         WHERE a.table_name='tbl_local_milk_sale'
-          AND a.collection_date BETWEEN ? AND ? AND a.collection_date<=NOW()
+          AND a.collection_date >= ? AND a.collection_date < ? AND a.collection_date<=NOW()
         GROUP BY s.sub_district_name
-      `, [m.start, m.end]);
+      `, [m.start, m.endExcl]);
       const map={}; r.forEach(x=>map[x.taluk]=parseFloat(x.localSale)||0); return map;
     }));
 
@@ -887,18 +901,13 @@ function pdSpanLabel(d0, d1) {
     return `${a.getUTCDate()}\u2013${b.getUTCDate()} ${PD_MON[am]}`;
   return `${a.getUTCDate()} ${PD_MON[am]} \u2013 ${b.getUTCDate()} ${PD_MON[bm]}`;
 }
-// Month-clipped Monday–Sunday week that CONTAINS date `d` (UTC Date).
-// A week never crosses a month boundary: the first week of a month starts on
-// the 1st (even mid-week) and the last week ends on the last day of the month.
+// Full Monday–Sunday week that CONTAINS date `d` (UTC Date). Weeks are NOT
+// clipped to the month — a week keeps its real 7-day span even when it crosses
+// a month boundary (e.g. 31 Aug – 6 Sep).
 function pdWeekOf(d) {
-  const y = d.getUTCFullYear(), m = d.getUTCMonth();
   const dow = d.getUTCDay() === 0 ? 7 : d.getUTCDay();   // Mon=1..Sun=7
-  let mon = new Date(Date.UTC(y, m, d.getUTCDate() - dow + 1));
-  let sun = new Date(Date.UTC(y, m, d.getUTCDate() - dow + 7));
-  const firstOfMonth = new Date(Date.UTC(y, m, 1));
-  const lastOfMonth  = new Date(Date.UTC(y, m + 1, 0));
-  if (mon < firstOfMonth) mon = firstOfMonth;
-  if (sun > lastOfMonth)  sun = lastOfMonth;
+  const mon = new Date(d); mon.setUTCDate(d.getUTCDate() - dow + 1);
+  const sun = new Date(mon); sun.setUTCDate(mon.getUTCDate() + 6);
   return { from: pdIso(mon), to: pdIso(sun) };
 }
 function pdPrevWeek(week) { return pdWeekOf(pdParseDay(pdAddDays(week.from, -1))); }
@@ -910,9 +919,26 @@ function pdPrevWeek(week) { return pdWeekOf(pdParseDay(pdAddDays(week.from, -1))
 //   monthly   → this month (clipped to `toDate` if partial) + the previous 2
 //   custom    → the N-day span + the previous N days + the N days before that
 function pdComparePeriods(fromDate, toDate, basis) {
-  if (basis === 'yesterday' || fromDate === toDate) {
+  // Check the explicit basis FIRST. A partial current week/month can be a
+  // single day (e.g. Tuesday → current week is just Monday), and we must still
+  // compare against whole prior weeks/months — not fall back to single days.
+  if (basis === 'weekly') {
+    // Every full Mon–Sun week from the FIRST week of the current month (the
+    // Monday of the week containing the 1st — may fall in the previous month,
+    // e.g. 31 Aug for a Sep whose 1st is a Tuesday) up to the week that
+    // contains `toDate` (the last data day). The final week is clipped to
+    // `toDate` so it shows only the days collected so far. Count is dynamic.
+    const t = pdParseDay(toDate);
+    const first = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), 1));
+    let wkStart = pdParseDay(pdWeekOf(first).from);
     const out = [];
-    for (let k = 2; k >= 0; k--) { const d = pdAddDays(toDate, -k); out.push([pdSpanLabel(d, d), d, d]); }
+    while (pdIso(wkStart) <= toDate) {
+      const wkEnd = new Date(wkStart); wkEnd.setUTCDate(wkStart.getUTCDate() + 6);
+      const endIso = pdIso(wkEnd) > toDate ? toDate : pdIso(wkEnd);  // clip current partial week
+      const fromIso = pdIso(wkStart);
+      out.push([pdSpanLabel(fromIso, endIso), fromIso, endIso]);
+      wkStart = new Date(wkStart); wkStart.setUTCDate(wkStart.getUTCDate() + 7);
+    }
     return out;
   }
   if (basis === 'monthly') {
@@ -929,11 +955,10 @@ function pdComparePeriods(fromDate, toDate, basis) {
     }
     return out;
   }
-  if (basis === 'weekly') {
-    const cur = { from: fromDate, to: toDate };
-    const w1 = pdPrevWeek(cur);
-    const w2 = pdPrevWeek(w1);
-    return [w2, w1, cur].map(w => [pdSpanLabel(w.from, w.to), w.from, w.to]);
+  if (basis === 'yesterday' || fromDate === toDate) {
+    const out = [];
+    for (let k = 2; k >= 0; k--) { const d = pdAddDays(toDate, -k); out.push([pdSpanLabel(d, d), d, d]); }
+    return out;
   }
   // custom (default): N-day span vs previous N vs the N before that
   const N = Math.round((pdParseDay(toDate) - pdParseDay(fromDate)) / 86400000) + 1;
